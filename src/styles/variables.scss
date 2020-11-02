@@ -1,0 +1,41 @@
+// 基础颜色
+$blue:#324157;
+$light-blue:#3A71A8;
+$red:#C03639;
+$pink: #E65D6E;
+$green: #30B08F;
+$tiffany: #4AB7BD;
+$yellow:#FEC171;
+$panGreen: #30B08F;
+
+// sidebar
+// $menuText:#bfcbd9;  //2020520修改侧边栏字体颜色
+$menuText: #303133;;
+// $menuActiveText:#409EFF; //2020520修改选择颜色
+$menuActiveText:#14889A;
+//$subMenuActiveText:#e8f3f5; //20205618修改选择颜色
+$subMenuActiveText:#14889A;
+
+// $menuBg:#304156;
+$menuBg:#f4f4f5; //2020520修改侧边栏颜色
+// $menuHover:#263445; //2020520鼠标悬浮颜色
+$menuHover:#e8f3f5;
+
+
+// $subMenuBg:#1f2d3d; //2021 修改菜单颜色
+// $subMenuHover:#001528; //2021 鼠标菜单悬浮颜色
+$subMenuBg:#f4f4f5;
+$subMenuHover:#e8f3f5;
+
+$sideBarWidth: 210px;
+
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+}
