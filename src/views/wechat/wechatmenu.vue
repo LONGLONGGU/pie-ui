@@ -397,6 +397,7 @@ export default {
       this.deleteData()
     },
     saveMenu() {
+      console.log(this.menu)
       const wechatMneu = { wechatinfoId: this.wechatinfoId, menu: JSON.stringify(this.menu) }
       saveMenu(wechatMneu).then(response => {
         this.$message({ message: '操作成功', type: 'success' })

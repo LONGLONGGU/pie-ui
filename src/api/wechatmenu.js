@@ -6,7 +6,7 @@ import request from '@/utils/request'
 
 export const saveMenu = (data) => {
   return request({
-    url: '/buswechatmenu/save',
+    url: '/wechatmenu/add',
     method: 'post',
     data
   })
@@ -15,7 +15,7 @@ export const saveMenu = (data) => {
 // 查询公众号菜单信息
 export const findMenu = (data) => {
   return request({
-    url: '/buswechatmenu/findMenu/' + data,
+    url: '/wechatmenu/findMenu/' + data,
     method: 'get'
   })
 }
