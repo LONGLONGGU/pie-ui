@@ -108,7 +108,7 @@
 import KtTable from '@/components/KtTable'
 import KtButton from '@/components/KtButton'
 import { format } from '@/utils/datetime'
-import { save, findPage, batchDelete, findRoleMenus } from '@/api/role'
+import { save, findPage, batchDelete, findRoleMenus,saveRoleMenus} from '@/api/role'
 import { findMenuTree } from '@/api/menu'
 export default {
   components: {
@@ -295,7 +295,7 @@ export default {
         const roleMenu = { roleId: roleId, menuId: checkedNodes[i].id }
         roleMenus.push(roleMenu)
       }
-      this.$api.role.saveRoleMenus({ roleId: roleId, roleMenus: roleMenus }).then((res) => {
+      saveRoleMenus({ roleId: roleId, roleMenus: roleMenus }).then((res) => {
         if (res.code == 200) {
           this.$message({ message: '操作成功', type: 'success' })
         } else {
