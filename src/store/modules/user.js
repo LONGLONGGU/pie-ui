@@ -37,10 +37,12 @@ const actions = {
     const { account, password, captcha } = userInfo
     return new Promise((resolve, reject) => {
       login({ account: account.trim(), password: password, captcha: captcha }).then(response => {
-        const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
-        resolve()
+        const {code, data } = response
+        if(code === 200){
+          commit('SET_TOKEN', data.token)
+          setToken(data.token)
+        }
+        resolve(response)
       }).catch(error => {
         reject(error)
       })
