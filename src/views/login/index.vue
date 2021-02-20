@@ -97,7 +97,7 @@ export default {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm).then((response) => {
            const {code ,msg} = response
-           if(code !== '200'){
+           if(code !== 200){
                this.$message({ message: '登录失败, ' + msg, type: 'error' })
            }
             this.$router.push({ path: this.redirect || '/' })
