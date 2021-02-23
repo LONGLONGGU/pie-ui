@@ -116,7 +116,7 @@
         </el-form-item>
         <el-form-item v-if="!operation" label="角色" prop="userRoles">
           <el-select v-model="dataForm.userRoles" multiple placeholder="请选择" style="width: 100%;">
-            <el-option v-for="item in roles" :key="item.id" :label="item.remark" :value="item.id" />
+            <el-option v-for="item in roles" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
       </el-form>
