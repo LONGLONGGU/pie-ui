@@ -40,6 +40,25 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
+         <el-row :gutter="20">
+          <el-col :span="16">
+            <el-form-item prop="captcha">
+            <span class="svg-container">
+              <svg-icon icon-class="captcha" />
+            </span>
+              <el-input
+                v-model="loginForm.captcha"
+                placeholder="验证码"
+                name="captcha"
+                tabindex="2"
+                auto-complete="on"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <img @click="refreshCaptcha" :src="captchaSrc" style="margin-right:20px;width: 100%;height: 52px;"/>
+          </el-col>
+        </el-row>
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
 
       <div class="tips">
@@ -61,9 +80,11 @@ export default {
         captcha: '',
         src: ''
       },
+      captchaSrc: process.env.VUE_APP_BASE_API + '/captcha.jpg',
       loginRules: {
         account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
-        password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+        captcha: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
       },
       loading: false,
       passwordType: 'password',
@@ -111,6 +132,9 @@ export default {
           return false
         }
       })
+    },
+     refreshCaptcha () {
+      this.captchaSrc = process.env.VUE_APP_BASE_API + '/captcha.jpg?picId=' + Math.random()
     }
   }
 }
