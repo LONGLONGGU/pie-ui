@@ -20,7 +20,7 @@
         </el-menu-item>
       </el-menu>
     </div>
-    <div class="right-menu">
+    <!-- <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
@@ -37,23 +37,79 @@
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-    </div>
+    </div> -->
+    <span class="toolbar">
+      <el-menu class="el-menu-demo" 
+        background-color="rgb(20, 136, 154)"
+    
+        active-text-color="rgb(20, 136, 154)"
+        mode="horizontal">
+        <el-menu-item index="1" v-popover:popover-message>
+          <!-- 我的私信 -->
+          <el-badge :value="5" :max="99" class="badge">
+            <li style="color:#fff;display: block;" class="fa fa-envelope-o fa-lg"></li>
+          </el-badge>
+          <el-popover ref="popover-message" placement="bottom-end" trigger="click">
+            <message-panel></message-panel>
+          </el-popover>
+        </el-menu-item>
+        <el-menu-item index="2" v-popover:popover-notice>
+          <!-- 系统通知 -->
+          <el-badge :value="4" :max="99" class="badge">
+            <li style="color:#fff;display: block;" class="fa fa-bell-o fa-lg"></li>
+          </el-badge>
+          <el-popover ref="popover-notice" placement="bottom-end" trigger="click">
+            <notice-panel></notice-panel>
+          </el-popover>
+        </el-menu-item>
+        <el-menu-item index="3" v-popover:popover-personal>
+          <!-- 用户信息 -->
+          <span class="user-info"><img :src="user.avatar" />{{ user.name }}</span>
+          <el-popover ref="popover-personal" placement="bottom-end" trigger="click" :visible-arrow="false">
+            <personal-panel :user="user"></personal-panel>
+          </el-popover>
+        </el-menu-item>
+      </el-menu>
+    </span>
   </div>
 </template>
 <script>
+import { findByName , download} from "@/api/user"
 import { mapGetters } from 'vuex'
 import store from '@/store'
 import Item from '../Sidebar/Item'
+import MessagePanel from "@/components/MessagePanel";
+import NoticePanel from "@/components/NoticePanel";
+import PersonalPanel from "@/components/PersonalPanel";
 
 export default {
   components: {
-    Item
+    Item,
+    MessagePanel,
+    NoticePanel,
+    PersonalPanel
+    
+  },
+    data(){
+    return{
+      user: {
+        id: 0,
+        name: "路飞",
+        avatar: require("@/assets/user.png"),
+        avatarId: 0,
+        role: "超级管理员",
+        createTime: "注册时间：2018-12-20 ",
+        email: "",
+        mobile: ""
+      }
+    }
   },
   computed: {
     ...mapGetters([
       'sidebar',
       'avatar',
-      'routes'
+      'routes',
+      'name'
     ]),
     topMenu() {
       const menus = []
@@ -94,7 +150,27 @@ export default {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
-  }
+  },
+   mounted () {
+     findByName({ name: this.name }).then((res) => {
+      const { id, name, avatarId, createTime, email, mobile } = res.data;
+      this.user.id = id
+      this.user.name = name
+      this.user.avatarId = avatarId
+      this.user.createTime = createTime
+      this.user.email = email
+      this.user.mobile = mobile
+      if (this.user) {
+        if (avatarId != null) {
+          download(avatarId).then((response) => {
+            this.user.avatar = response;
+          })
+        } else {
+          this.user.avatar = require("@/assets/user.png")
+        }
+      }
+    })
+   }
 }
 </script>
 
@@ -166,4 +242,22 @@ export default {
       }
     }
   }
+  .toolbar {
+  float: right;
+  background-color: rgb(20, 136, 154);
+  height: 60px;
+}
+.user-info {
+  font-size: 20px;
+  color: #fff;
+  cursor: pointer;
+
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin: 10px 0px 10px 10px;
+    float: right;
+  }
+}
 </style>
