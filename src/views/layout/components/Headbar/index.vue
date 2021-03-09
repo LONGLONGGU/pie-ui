@@ -94,11 +94,11 @@ export default {
     return{
       user: {
         id: 0,
-        name: "路飞",
+        name: "",
         avatar: require("@/assets/user.png"),
         avatarId: 0,
-        role: "超级管理员",
-        createTime: "注册时间：2018-12-20 ",
+        role: "",
+        createTime:"",
         email: "",
         mobile: ""
       }
