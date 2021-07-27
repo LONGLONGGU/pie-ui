@@ -30,6 +30,8 @@
     <el-table
       v-loading="loading"
       :data="tableTreeDdata"
+      lazy
+      :load="loadTree"
       stripe
       size="mini"
       style="width: 100%;"
@@ -37,7 +39,7 @@
       element-loading-text="拼命加载中"
     >
       <el-table-column prop="id" header-align="center" align="center" width="80" label="ID" />
-      <table-tree-column prop="name" header-align="center" tree-key="id" width="150" label="名称" />
+      <el-table-column prop="name" header-align="center" align="center" width="150" label="名称" />
       <el-table-column prop="parentName" header-align="center" align="center" width="120" label="上级部门" />
       <el-table-column prop="orderNum" header-align="center" align="center" label="排序" />
       <el-table-column prop="createBy" header-align="center" align="center" label="创建人" />
@@ -102,15 +104,15 @@
 
 <script>
 import KtButton from '@/components/KtButton'
-import TableTreeColumn from '@/components/TableTreeColumn'
+// import TableTreeColumn from '@/components/TableTreeColumn'
 import PopupTreeInput from '@/components/PopupTreeInput'
 import { format } from '@/utils/datetime'
-import { findDeptTree, save, batchDelete } from '@/api/dept'
+import { findDeptTree, asyncFindTree, save, batchDelete } from '@/api/dept'
 export default {
   components: {
     PopupTreeInput,
-    KtButton,
-    TableTreeColumn
+    KtButton
+    // TableTreeColumn
     // FaIconTooltip
   },
   data() {
@@ -146,15 +148,29 @@ export default {
   },
   mounted() {
     this.findTreeData()
+    this.asyncFindTree(0)
   },
   methods: {
     // 获取数据
     findTreeData: function() {
       this.loading = true
       findDeptTree().then((res) => {
-        this.tableTreeDdata = res.data
+        // this.tableTreeDdata = res.data
         this.popupTreeData = this.getParentMenuTree(res.data)
         this.loading = false
+      })
+    },
+    loadTree(tree, treeNode, resolve) {
+      setTimeout(() => {
+        const parentId = tree.id
+        asyncFindTree(parentId).then((res) => {
+          resolve(res.data)
+        })
+      }, 300)
+    },
+    asyncFindTree(parentId) {
+      asyncFindTree(parentId).then((res) => {
+        this.tableTreeDdata = res.data
       })
     },
     // 获取上级机构树
@@ -239,8 +255,6 @@ export default {
     },
     // 时间格式化
     dateFormat: function(row, column, cellValue, index) {
-      console.log(cellValue)
-      console.log(index)
       return format(row[column.property])
     }
 

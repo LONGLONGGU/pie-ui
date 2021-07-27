@@ -20,10 +20,18 @@ export const batchDelete = (data) => {
     data
   })
 }
-// 查询机构树
+// 查询部门树
 export const findDeptTree = () => {
   return request({
     url: '/dept/findTree',
+    method: 'get'
+  })
+}
+
+// 异步加载部门树
+export const asyncFindTree = (parentId) => {
+  return request({
+    url: '/dept/findTree/' + parentId,
     method: 'get'
   })
 }
