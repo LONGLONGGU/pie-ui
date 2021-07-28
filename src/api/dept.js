@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 部门管理模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 保存
 export const save = (data) => {
   return request({
-    url: '/dept/save',
+    url: baseAdminUrl + '/dept/save',
     method: 'post',
     data
   })
@@ -15,7 +16,7 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/dept/delete',
+    url: baseAdminUrl + '/dept/delete',
     method: 'post',
     data
   })
@@ -23,7 +24,7 @@ export const batchDelete = (data) => {
 // 查询部门树
 export const findDeptTree = () => {
   return request({
-    url: '/dept/findTree',
+    url: baseAdminUrl + '/dept/findTree',
     method: 'get'
   })
 }
@@ -31,7 +32,7 @@ export const findDeptTree = () => {
 // 异步加载部门树
 export const asyncFindTree = (parentId) => {
   return request({
-    url: '/dept/findTree/' + parentId,
+    url: baseAdminUrl + '/dept/findTree/' + parentId,
     method: 'get'
   })
 }

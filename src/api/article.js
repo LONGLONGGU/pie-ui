@@ -1,9 +1,9 @@
 import request from '@/utils/request'
-
+const baseAdminUrl = '/pie-admin'
 // 分页查询
 export const findPage = data => {
   return request({
-    url: '/article/findPage',
+    url: baseAdminUrl + '/article/findPage',
     method: 'post',
     data
   })
@@ -11,7 +11,7 @@ export const findPage = data => {
 // 保存
 export const save = (data) => {
   return request({
-    url: '/article/add',
+    url: baseAdminUrl + '/article/add',
     method: 'post',
     data
   })
@@ -19,7 +19,7 @@ export const save = (data) => {
 // 查询文章信息
 export const findByArticle = (data) => {
   return request({
-    url: '/article/' + data,
+    url: baseAdminUrl + '/article/' + data,
     method: 'get',
     data
   })
@@ -27,7 +27,7 @@ export const findByArticle = (data) => {
 // 删除
 export const batchDelete = data => {
   return request({
-    url: '/article/remove/' + data,
+    url: baseAdminUrl + '/article/remove/' + data,
     method: 'get',
     data
   })
@@ -36,7 +36,7 @@ export const batchDelete = data => {
 // 附件上传
 export const uploadFiles = (files) => {
   return request({
-    url: '/article/uploadFiles',
+    url: baseAdminUrl + '/article/uploadFiles',
     method: 'POST',
     headers: {
       'Content-type': 'multipart/form-data'

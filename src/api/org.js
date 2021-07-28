@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 机构管理模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 保存
 export const save = (data) => {
   return request({
-    url: '/org/save',
+    url: baseAdminUrl + '/org/save',
     method: 'post',
     data
   })
@@ -16,7 +17,7 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/org/delete',
+    url: baseAdminUrl + '/org/delete',
     method: 'post',
     data
   })
@@ -24,7 +25,7 @@ export const batchDelete = (data) => {
 // 分页查询
 export const findPage = (data) => {
   return request({
-    url: '/org/findPage',
+    url: baseAdminUrl + '/org/findPage',
     method: 'post',
     data
   })
@@ -33,7 +34,7 @@ export const findPage = (data) => {
 // 查询机构菜单集合
 export const findOrgMenus = (params) => {
   return request({
-    url: '/org/findOrgMenus',
+    url: baseAdminUrl + '/org/findOrgMenus',
     method: 'get',
     params
   })
@@ -42,7 +43,7 @@ export const findOrgMenus = (params) => {
 // 保存架构菜单
 export const saveOrgMenus = (data) => {
   return request({
-    url: '/org/saveOrgMenus',
+    url: baseAdminUrl + '/org/saveOrgMenus',
     method: 'post',
     data
   })

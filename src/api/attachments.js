@@ -1,9 +1,10 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 // 分页查询
 export const findPage = data => {
   return request({
-    url: '/attachments/findPage',
+    url: baseAdminUrl + '/attachments/findPage',
     method: 'post',
     data
   })
@@ -12,7 +13,7 @@ export const findPage = data => {
 // 删除
 export const batchDelete = data => {
   return request({
-    url: '/attachments/delete',
+    url: baseAdminUrl + '/attachments/delete',
     method: 'post',
     data
   })
@@ -21,7 +22,7 @@ export const batchDelete = data => {
 // 附件上传
 export const uploadFiles = (files) => {
   return request({
-    url: '/upload',
+    url: baseAdminUrl + '/upload',
     method: 'POST',
     headers: {
       'Content-type': 'multipart/form-data'
@@ -32,7 +33,7 @@ export const uploadFiles = (files) => {
 
 export const download = (fileId) => {
   return request({
-    url: '/download?fileId=' + fileId,
+    url: baseAdminUrl + '/download?fileId=' + fileId,
     method: 'GET',
     responseType: 'arraybuffer'
   })

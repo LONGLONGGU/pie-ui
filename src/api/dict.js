@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 字典管理模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 保存
 export const save = (data) => {
   return request({
-    url: '/dict/save',
+    url: baseAdminUrl + '/dict/save',
     method: 'post',
     data
   })
@@ -15,7 +16,7 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/dict/delete',
+    url: baseAdminUrl + '/dict/delete',
     method: 'post',
     data
   })
@@ -23,7 +24,7 @@ export const batchDelete = (data) => {
 // 分页查询
 export const findPage = (data) => {
   return request({
-    url: '/dict/findPage',
+    url: baseAdminUrl + '/dict/findPage',
     method: 'post',
     data
   })
@@ -32,14 +33,14 @@ export const findPage = (data) => {
 // 查询字典所有数据类型
 export const findTypes = () => {
   return request({
-    url: '/dict/findTypes',
+    url: baseAdminUrl + '/dict/findTypes',
     method: 'get'
   })
 }
 // 查询该类型所有数据
 export const findByType = (data) => {
   return request({
-    url: '/dict/findByType?type=' + data,
+    url: baseAdminUrl + '/dict/findByType?type=' + data,
     method: 'get'
   })
 }

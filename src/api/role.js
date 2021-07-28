@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 角色管理模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 保存
 export const save = (data) => {
   return request({
-    url: '/role/save',
+    url: baseAdminUrl + '/role/save',
     method: 'post',
     data
   })
@@ -15,7 +16,7 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/role/delete',
+    url: baseAdminUrl + '/role/delete',
     method: 'post',
     data
   })
@@ -23,7 +24,7 @@ export const batchDelete = (data) => {
 // 分页查询
 export const findPage = (data) => {
   return request({
-    url: '/role/findPage',
+    url: baseAdminUrl + '/role/findPage',
     method: 'post',
     data
   })
@@ -31,14 +32,14 @@ export const findPage = (data) => {
 // 查询全部
 export const findAll = () => {
   return request({
-    url: '/role/findAll',
+    url: baseAdminUrl + '/role/findAll',
     method: 'get'
   })
 }
 // 查询角色菜单集合
 export const findRoleMenus = (params) => {
   return request({
-    url: '/role/findRoleMenus',
+    url: baseAdminUrl + '/role/findRoleMenus',
     method: 'get',
     params
   })
@@ -46,7 +47,7 @@ export const findRoleMenus = (params) => {
 // 保存角色菜单集合
 export const saveRoleMenus = (data) => {
   return request({
-    url: '/role/saveRoleMenus',
+    url: baseAdminUrl + '/role/saveRoleMenus',
     method: 'post',
     data
   })

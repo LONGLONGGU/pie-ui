@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 操作日志模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/log/delete',
+    url: baseAdminUrl + '/log/delete',
     method: 'post',
     data
   })
@@ -15,7 +16,7 @@ export const batchDelete = (data) => {
 // 分页查询
 export const findPage = (data) => {
   return request({
-    url: '/log/findPage',
+    url: baseAdminUrl + '/log/findPage',
     method: 'post',
     data
   })

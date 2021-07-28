@@ -1,8 +1,9 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 export const findRecords = data => {
   return request({
-    url: '/backup/findRecords',
+    url: baseAdminUrl + '/backup/findRecords',
     method: 'get',
     data
   })
@@ -10,7 +11,7 @@ export const findRecords = data => {
 
 export const backup = data => {
   return request({
-    url: '/backup/backup',
+    url: baseAdminUrl + '/backup/backup',
     method: 'get',
     data
   })
@@ -18,14 +19,14 @@ export const backup = data => {
 
 export const restore = data => {
   return request({
-    url: '/backup/restore?name=' + data,
+    url: baseAdminUrl + '/backup/restore?name=' + data,
     method: 'get'
   })
 }
 
 export const remove = data => {
   return request({
-    url: '/backup/delete?name=' + data,
+    url: baseAdminUrl + '/backup/delete?name=' + data,
     method: 'get'
   })
 }

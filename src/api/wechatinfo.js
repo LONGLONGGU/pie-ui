@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 机构管理模块
@@ -7,7 +8,7 @@ import request from '@/utils/request'
 // 保存
 export const save = (data) => {
   return request({
-    url: '/wechatinfo/add',
+    url: baseAdminUrl + '/wechatinfo/add',
     method: 'post',
     data
   })
@@ -16,7 +17,7 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/wechatinfo/delete',
+    url: baseAdminUrl + '/wechatinfo/delete',
     method: 'post',
     data
   })
@@ -24,7 +25,7 @@ export const batchDelete = (data) => {
 // 分页查询
 export const findPage = (data) => {
   return request({
-    url: '/wechatinfo/findPage',
+    url: baseAdminUrl + '/wechatinfo/findPage',
     method: 'post',
     data
   })

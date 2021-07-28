@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 /*
  * 微信菜单管理
@@ -6,7 +7,7 @@ import request from '@/utils/request'
 
 export const saveMenu = (data) => {
   return request({
-    url: '/wechatmenu/add',
+    url: baseAdminUrl + '/wechatmenu/add',
     method: 'post',
     data
   })
@@ -15,7 +16,7 @@ export const saveMenu = (data) => {
 // 查询公众号菜单信息
 export const findMenu = (data) => {
   return request({
-    url: '/wechatmenu/findMenu/' + data,
+    url: baseAdminUrl + '/wechatmenu/findMenu/' + data,
     method: 'get'
   })
 }

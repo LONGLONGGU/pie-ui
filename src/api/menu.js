@@ -1,9 +1,10 @@
 import request from '@/utils/request'
+const baseAdminUrl = '/pie-admin'
 
 // 保存
 export const save = (data) => {
   return request({
-    url: '/menu/save',
+    url: baseAdminUrl + '/menu/save',
     method: 'post',
     data
   })
@@ -11,14 +12,14 @@ export const save = (data) => {
 // 删除
 export const batchDelete = (data) => {
   return request({
-    url: '/menu/delete',
+    url: baseAdminUrl + '/menu/delete',
     method: 'post',
     data
   })
 }
 export function findMneu(params) {
   return request({
-    url: '/menu/findNavTree',
+    url: baseAdminUrl + '/menu/findNavTree',
     method: 'get',
     params: params
   })
@@ -26,7 +27,7 @@ export function findMneu(params) {
 // 查找导航菜单树
 export const findNavTree = (params) => {
   return request({
-    url: '/menu/findNavTree',
+    url: baseAdminUrl + '/menu/findNavTree',
     method: 'get',
     params
   })
@@ -35,7 +36,7 @@ export const findNavTree = (params) => {
 // 查找导航菜单树
 export const findMenuTree = () => {
   return request({
-    url: '/menu/findMenuTree',
+    url: baseAdminUrl + '/menu/findMenuTree',
     method: 'get'
   })
 }

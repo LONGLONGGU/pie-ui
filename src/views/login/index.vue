@@ -40,25 +40,25 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
-         <el-row :gutter="20">
-          <el-col :span="16">
-            <el-form-item prop="captcha">
+      <el-row :gutter="20">
+        <el-col :span="16">
+          <el-form-item prop="captcha">
             <span class="svg-container">
               <svg-icon icon-class="captcha" />
             </span>
-              <el-input
-                v-model="loginForm.captcha"
-                placeholder="验证码"
-                name="captcha"
-                tabindex="2"
-                auto-complete="on"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <img @click="refreshCaptcha" :src="captchaSrc" style="margin-right:20px;width: 100%;height: 52px;"/>
-          </el-col>
-        </el-row>
+            <el-input
+              v-model="loginForm.captcha"
+              placeholder="验证码"
+              name="captcha"
+              tabindex="2"
+              auto-complete="on"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <img :src="captchaSrc" style="margin-right:20px;width: 100%;height: 52px;" @click="refreshCaptcha">
+        </el-col>
+      </el-row>
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
 
       <div class="tips">
@@ -80,7 +80,7 @@ export default {
         captcha: '',
         src: ''
       },
-      captchaSrc: process.env.VUE_APP_BASE_API + '/captcha.jpg',
+      captchaSrc: process.env.VUE_APP_BASE_API + '/pie-admin/captcha.jpg',
       loginRules: {
         account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
@@ -117,14 +117,14 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm).then((response) => {
-           const {code ,msg} = response
-           if(code !== 200){
-               this.$message({ message: '登录失败, ' + msg, type: 'error' })
-           }
+            const { code, msg } = response
+            if (code !== 200) {
+              this.$message({ message: '登录失败, ' + msg, type: 'error' })
+            }
             this.$router.push({ path: this.redirect || '/' })
             this.loading = false
           }).catch((error) => {
-             console.log(error)
+            console.log(error)
             this.loading = false
           })
         } else {
@@ -133,8 +133,8 @@ export default {
         }
       })
     },
-     refreshCaptcha () {
-      this.captchaSrc = process.env.VUE_APP_BASE_API + '/captcha.jpg?picId=' + Math.random()
+    refreshCaptcha() {
+      this.captchaSrc = process.env.VUE_APP_BASE_API + '/pie-admin/captcha.jpg?picId=' + Math.random()
     }
   }
 }
