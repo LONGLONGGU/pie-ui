@@ -1,19 +1,10 @@
 <template>
   <div class="page-container">
     <!--工具栏-->
-    <div class="toolbar" style="float:left;padding-top:10px;padding-left:15px;">
-      <el-form :inline="true" :model="filters" :size="size">
+    <div class="toolbar" style="float:left;padding-top:10px;padding-left:15px;width:100%;">
+      <el-form :inline="true" :size="size">
         <el-form-item>
-          <el-input v-model="filters.name" placeholder="名称" />
-        </el-form-item>
-        <el-form-item>
-          <kt-button
-            icon="fa fa-search"
-            label="查询"
-            perms="sys:dept:view"
-            type="primary"
-            @click="findTreeData(null)"
-          />
+          <el-input v-model="filterName" placeholder="名称" />
         </el-form-item>
         <el-form-item>
           <kt-button
@@ -21,47 +12,50 @@
             label="新增"
             perms="sys:dept:add"
             type="primary"
-            @click="handleAdd"
+            @click="addParent"
           />
         </el-form-item>
       </el-form>
     </div>
-    <!--表格树内容栏-->
-    <el-table
-      v-loading="loading"
-      :data="tableTreeDdata"
-      lazy
-      :load="loadTree"
-      stripe
-      size="mini"
-      style="width: 100%;"
-      row-key="id"
-      element-loading-text="拼命加载中"
-    >
-      <el-table-column prop="id" header-align="center" align="center" width="80" label="ID" />
-      <el-table-column prop="name" header-align="center" align="center" width="150" label="名称" />
-      <el-table-column prop="parentName" header-align="center" align="center" width="120" label="上级部门" />
-      <el-table-column prop="orderNum" header-align="center" align="center" label="排序" />
-      <el-table-column prop="createBy" header-align="center" align="center" label="创建人" />
-      <el-table-column prop="createTime" header-align="center" align="center" label="创建时间" :formatter="dateFormat" />
-      <el-table-column fixed="right" header-align="center" align="center" width="185" label="操作">
-        <template slot-scope="scope">
-          <kt-button
-            icon="fa fa-edit"
-            label="编辑"
-            perms="sys:dept:edit"
-            @click="handleEdit(scope.row)"
-          />
-          <kt-button
-            icon="fa fa-trash"
-            label="删除"
-            perms="sys:dept:delete"
-            type="danger"
-            @click="handleDelete(scope.row)"
-          />
-        </template>
-      </el-table-column>
-    </el-table>
+    <div style="float:left;padding-top:10px;padding-left:15px;width:30%;">
+      <el-tree
+        ref="deptTree"
+        :props="defaultProps"
+        :load="loadNode"
+        node-key="id"
+        lazy
+        :expand-on-click-node="false"
+        :filter-node-method="filterNode"
+        @node-click="nodeClick"
+      >
+        <span slot-scope="{ node, data }" class="custom-tree-node">
+          <span>{{ node.label }}</span>
+          <span>
+            <kt-button
+              icon="el-icon-plus"
+              perms="sys:dept:add"
+              label=""
+              type="text"
+              @click="handleAdd(node,data)"
+            />
+            <kt-button
+              icon="el-icon-edit-outline"
+              perms="sys:dept:edit"
+              label=""
+              type="text"
+              @click="handleEdit(node,data)"
+            />
+            <kt-button
+              icon="el-icon-delete"
+              perms="sys:dept:delete"
+              label=""
+              type="text"
+              @click="handleDelete(node,data)"
+            />
+          </span>
+        </span>
+      </el-tree>
+    </div>
     <!-- 新增修改界面 -->
     <el-dialog
       :title="!dataForm.id ? '新增' : '修改'"
@@ -81,17 +75,27 @@
         <el-form-item label="名称" prop="name">
           <el-input v-model="dataForm.name" placeholder="名称" />
         </el-form-item>
-        <el-form-item label="上级机构" prop="parentName">
-          <popup-tree-input
-            :data="popupTreeData"
-            :props="popupTreeProps"
-            :prop="dataForm.parentName==null?'顶级菜单':dataForm.parentName"
-            :node-key="''+dataForm.parentId"
-            :current-change-handle="handleTreeSelectChange"
+        <el-form-item label="上级机构" prop="name">
+          <el-input v-model="dataForm.parentName" placeholder="上级机构" disabled @click.native="getDeptSelectTree" />
+          <el-tree
+            v-show="isShowDeptSelect"
+            ref="deptSelectTree"
+            :props="defaultProps"
+            :load="loadNode"
+            node-key="id"
+            lazy
+            :expand-on-click-node="false"
+            highlight-current
+            @node-click="(data,node,item) => deptSelectNodeClick(data,node,item)"
           />
         </el-form-item>
         <el-form-item v-if="dataForm.type !== 2" label="排序编号" prop="orderNum">
           <el-input-number v-model="dataForm.orderNum" controls-position="right" :min="0" label="排序编号" />
+        </el-form-item>
+        <el-form-item label="角色" prop="deptRoles">
+          <el-select v-model="dataForm.deptRoles" multiple placeholder="请选择" style="width: 100%;">
+            <el-option v-for="item in roles" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -104,111 +108,98 @@
 
 <script>
 import KtButton from '@/components/KtButton'
-// import TableTreeColumn from '@/components/TableTreeColumn'
-import PopupTreeInput from '@/components/PopupTreeInput'
 import { format } from '@/utils/datetime'
-import { findDeptTree, asyncFindTree, save, batchDelete } from '@/api/dept'
+import { asyncFindTree, save, batchDelete, getDeptRoles } from '@/api/admin-server/dept'
+import { findAll } from '@/api/admin-server/role'
 export default {
   components: {
-    PopupTreeInput,
     KtButton
-    // TableTreeColumn
-    // FaIconTooltip
   },
   data() {
     return {
       size: 'small',
-      loading: false,
-      filters: {
-        name: ''
-      },
-      tableTreeDdata: [],
+      filterName: '',
       dialogVisible: false,
+      isShowDeptSelect: false,
       dataForm: {
         id: '',
         name: '',
         parentId: 0,
         parentName: '',
-        orderNum: 0
+        orderNum: 0,
+        deptRoles: []
       },
+      roles: [],
       dataRule: {
         name: [
-          { required: true, message: '机构名称不能为空', trigger: 'blur' }
+          { required: true, message: '部门名称不能为空', trigger: 'blur' }
         ],
         parentName: [
           { required: true, message: '上级机构不能为空', trigger: 'change' }
         ]
       },
-      popupTreeData: [],
-      popupTreeProps: {
+      defaultProps: { // tree 控件的数据结构，需要设置 isLeaf
+        children: 'children',
         label: 'name',
-        children: 'children'
-      }
+        isLeaf: 'hasChildren'
+      },
+      curPath: null,
+      curNode: null,
+      refreshNode: null
     }
   },
+  watch: {
+    filterName(val) {
+      this.$refs.deptTree.filter(val)
+    }
+  },
+  created() {
+    this.findRoles()
+  },
   mounted() {
-    this.findTreeData()
-    this.asyncFindTree(0)
   },
   methods: {
-    // 获取数据
-    findTreeData: function() {
-      this.loading = true
-      findDeptTree().then((res) => {
-        // this.tableTreeDdata = res.data
-        this.popupTreeData = this.getParentMenuTree(res.data)
-        this.loading = false
-      })
-    },
-    loadTree(tree, treeNode, resolve) {
-      setTimeout(() => {
-        const parentId = tree.id
-        asyncFindTree(parentId).then((res) => {
-          resolve(res.data)
-        })
-      }, 300)
-    },
-    asyncFindTree(parentId) {
-      asyncFindTree(parentId).then((res) => {
-        this.tableTreeDdata = res.data
-      })
-    },
-    // 获取上级机构树
-    getParentMenuTree: function(tableTreeDdata) {
-      const parent = {
-        parentId: 0,
-        name: '顶级菜单',
-        children: tableTreeDdata
-      }
-      return [parent]
-    },
-    // 显示新增界面
-    handleAdd: function() {
+    addParent: function() {
       this.dialogVisible = true
       this.dataForm = {
         id: '',
         name: '',
-        parentId: 0,
-        parentName: '',
+        parentId: null,
+        parentName: '顶级部门',
         orderNum: 0
       }
+      const deptTree = this.$refs.deptTree
+      this.curNode = deptTree.root
     },
-    // 显示编辑界面
-    handleEdit: function(row) {
+    handleAdd: function(node, data) {
       this.dialogVisible = true
-      Object.assign(this.dataForm, row)
+      this.curNode = node
+      this.dataForm = {
+        id: '',
+        name: '',
+        parentId: this.curNode.data.id,
+        parentName: this.curNode.data.name,
+        orderNum: 0
+      }
+      this.isShowDeptSelect = false
     },
-    // 删除
-    handleDelete(row) {
+    handleEdit: function(node, data) {
+      this.curNode = node.parent
+      this.dialogVisible = true
+      this.isShowDeptSelect = false
+      Object.assign(this.dataForm, data)
+      this.getDeptRoles(data)
+    },
+    handleDelete(node, data) {
+      this.curNode = node.parent
       this.$confirm('确认删除选中记录吗？', '提示', {
         type: 'warning'
       }).then(() => {
-        const params = this.getDeleteIds([], row)
+        const params = this.getDeleteIds([], data)
         batchDelete(params).then(res => {
-          console.log(res)
-          this.findTreeData()
-          if (res.code == 200) {
+          if (res.code === 200) {
             this.$message({ message: '删除成功', type: 'success' })
+            this.partialRefreshpartialRefresh(this.curNode)
           } else {
             this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
           }
@@ -225,19 +216,22 @@ export default {
       }
       return ids
     },
-    // 机构树选中
-    handleTreeSelectChange(data, node) {
-      console.log(node)
-      this.dataForm.parentId = data.id
-      this.dataForm.parentName = data.name
-    },
-    // 表单提交
     submitForm() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.editLoading = true
             const params = Object.assign({}, this.dataForm)
+            const deptRoles = []
+            for (let i = 0, len = params.deptRoles.length; i < len; i++) {
+              const deptRole = {
+                deptId: params.id,
+                roleId: params.deptRoles[i]
+              }
+              deptRoles.push(deptRole)
+            }
+            params.deptRoles = deptRoles
+
             save(params).then((res) => {
               this.editLoading = false
               if (res.code === 200) {
@@ -247,20 +241,91 @@ export default {
               } else {
                 this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
               }
-              this.findTreeData()
+              this.partialRefreshpartialRefresh(this.curNode, this.refreshNode)
             })
           })
         }
       })
     },
-    // 时间格式化
     dateFormat: function(row, column, cellValue, index) {
       return format(row[column.property])
-    }
+    },
+    async loadNode(node, resolve) {
+      if (node.level === 0) {
+        return resolve(await this.getTagList())
+      } else {
+        return resolve(await this.getTagApiList(node.data.id))
+      }
+    },
+    async getTagList() {
+      const res = await asyncFindTree(0)
+      const tags = res.data
+      return tags
+    },
+    async getTagApiList(tag) {
+      const res = await asyncFindTree(tag)
+      const results = res.data
+      return results
+    },
+    nodeClick(data, node) {
+      // this.curPath = data.path
+      // this.curNode = node
+    },
+    partialRefreshpartialRefresh(node, refreshNode) {
+      if (refreshNode) {
+        refreshNode.loaded = false
+        refreshNode.expand()
+        node.loaded = false
+        node.expand()
+      } else {
+        node.loaded = false
+        node.expand()
+      }
+    },
+    filterNode(value, data) {
+      if (!value) return true
+      return data.name.indexOf(value) !== -1
+    },
+    getDeptSelectTree: function() {
+      this.isShowDeptSelect = true
+    },
+    // 树形菜单选择
+    deptSelectNodeClick(data, node, item) {
+      this.dataForm.parentId = data.id
+      this.dataForm.parentName = data.name
+      this.isShowDeptSelect = false
 
+      // 通过修改的时候选中的节点处理需要刷新的节点
+      this.refreshNode = this.$refs.deptTree.getNode(data)
+    },
+    // 加载所有角色信息
+    findRoles: function() {
+      findAll().then((res) => {
+        this.roles = res.data
+      })
+    },
+    // 加载部门角色信息
+    getDeptRoles: function(data) {
+      getDeptRoles(data.id).then((res) => {
+        const roles = res.data
+        const deptRoles = []
+        for (let i = 0, len = roles.length; i < len; i++) {
+          deptRoles.push(roles[i].roleId)
+        }
+        this.dataForm.deptRoles = deptRoles
+      })
+    }
   }
 }
 </script>
 
 <style scoped>
+.custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    padding-right: 8px;
+  }
 </style>

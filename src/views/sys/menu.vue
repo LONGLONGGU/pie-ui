@@ -36,8 +36,7 @@
       row-key="id"
       element-loading-text="拼命加载中..."
     >
-      <el-table-column prop="id" header-align="center" align="center" width="120" label="ID" />
-      <table-tree-column prop="name" header-align="center" tree-key="id" width="150" label="名称" />
+      <el-table-column prop="name" header-align="center" align="center" width="150" label="名称" />
       <el-table-column header-align="center" align="center" label="图标">
         <template slot-scope="scope">
           <i :class="scope.row.icon || ''" />
@@ -128,7 +127,20 @@
         <el-form-item v-if="dataForm.type !== 0" label="授权标识" prop="perms">
           <el-input v-model="dataForm.perms" placeholder="如: sys:user:add, sys:user:edit, sys:user:delete" />
         </el-form-item>
-        <el-form-item v-if="dataForm.type === 1 | dataForm.type === 0" label="菜单路由" prop="url">
+        <el-form-item v-if="dataForm.type === 2" label="所属系统模块">
+          <el-select v-model="dataForm.moduleInfo" placeholder="请选择所属系统模块">
+            <el-option
+              v-for="item in dictionaryList"
+              :key="item.value"
+              :label="item.name"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="dataForm.type === 2" label="功能请求路径" prop="pathInfo">
+          <el-input v-model="dataForm.pathInfo" placeholder="如: user/save表示新增或修改用户" />
+        </el-form-item>
+        <el-form-item v-if="dataForm.type === 1 || dataForm.type === 0" label="菜单路由" prop="url">
           <el-row>
             <el-col :span="22">
               <el-input v-model="dataForm.url" placeholder="菜单路由" />
@@ -168,7 +180,7 @@
             </el-col>
           </el-row>
         </el-form-item>
-        <el-form-item v-if="dataForm.type !== 2" label="排序编号" prop="orderNum">
+        <el-form-item label="排序编号" prop="orderNum">
           <el-input-number v-model="dataForm.orderNum" controls-position="right" :min="0" label="排序编号" />
         </el-form-item>
         <el-form-item v-if="dataForm.type !== 2" label="菜单图标" prop="icon">
@@ -215,19 +227,19 @@
 
 <script>
 import KtButton from '@/components/KtButton'
-import TableTreeColumn from '@/components/TableTreeColumn'
 import PopupTreeInput from '@/components/PopupTreeInput'
 import FaIconTooltip from '@/components/FaIconTooltip'
-import { findMenuTree, batchDelete, save } from '@/api/menu'
+import { findMenuTree, batchDelete, save } from '@/api/admin-server/menu'
+import { getDictionaryByCode } from '@/api/admin-server/dictionary'
 export default {
   components: {
     PopupTreeInput,
     KtButton,
-    TableTreeColumn,
     FaIconTooltip
   },
   data() {
     return {
+      dictionaryList: [],
       size: 'small',
       loading: false,
       filters: {
@@ -247,6 +259,8 @@ export default {
         url: '',
         nestedUrl: '',
         perms: '',
+        moduleInfo: '',
+        pathInfo: '',
         orderNum: 0,
         icon: '',
         iconList: []
@@ -263,6 +277,7 @@ export default {
   },
   mounted() {
     this.findTreeData()
+    this.getDictionaryByCode()
   },
   methods: {
     // 获取数据
@@ -292,11 +307,13 @@ export default {
         hidden: false,
         typeList: ['目录', '菜单', '按钮'],
         name: '',
-        parentId: 0,
+        parentId: null,
         parentName: '',
         url: '',
         nestedUrl: '',
         perms: '',
+        moduleInfo: '',
+        pathInfo: '',
         orderNum: 0,
         icon: '',
         iconList: []
@@ -317,7 +334,6 @@ export default {
       this.$confirm('确认删除选中记录吗？', '提示', {
         type: 'warning'
       }).then(() => {
-        // let params = this.getDeleteIds([], row);
         batchDelete(row).then(res => {
           console.log(res)
           this.findTreeData()
@@ -367,6 +383,12 @@ export default {
             })
           })
         }
+      })
+    },
+    // 数据字典查询
+    getDictionaryByCode: function() {
+      getDictionaryByCode({ 'code': 'Microservices' }).then(res => {
+        this.dictionaryList = res.data
       })
     }
   }

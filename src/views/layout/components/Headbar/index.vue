@@ -1,18 +1,10 @@
 <template>
   <div class="headbar">
     <div class="logo">
-      <div>PIE</div>
+      <div>pie</div>
     </div>
     <div class="to-menu">
-      <el-menu
-        :default-active="defaultActive"
-        class="el-menu-demo"
-        mode="horizontal"
-        background-color="rgb(20, 136, 154)"
-        text-color="#fff"
-        active-text-color="#fff"
-        router
-      >
+      <el-menu :default-active="defaultActive" class="el-menu-demo" mode="horizontal" background-color="rgb(20, 136, 154)" text-color="#fff" active-text-color="#fff" router>
         <el-menu-item v-for="item in topMenu" :key="item.path" :index="item.path">
           <!-- <i style="vertical-align: middle;margin-right: 5px;width: 24px;text-align: center; font-size: 18px;" :class="item.icon" /> -->
           <!-- {{ item.name }} -->
@@ -39,34 +31,30 @@
       </el-dropdown>
     </div> -->
     <span class="toolbar">
-      <el-menu class="el-menu-demo" 
-        background-color="rgb(20, 136, 154)"
-    
-        active-text-color="rgb(20, 136, 154)"
-        mode="horizontal">
-        <el-menu-item index="1" v-popover:popover-message>
+      <el-menu class="el-menu-demo" background-color="rgb(20, 136, 154)" active-text-color="rgb(20, 136, 154)" mode="horizontal">
+        <el-menu-item v-popover:popover-message index="1">
           <!-- 我的私信 -->
-          <el-badge :value="5" :max="99" class="badge">
-            <li style="color:#fff;display: block;" class="fa fa-envelope-o fa-lg"></li>
+          <el-badge :value="0" :max="99" class="badge">
+            <li style="color:#fff;display: block;" class="fa fa-envelope-o fa-lg" />
           </el-badge>
           <el-popover ref="popover-message" placement="bottom-end" trigger="click">
-            <message-panel></message-panel>
+            <message-panel />
           </el-popover>
         </el-menu-item>
-        <el-menu-item index="2" v-popover:popover-notice>
+        <el-menu-item v-popover:popover-notice index="2">
           <!-- 系统通知 -->
-          <el-badge :value="4" :max="99" class="badge">
-            <li style="color:#fff;display: block;" class="fa fa-bell-o fa-lg"></li>
+          <el-badge :value="0" :max="99" class="badge">
+            <li style="color:#fff;display: block;" class="fa fa-bell-o fa-lg" />
           </el-badge>
           <el-popover ref="popover-notice" placement="bottom-end" trigger="click">
-            <notice-panel></notice-panel>
+            <notice-panel />
           </el-popover>
         </el-menu-item>
-        <el-menu-item index="3" v-popover:popover-personal>
+        <el-menu-item v-popover:popover-personal index="3">
           <!-- 用户信息 -->
-          <span class="user-info"><img :src="user.avatar" />{{ user.name }}</span>
+          <span class="user-info"><img :src="user.avatar">{{ user.nickName }}</span>
           <el-popover ref="popover-personal" placement="bottom-end" trigger="click" :visible-arrow="false">
-            <personal-panel :user="user"></personal-panel>
+            <personal-panel :user="user" />
           </el-popover>
         </el-menu-item>
       </el-menu>
@@ -74,13 +62,13 @@
   </div>
 </template>
 <script>
-import { findByName , download} from "@/api/user"
+import { findByName, download } from '@/api/admin-server/user'
 import { mapGetters } from 'vuex'
 import store from '@/store'
 import Item from '../Sidebar/Item'
-import MessagePanel from "@/components/MessagePanel";
-import NoticePanel from "@/components/NoticePanel";
-import PersonalPanel from "@/components/PersonalPanel";
+import MessagePanel from '@/components/MessagePanel'
+import NoticePanel from '@/components/NoticePanel'
+import PersonalPanel from '@/components/PersonalPanel'
 
 export default {
   components: {
@@ -88,19 +76,19 @@ export default {
     MessagePanel,
     NoticePanel,
     PersonalPanel
-    
+
   },
-    data(){
-    return{
+  data() {
+    return {
       user: {
         id: 0,
-        name: "",
-        avatar: require("@/assets/user.png"),
+        name: '',
+        avatar: require('@/assets/user.png'),
         avatarId: 0,
-        role: "",
-        createTime:"",
-        email: "",
-        mobile: ""
+        role: '',
+        createTime: '',
+        email: '',
+        mobile: ''
       }
     }
   },
@@ -121,7 +109,7 @@ export default {
       return menus
     },
     // 选中激活菜单
-    defaultActive: function() {
+    defaultActive: function () {
       let pathname = this.$route.path
       console.log(pathname)
       if (pathname.lastIndexOf('/') === 0) {
@@ -139,8 +127,29 @@ export default {
       return pathname
     }
   },
+  mounted() {
+    findByName({ name: this.name }).then((res) => {
+      const { id, name, nickName, avatarId, createTime, email, mobile } = res.data
+      this.user.id = id
+      this.user.name = name
+      this.user.nickName = nickName
+      this.user.avatarId = avatarId
+      this.user.createTime = createTime
+      this.user.email = email
+      this.user.mobile = mobile
+      if (this.user) {
+        if (avatarId != null) {
+          download(avatarId).then((response) => {
+            this.user.avatar = response
+          })
+        } else {
+          this.user.avatar = require('@/assets/user.png')
+        }
+      }
+    })
+  },
   methods: {
-    handleSelect: function(to) {
+    handleSelect: function (to) {
       store.dispatch('permission/generateSideBarMenus', to)
     },
     toggleSideBar() {
@@ -150,99 +159,79 @@ export default {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
-  },
-   mounted () {
-     findByName({ name: this.name }).then((res) => {
-      const { id, name, avatarId, createTime, email, mobile } = res.data;
-      this.user.id = id
-      this.user.name = name
-      this.user.avatarId = avatarId
-      this.user.createTime = createTime
-      this.user.email = email
-      this.user.mobile = mobile
-      if (this.user) {
-        if (avatarId != null) {
-          download(avatarId).then((response) => {
-            this.user.avatar = response;
-          })
-        } else {
-          this.user.avatar = require("@/assets/user.png")
-        }
-      }
-    })
-   }
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-.headbar{
-    background-color: rgb(20, 136, 154);
-    height: 60px;
-  .logo{
+.headbar {
+  background-color: rgb(20, 136, 154);
   height: 60px;
-  line-height: 60px;
-  float: left;
-  width: 210px;
+  .logo {
+    height: 60px;
+    line-height: 60px;
+    float: left;
+    width: 210px;
     div {
-    font-size: 25px;
-    color: white;
-    text-align: left;
-    padding-left: 20px;
+      font-size: 25px;
+      color: white;
+      text-align: left;
+      padding-left: 20px;
+    }
   }
-  }
-    .to-menu{
+  .to-menu {
     float: left;
   }
 }
- .right-menu {
-    float: right;
+.right-menu {
+  float: right;
+  height: 100%;
+  line-height: 50px;
+
+  &:focus {
+    outline: none;
+  }
+  .right-menu-item {
+    display: inline-block;
+    padding: 0 8px;
     height: 100%;
-    line-height: 50px;
+    font-size: 18px;
+    color: #5a5e66;
+    vertical-align: text-bottom;
+    &.hover-effect {
+      cursor: pointer;
+      transition: background 0.3s;
 
-    &:focus {
-      outline: none;
-    }
-    .right-menu-item {
-      display: inline-block;
-      padding: 0 8px;
-      height: 100%;
-      font-size: 18px;
-      color: #5a5e66;
-      vertical-align: text-bottom;
-      &.hover-effect {
-        cursor: pointer;
-        transition: background .3s;
-
-        &:hover {
-          background: rgba(0, 0, 0, .025)
-        }
-      }
-    }
-    .avatar-container {
-      margin-right: 30px;
-
-      .avatar-wrapper {
-        margin-top: 5px;
-        position: relative;
-
-        .user-avatar {
-          cursor: pointer;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-        }
-
-        .el-icon-caret-bottom {
-          cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
-          font-size: 12px;
-        }
+      &:hover {
+        background: rgba(0, 0, 0, 0.025);
       }
     }
   }
-  .toolbar {
+  .avatar-container {
+    margin-right: 30px;
+
+    .avatar-wrapper {
+      margin-top: 5px;
+      position: relative;
+
+      .user-avatar {
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+      }
+
+      .el-icon-caret-bottom {
+        cursor: pointer;
+        position: absolute;
+        right: -20px;
+        top: 25px;
+        font-size: 12px;
+      }
+    }
+  }
+}
+.toolbar {
   float: right;
   background-color: rgb(20, 136, 154);
   height: 60px;

@@ -7,13 +7,19 @@
       :disabled="disabled"
       @onClick="onClick"
     />
+    <!--      v-show="!disabled"-->
     <el-upload
+      v-if="!disabled"
+      v-show="isshow"
       class="upload-demo"
       drag
       :http-request="uploadFiles"
       action
       multiple
       :file-list="fileList"
+      :accept="accept"
+      :before-remove="beforeRemove"
+      :before-upload="beforeUpload"
     >
       <i class="el-icon-upload" />
       <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
@@ -29,7 +35,7 @@ import 'tinymce/themes/silver'
 import 'tinymce/icons/default'
 import plugins from './plugins'
 import toolbar from './toolbar'
-import { uploadFiles, batchDelete } from '@/api/article'
+import { uploadFiles, batchDeleteFiles } from '@/api/file-upload-server/file-upload'
 
 export default {
   name: 'Tinymce',
@@ -46,6 +52,10 @@ export default {
       type: Boolean,
       default: false
     },
+    isshow:{
+      type:Boolean,
+      default:false
+    },
     height: {
       type: [Number, String],
       required: false,
@@ -55,6 +65,11 @@ export default {
       type: [Number, String],
       required: false,
       default: 'auto'
+    },
+    // 调用富文本编辑器的服务，指定之后富文本编辑器的文件上传地址上传到对应的服务文件夹之下
+    serverCode: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -80,7 +95,9 @@ export default {
         advlist_bullet_styles: 'square',
         advlist_number_styles: 'default',
         branding: false, //   // 去水印
-        menubar: true // 顶部菜单栏显示
+        menubar: true,// 顶部菜单栏显示
+        //自定义样式
+        content_style:"img {max-width: 360px}",
         // 此处为图片上传处理函数，这个直接用了base64的图片形式上传图片，
         // 如需ajax上传可参考https://www.tiny.cloud/docs/configure/file-image-upload/#images_upload_handler
         // images_upload_handler: (blobInfo, success, failure) => {
@@ -94,7 +111,9 @@ export default {
         // }
       },
       myValue: this.value,
-      fileList: []
+      fileList: [],
+      category: 'tinymce',
+      accept: '.jpg,.png,.mp4'
     }
   },
   computed: {
@@ -130,25 +149,55 @@ export default {
     },
     uploadFiles(fileObject) {
       const formData = new FormData()
-      formData.set('file', fileObject.file)
+      formData.append('file', fileObject.file)
+      formData.append('serverCode', this.serverCode)
+      formData.append('category', this.category)
       uploadFiles(formData).then(response => {
         const { data } = response
-        this.fileList.push({ id: data.id, name: data.fileName + '，文件地址：' + 'http:' + process.env.VUE_APP_BASE_API + '/article/download?fileId=' + data.id, url: data.filePath })
-        this.$message({ message: response, type: 'success' })
+        if (response.code === 200) {
+          this.fileList.push({ id: data.id, name: data.fileName + '，文件地址：' +
+              'http:' + process.env.VUE_APP_BASE_API + process.env.VUE_APP_BASE_FILE_UPLOAD_URL +
+              '/download?fileId=' + data.id, url: data.filePath })
+          this.$message({ message: response.msg || '文件上传成功', type: 'success' })
+        } else {
+          this.$message.error(response.msg || '文件上传失败')
+        }
       })
+    },
+    beforeUpload(file) {
+      const suffix = file.name.substring(file.name.lastIndexOf('.') + 1)
+      const suffixIsPass = this.accept.indexOf(suffix) !== -1
+      const fileSize = file.size / 1024 / 1024 < 10
+      if (!suffixIsPass) {
+        this.$message({
+          message: '上传的文件类型只能是以' + this.accept + '为后缀的文件!',
+          type: 'warning'
+        })
+        return false
+      }
+      if (!fileSize) {
+        this.$message({
+          message: '上传的文件大小不能超过10MB!',
+          type: 'warning'
+        })
+        return false
+      }
+      return true
     },
     beforeRemove(file, fileList) {
       if (file && file.status === 'success') {
-        return this.$confirm(`确定移除 ${file.name}？`).then(() => {
-          return this.delete(file.id)
+        return this.$confirm(`确定移除 ${file.name}?`).then(() => {
+          return this.deleteFile(file.id)
         })
       }
     },
-    delete(fileId) {
-      batchDelete(fileId).then(response => {
-        this.$message.success('删除成功!')
-        this.imageUrl = ''
-        this.fileList = []
+    deleteFile(fileId) {
+      batchDeleteFiles(fileId).then(response => {
+        if (response.code === 200) {
+          this.$message.success('删除成功!')
+        } else {
+          this.$message.error(response.msg || '删除失败')
+        }
       })
     }
 

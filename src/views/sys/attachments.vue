@@ -7,35 +7,16 @@
           <el-input v-model="filters.name" :size="size" placeholder="文件名" />
         </el-form-item>
         <el-form-item>
-          <kt-button
-            icon="fa fa-search"
-            label="查询"
-            perms="sys:attachments:view"
-            type="primary"
-            @click="findPage(null)"
-          />
+          <kt-button icon="fa fa-search" label="查询" perms="sys:attachments:view" type="primary" @click="findPage(null)" />
         </el-form-item>
         <el-form-item>
-          <kt-button
-            icon="fa fa-plus"
-            label="上传"
-            perms="sys:attachments:view"
-            type="primary"
-            @click="handleAdd"
-          />
+          <kt-button icon="fa fa-plus" label="上传" perms="sys:attachments:view" type="primary" @click="handleAdd" />
         </el-form-item>
       </el-form>
     </div>
-    <el-table
-      v-loading="loading"
-      :data="pageResult.content"
-      :max-height="420"
-      :size="size"
-      align="left"
-      @selection-change="handleSelectionChange"
-    >
+    <el-table v-loading="loading" :data="pageResult.content" :max-height="420" :size="size" align="left" @selection-change="handleSelectionChange">
       <el-table-column header-align="center" align="center" type="selection" width="50" />
-      <el-table-column header-align="center" align="center" prop="id" label="ID" sortable />
+      <el-table-column header-align="center" align="center" type="index" label="序号" sortable />
       <el-table-column header-align="center" align="center" prop="fileName" label="文件名" sortable />
       <el-table-column header-align="center" align="center" prop="fileType" label="类型" sortable />
       <el-table-column header-align="center" align="center" prop="fileSize" label="大小" :formatter="renderSize" sortable />
@@ -50,39 +31,13 @@
       </el-table-column>
     </el-table>
     <div class="toolbar" style="padding:10px;">
-      <kt-button
-        label="批量删除"
-        perms="sys:attachments:view"
-        :size="size"
-        type="danger"
-        :disabled="this.selections.length===0"
-        style="float:left;"
-        @click="handleBatchDelete()"
-      />
-      <pagination
-        v-show="pageRequest.total>0"
-        :layout="layout"
-        :total="pageRequest.total"
-        :page.sync="pageRequest.pageNum"
-        :limit.sync="pageRequest.pageSize"
-        @pagination="findPage"
-      />
+      <kt-button label="批量删除" perms="sys:attachments:view" :size="size" type="danger" :disabled="this.selections.length===0" style="float:left;" @click="handleBatchDelete()" />
+      <pagination v-show="pageRequest.total>0" :layout="layout" :total="pageRequest.total" :page.sync="pageRequest.pageNum" :limit.sync="pageRequest.pageSize" @pagination="findPage" />
     </div>
     <!-- </el-col> -->
     <!--新增编辑界面-->
     <el-dialog title="附件上传" width="40%" :visible.sync="dialogVisible" :close-on-click-modal="false">
-      <el-upload
-        class="upload-demo"
-        :http-request="uploadFiles"
-        :on-preview="handlePreview"
-        :on-remove="handleRemove"
-        :before-remove="beforeRemove"
-        action
-        multiple
-        :limit="5"
-        :on-exceed="handleExceed"
-        :file-list="fileList"
-      >
+      <el-upload class="upload-demo" :http-request="uploadFiles" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" action multiple :limit="5" :on-exceed="handleExceed" :file-list="fileList">
         <el-button size="small" type="primary">点击上传</el-button>
         <div slot="tip" class="el-upload__tip">只能上传jpg/png/zip文件，且不超过500kb</div>
       </el-upload>
@@ -94,7 +49,8 @@
 import KtButton from '@/components/KtButton'
 import Pagination from '@/components/Pagination'
 import { format } from '@/utils/datetime'
-import { findPage, uploadFiles, batchDelete, download } from '@/api/attachments'
+import { findPage, uploadFiles, batchDelete, download } from '@/api/admin-server/attachments'
+import { memoryTurned } from '@/utils'
 export default {
   components: {
     KtButton,
@@ -127,7 +83,7 @@ export default {
   },
   methods: {
     // 获取分页数据
-    findPage: function(data) {
+    findPage: function (data) {
       this.loading = true
       this.pageRequest.params = { name: this.filters.name }
       findPage(this.pageRequest).then((res) => {
@@ -138,20 +94,20 @@ export default {
         this.pageRequest.pageSize = this.pageResult.pageSize
       }).then(data != null ? data.callback : '')
     },
-    handleSelectionChange: function(selections) {
+    handleSelectionChange: function (selections) {
       this.selections = selections
       console.log(this.selections)
     },
     // 删除
-    handleDelete: function(data) {
+    handleDelete: function (data) {
       this.delete(data.id)
     },
     // 批量删除
-    handleBatchDelete: function() {
+    handleBatchDelete: function () {
       const ids = this.selections.map(item => item.id).toString()
       this.delete(ids)
     },
-    delete: function(ids) {
+    delete: function (ids) {
       this.$confirm('确认删除选中记录吗？', '提示', {
         type: 'warning'
       }).then(() => {
@@ -171,11 +127,13 @@ export default {
       })
     },
     // 显示新增界面
-    handleAdd: function() {
+    handleAdd: function () {
       this.dialogVisible = true
     },
     uploadFiles(fileObject) {
       const formData = new FormData()
+      formData.set('category', 'root')
+      formData.set('serverCode', 'pie-file-server')
       formData.set('file', fileObject.file)
       uploadFiles(formData).then(response => {
         const { data } = response
@@ -192,7 +150,7 @@ export default {
         if (window.navigator.msSaveOrOpenBlob) { // 兼容IE10
           navigator.msSaveBlob(blob, filename)
         } else {
-        // 创建一个超链接，将文件流赋进去，然后实现这个超链接的单击事件
+          // 创建一个超链接，将文件流赋进去，然后实现这个超链接的单击事件
           const elink = document.createElement('a')
           elink.download = filename
           elink.style.display = filename
@@ -219,23 +177,12 @@ export default {
       })
     },
     // 时间格式化
-    dateFormat: function(row, column) {
+    dateFormat: function (row, column) {
       return format(row[column.property])
     },
     //  格式化文件大小
-    renderSize: function(row) {
-      const value = row.fileSize
-      if (value === null || value === '') {
-        return '0 Bytes'
-      }
-      var unitArr = ('Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
-      var index = 0
-      var srcsize = parseFloat(value)
-      index = Math.floor(Math.log(srcsize) / Math.log(1024))
-      var size = srcsize / Math.pow(1024, index)
-      //  保留的小数位数
-      size = size.toFixed(2)
-      return size + unitArr[index]
+    renderSize: function (row) {
+      return memoryTurned(row.fileSize)
     }
   }
 }

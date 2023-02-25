@@ -1,4 +1,5 @@
 'use strict'
+const webpack = require('webpack')
 const path = require('path')
 const defaultSettings = require('./src/settings.js')
 
@@ -37,8 +38,17 @@ module.exports = {
       errors: true
     },
     before: app => { }
+    // 此处开启 https
+    // https: true
   },
   configureWebpack: {
+    plugins: [
+      new webpack.ProvidePlugin({
+        $: 'jquery',
+        jQuery: 'jquery',
+        'windows.jQuery': 'jquery'
+      })
+    ],
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.
     name: name,

@@ -14,6 +14,13 @@
             type="primary"
             @click="findPage(null)"
           />
+          <kt-button
+            icon="fa fa-search"
+            label="导出统计信息"
+            perms="sys:count:export"
+            type="primary"
+            @click="exportCountInfo()"
+          />
         </el-form-item>
       </el-form>
     </div>
@@ -26,7 +33,7 @@
 import KtTable from '@/components/KtTable'
 import KtButton from '@/components/KtButton'
 import { format } from '@/utils/datetime'
-import { findPage } from '@/api/log'
+import { findPage, exportCount } from '@/api/admin-server/log'
 export default {
   components: {
     KtTable,
@@ -39,7 +46,6 @@ export default {
         name: ''
       },
       columns: [
-        { prop: 'id', label: 'ID', minWidth: 60 },
         { prop: 'userName', label: '用户名', minWidth: 100 },
         { prop: 'operation', label: '操作', minWidth: 120 },
         { prop: 'method', label: '方法', minWidth: 180 },
@@ -68,6 +74,36 @@ export default {
       findPage(this.pageRequest).then((res) => {
         this.pageResult = res.data
       }).then(data != null ? data.callback : '')
+    },
+    // 导出统计信息
+    exportCountInfo() {
+      const loading = this.$loading({
+        lock: true,
+        text: '统计报告生成中，需要时间可能会久一些，请耐心等待......',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
+      exportCount().then(response => {
+        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' })
+        const date = new Date()
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)
+        const filename = year + '年' + month + '月招商通数据量及运行情况.docx'
+        if (window.navigator.msSaveOrOpenBlob) { // 兼容IE10
+          navigator.msSaveBlob(blob, filename)
+        } else {
+          // 创建一个超链接，将文件流赋进去，然后实现这个超链接的单击事件
+          const elink = document.createElement('a')
+          elink.download = filename
+          elink.style.display = filename
+          elink.href = URL.createObjectURL(blob)
+          document.body.appendChild(elink)
+          elink.click()
+          URL.revokeObjectURL(elink.href) // 释放URL 对象
+          document.body.removeChild(elink)
+          loading.close()
+        }
+      })
     },
     // 时间格式化
     dateFormat: function(row, column, cellValue, index) {

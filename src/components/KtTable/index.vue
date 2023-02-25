@@ -34,7 +34,7 @@
       <el-table-column
         v-if="showOperation"
         label="操作"
-        width="185"
+        width="300"
         fixed="right"
         header-align="center"
         align="center"
@@ -47,6 +47,15 @@
             :size="size"
             @click="handleEdit(scope.$index, scope.row)"
           />
+          <kt-button
+          v-show="isDownloadButton"
+          icon="el-icon-download"
+          label="下载报告"
+          :perms="downloadReport"
+          :size="size"
+          @click="exportReport(scope.$index, scope.row)"
+          >
+          </kt-button>
           <kt-button
             icon="fa fa-trash"
             label="删除"
@@ -93,7 +102,12 @@ export default {
     columns: Array, // 表格列配置
     data: Object, // 表格分页数据
     permsEdit: String, // 编辑权限标识
-    permsDelete: String, // 删除权限标识
+    downloadReport:String,//下载权限标识
+    permsDelete: String,// 删除权限标识
+    isDownloadButton:{
+      type:Boolean,
+      default: false
+    },
     size: { // 尺寸样式
       type: String,
       default: 'mini'
@@ -172,6 +186,10 @@ export default {
     // 编辑
     handleEdit: function(index, row) {
       this.$emit('handleEdit', { index: index, row: row })
+    },
+    //下载 说明：添加下载报告按钮（张关强）
+    exportReport:function(index, row){
+      this.$emit('downloadFile', { index: index, row: row })
     },
     // 删除
     handleDelete: function(index, row) {

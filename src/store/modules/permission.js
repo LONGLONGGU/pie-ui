@@ -1,8 +1,9 @@
 import { constantRoutes } from '@/router'
 import router from '@/router'
-import { findMneu } from '@/api/menu'
+import { findMneu } from '@/api/admin-server/menu'
 import store from '@/store'
 import Layout from '@/views/layout'
+import Nested from '@/views/layout/nested'
 import container from '@/views/layout/container'
 import { getIFramePath } from '@/utils/iframe'
 const state = {
@@ -47,8 +48,15 @@ export function filterAsyncRoutes(routes) {
       }
       store.commit('addIFrameUrl', iFrameUrl)
     }
-    if (item.children.length > 0) {
+    if (item.children.length > 0 && item.parentId === null) {
       item.component = Layout
+      item.path = item.url
+      item.meta = { title: item.name, icon: item.icon }
+      item.redirect = getSubRoutesPath(item.children)
+      item.children = filterAsyncRoutes(item.children)
+      result.push(item)
+    } else if (item.children.length > 0) {
+      item.component = Nested
       item.path = item.url
       item.meta = { title: item.name, icon: item.icon }
       item.redirect = getSubRoutesPath(item.children)

@@ -47,7 +47,7 @@
         <el-form-item v-if="false" label="ID" prop="id">
           <el-input v-model="dataForm.id" :disabled="true" auto-complete="off" />
         </el-form-item>
-        <el-form-item label="机构名称" prop="name">
+        <el-form-item label="角色名称" prop="name">
           <el-input v-model="dataForm.name" auto-complete="off" />
         </el-form-item>
         <el-form-item label="备注 " prop="remark">
@@ -73,7 +73,7 @@
         show-checkbox
         node-key="id"
         :props="defaultProps"
-        style="width: 100%;pading-top:20px;"
+        style="width: 100%;padding-top:20px;"
         :render-content="renderContent"
         element-loading-text="拼命加载中"
         :check-strictly="true"
@@ -108,8 +108,8 @@
 import KtTable from '@/components/KtTable'
 import KtButton from '@/components/KtButton'
 import { format } from '@/utils/datetime'
-import { save, findPage, batchDelete, findRoleMenus,saveRoleMenus} from '@/api/role'
-import { findMenuTree } from '@/api/menu'
+import { save, findPage, deleteById, findRoleMenus, saveRoleMenus } from '@/api/admin-server/role'
+import { findMenuTree } from '@/api/admin-server/menu'
 export default {
   components: {
     KtTable,
@@ -123,7 +123,7 @@ export default {
         name: ''
       },
       columns: [
-        { prop: 'id', label: 'ID', minWidth: 50 },
+        // { prop: 'id', label: 'ID', minWidth: 50 },
         { prop: 'name', label: '角色名', minWidth: 120 },
         { prop: 'remark', label: '备注', minWidth: 120 },
         { prop: 'createBy', label: '创建人', minWidth: 120 },
@@ -177,7 +177,8 @@ export default {
     },
     // 批量删除
     handleDelete: function(data) {
-      batchDelete(data.params).then(data.callback)
+      const id = data.params[0].id
+      deleteById(id).then(data.callback)
     },
     // 显示新增界面
     handleAdd: function() {

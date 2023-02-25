@@ -26,7 +26,7 @@
 import KtTable from '@/components/KtTable'
 import KtButton from '@/components/KtButton'
 import { format } from '@/utils/datetime'
-import { findPage } from '@/api/loginlog'
+import { findPage } from '@/api/admin-server/loginlog'
 export default {
   components: {
     KtTable,
@@ -39,7 +39,6 @@ export default {
         name: ''
       },
       columns: [
-        { prop: 'id', label: 'ID', minWidth: 60 },
         { prop: 'userName', label: '用户名', minWidth: 100 },
         { prop: 'status', label: '状态', minWidth: 120 },
         { prop: 'ip', label: 'IP', minWidth: 120 },

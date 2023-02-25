@@ -1,12 +1,19 @@
 <template>
   <div align="center" style="margin:10px">
-    <el-upload class="avatar-uploader" :action="action" :headers="headers" :show-file-list="false"
-      :on-success="handleAvatarSuccess" :on-remove="handleRemove" :before-upload="beforeAvatarUpload">
+    <el-upload
+      class="avatar-uploader"
+      :action="action"
+      :headers="headers"
+      :show-file-list="false"
+      :on-success="handleAvatarSuccess"
+      :on-remove="handleRemove"
+      :before-upload="beforeAvatarUpload"
+    >
       <img v-if="imageUrl" :src="imageUrl" class="avatar">
       <span v-if="imageUrl" class="el-upload-action" @click.stop="handleRemove()">
-        <i class="el-icon-delete"></i>
+        <i class="el-icon-delete" />
       </span>
-      <i v-else class="el-icon-upload2 avatar-uploader-icon" stop></i>
+      <i v-else class="el-icon-upload2 avatar-uploader-icon" stop />
     </el-upload>
   </div>
 </template>
@@ -16,12 +23,12 @@ export default {
   props: {
     imageUrl: {
       type: String,
-      default: ""
+      default: ''
     }
   },
-  data () {
+  data() {
     return {
-      action: process.env.VUE_APP_BASE_API + '/upload',
+      action: process.env.VUE_APP_BASE_API + process.env.VUE_APP_BASE_ADMIN_URL + '/fileUpload/upload',
       headers: {
         Authorization: getToken()
       }
@@ -29,15 +36,15 @@ export default {
   },
   methods: {
     // 移除图片
-    handleRemove () {
+    handleRemove() {
       this.$emit('onremove')
     },
     // 上传成功回调
-    handleAvatarSuccess (res, file) {
+    handleAvatarSuccess(res, file) {
       this.$emit('onsuccess', res, file)
     },
     // 上传前格式和图片大小限制
-    beforeAvatarUpload (file) {
+    beforeAvatarUpload(file) {
       const type = file.type === 'image/jpeg' || 'image/jpg' || 'image/webp' || 'image/png'
       const isLt2M = file.size / 1024 / 1024 < 2
       if (!type) {

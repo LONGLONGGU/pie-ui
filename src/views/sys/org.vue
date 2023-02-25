@@ -4,7 +4,7 @@
     <div class="toolbar" style="float:left;padding-top:10px;padding-left:15px;">
       <el-form :inline="true" :model="filters" :size="size">
         <el-form-item>
-          <el-input v-model="filters.name" placeholder="机构名" />
+          <el-input v-model="filters.name" placeholder="机构名" @keyup.enter.native="findPage(null)" />
         </el-form-item>
         <el-form-item>
           <kt-button
@@ -13,6 +13,15 @@
             perms="sys:role:view"
             type="primary"
             @click="findPage(null)"
+          />
+        </el-form-item>
+        <el-form-item>
+          <kt-button
+            icon="fa fa-refresh"
+            label="重置"
+            perms="sys:role:view"
+            type="danger"
+            @click="findPage(null,'reset')"
           />
         </el-form-item>
         <el-form-item>
@@ -36,10 +45,10 @@
       @current-change="handleRoleSelectChange"
     >
       <el-table-column header-align="center" align="center" type="selection" width="50" />
-      <el-table-column header-align="center" align="center" prop="id" label="ID" sortable width="100" />
       <el-table-column header-align="center" align="center" prop="name" label="机构名称" sortable />
+      <el-table-column header-align="center" align="center" prop="districtName" label="行政区划" sortable />
       <el-table-column header-align="center" align="center" prop="remark" label="备注" sortable />
-      <el-table-column header-align="center" align="center" prop="createBy" label="创建人" sortable />
+      <el-table-column header-align="center" align="center" prop="createUserName" label="创建人" sortable />
       <el-table-column header-align="center" align="center" prop="createTime" label="创建时间" sortable />
       <el-table-column label="状态" align="center">
         <template slot-scope="scope">
@@ -53,11 +62,12 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="185" align="center">
+      <el-table-column label="操作" width="200" align="center">
         <template slot-scope="scope">
           <el-button icon="fa fa-edit" size="mini" @click="handleEdit(scope)">编辑</el-button>
-          <el-button icon="fa fa-trash" size="mini" type="danger" @click="handleDelete(scope)">删除
-          </el-button>
+          <!--机构先不提供删除功能-->
+          <!--<el-button icon="fa fa-trash" size="mini" type="danger" @click="handleDelete(scope)">删除</el-button>-->
+          <el-button icon="fa fa-cog" size="mini" type="danger" @click="resetPwd(scope)">重置密码</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -85,10 +95,14 @@
         <el-form-item label="机构名称" prop="name">
           <el-input v-model="dataForm.name" auto-complete="off" />
         </el-form-item>
+        <el-form-item v-if="operation" label="管理密码" prop="orgAdminPwd">
+          <el-input v-model="dataForm.orgAdminPwd" type="password" auto-complete="off" />
+        </el-form-item>
+        <Area :label="dataForm.districtName" @getCheckedNodes="getCheckedNodes" />
         <el-form-item label="排序编号" prop="orderNum">
           <el-input-number v-model="dataForm.orderNum" controls-position="right" :min="0" label="排序编号" />
         </el-form-item>
-        <el-form-item label="备注 " prop="remark">
+        <el-form-item label="备注" prop="remark">
           <el-input v-model="dataForm.remark" auto-complete="off" type="textarea" />
         </el-form-item>
       </el-form>
@@ -111,7 +125,7 @@
         show-checkbox
         node-key="id"
         :props="defaultProps"
-        style="width: 100%;pading-top:20px;"
+        style="width: 100%;padding-top:20px;"
         :render-content="renderContent"
         element-loading-text="拼命加载中"
         :check-strictly="true"
@@ -146,15 +160,15 @@
 import KtButton from '@/components/KtButton'
 import { format } from '@/utils/datetime'
 import Pagination from '@/components/Pagination'
-import { save, findPage, batchDelete, saveOrgMenus, findOrgMenus } from '@/api/org'
-import { findMenuTree } from '@/api/menu'
+import { save, findPage, removeById, resetAdminPwd, saveOrgMenus, findOrgMenus } from '@/api/admin-server/org'
+import { findMenuTree } from '@/api/admin-server/menu'
+import Area from '@/components/ZST/Area'
 export default {
   name: 'Org',
   components: {
-    // KtTable,
     KtButton,
-    Pagination
-    // TableTreeColumn
+    Pagination,
+    Area
   },
   data() {
     return {
@@ -162,15 +176,6 @@ export default {
       filters: {
         name: ''
       },
-      columns: [
-        { prop: 'id', label: 'ID', minWidth: 50 },
-        { prop: 'name', label: '机构名称', minWidth: 120 },
-        { prop: 'remark', label: '备注', minWidth: 120 },
-        { prop: 'createBy', label: '创建人', minWidth: 120 },
-        { prop: 'createTime', label: '创建时间', minWidth: 120, formatter: this.dateFormat }
-        // {prop:"lastUpdateBy", label:"更新人", minWidth:100},
-        // {prop:"lastUpdateTime", label:"更新时间", minWidth:120, formatter:this.dateFormat}
-      ],
       loading: false,
       pageRequest: { pageNum: 1, pageSize: 10, total: 0 },
       pageResult: {},
@@ -181,12 +186,21 @@ export default {
       dataFormRules: {
         name: [
           { required: true, message: '请输入机构名称', trigger: 'blur' }
+        ],
+        orgAdminPwd: [
+          { required: true, message: '请输入管理密码', trigger: 'blur' }
+        ],
+        districtName: [
+          { required: true, message: '请选择行政区划信息', trigger: 'blur' }
         ]
       },
       // 新增编辑界面数据
       dataForm: {
         id: '',
         name: '',
+        districtId: '',
+        districtName: '',
+        orgAdminPwd: '',
         orderNum: 0,
         remark: ''
       },
@@ -200,7 +214,8 @@ export default {
       defaultProps: {
         children: 'children',
         label: ''
-      }
+      },
+      currentDistrictNode: null
     }
   },
   created() {
@@ -209,13 +224,17 @@ export default {
   mounted() {
   },
   methods: {
+    getCheckedNodes(data) {
+      this.dataForm.districtId = data.id
+      this.dataForm.districtName = data.name
+    },
     // 获取分页数据
-    findPage: function(data) {
-      // if (data !== null) {
-      //   this.pageRequest = data.pageRequest
-      // }
+    findPage: function(data, optFlag) {
       this.loading = true
-      this.pageRequest.params = { name: '', value: this.filters.name }
+      if (optFlag && optFlag === 'reset') {
+        this.filters.name = ''
+      }
+      this.pageRequest.params = { name: this.filters.name }
       findPage(this.pageRequest).then((res) => {
         this.loading = false
         this.pageResult = res.data
@@ -227,7 +246,22 @@ export default {
     },
     // 批量删除
     handleDelete: function(data) {
-      batchDelete(data.params).then(data.callback)
+      this.$confirm('确认删除选中记录吗？', '提示', {
+        type: 'warning'
+      }).then(() => {
+        this.loading = true
+        const id = data.row.id
+        removeById(id).then((res) => {
+          if (res.code === 200) {
+            this.$message({ message: '删除成功', type: 'success' })
+            this.findPage(null)
+          } else {
+            this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
+          }
+          this.loading = false
+        })
+      }).catch(() => {
+      })
     },
     // 显示新增界面
     handleAdd: function() {
@@ -236,6 +270,9 @@ export default {
       this.dataForm = {
         id: '',
         name: '',
+        orgAdminPwd: '',
+        districtId: '',
+        districtName: '',
         orderNum: 0,
         remark: ''
       }
@@ -250,6 +287,10 @@ export default {
     submitForm: function() {
       this.$refs.dataForm.validate((valid) => {
         if (valid) {
+          if (this.dataForm.districtId === '') {
+            this.$message({ message: '行政区划不能为空！', type: 'warning' })
+            return
+          }
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.editLoading = true
             const params = Object.assign({}, this.dataForm)
@@ -289,9 +330,6 @@ export default {
     },
     // 树节点选择监听
     handleMenuCheckChange(data, check, subCheck) {
-      console.log(data)
-      console.log(check)
-      console.log(subCheck)
       if (check) {
         // 节点选中时同步选中父节点
         const parentId = data.parentId
@@ -334,20 +372,17 @@ export default {
     // 角色菜单授权提交
     submitAuthForm() {
       const roleId = this.selectRole.id
-      if (this.selectRole.name == 'admin') {
+      if (this.selectRole.name === 'admin') {
         this.$message({ message: '超级管理员拥有所有菜单权限，不允许修改！', type: 'error' })
         return
       }
       this.authLoading = true
       const checkedNodes = this.$refs.menuTree.getCheckedNodes(false, true)
-      console.log(checkedNodes)
       const roleMenus = []
       for (let i = 0, len = checkedNodes.length; i < len; i++) {
         const roleMenu = { orgId: roleId, menuId: checkedNodes[i].id }
         roleMenus.push(roleMenu)
       }
-      console.log(roleId)
-      console.log(roleMenus)
       saveOrgMenus({ orgId: roleId, orgMenus: roleMenus }).then((res) => {
         if (res.code === 200) {
           this.$message({ message: '操作成功', type: 'success' })
@@ -358,8 +393,6 @@ export default {
       })
     },
     renderContent(h, { node, data, store }) {
-      console.log(node)
-      console.log(store)
       return (
         <div class='column-container'>
           <span style='text-algin:center;margin-right:80px;'>{data.name}</span>
@@ -386,16 +419,33 @@ export default {
 
     },
     change: function(data) {
-      this.$api.org.save(data).then((res) => {
-        if (res.code == 200) {
+      save(data).then((res) => {
+        if (res.code === 200) {
           this.$message({ message: '操作成功', type: 'success' })
         } else {
           this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
         }
         this.findPage(null)
       })
+    },
+    resetPwd: function(data) {
+      this.$confirm('确认重置当前机构管理员密码吗？', '提示', {
+        type: 'warning'
+      }).then(() => {
+        this.loading = true
+        const id = data.row.id
+        resetAdminPwd(id).then((res) => {
+          if (res.code === 200) {
+            this.$message({ message: res.msg, type: 'success' })
+            this.findPage(null)
+          } else {
+            this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
+          }
+          this.loading = false
+        })
+      }).catch(() => {
+      })
     }
-
   }
 }
 </script>

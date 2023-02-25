@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'PIE-UI',
+  title: 'PIE',
 
   /**
    * @type {boolean} true | false

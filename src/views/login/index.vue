@@ -3,39 +3,21 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">pie</h3>
       </div>
 
       <el-form-item prop="account">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input
-          ref="account"
-          v-model="loginForm.account"
-          placeholder="account"
-          name="account"
-          type="text"
-          tabindex="1"
-          auto-complete="on"
-        />
+        <el-input ref="account" v-model="loginForm.account" placeholder="账号" name="account" type="text" tabindex="1" auto-complete="on" />
       </el-form-item>
 
       <el-form-item prop="password">
         <span class="svg-container">
           <svg-icon icon-class="password" />
         </span>
-        <el-input
-          :key="passwordType"
-          ref="password"
-          v-model="loginForm.password"
-          :type="passwordType"
-          placeholder="Password"
-          name="password"
-          tabindex="2"
-          auto-complete="on"
-          @keyup.enter.native="handleLogin"
-        />
+        <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType" placeholder="密码" name="password" tabindex="2" auto-complete="on" @keyup.enter.native="handleLogin" />
         <span class="show-pwd" @click="showPwd">
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
@@ -46,41 +28,35 @@
             <span class="svg-container">
               <svg-icon icon-class="captcha" />
             </span>
-            <el-input
-              v-model="loginForm.captcha"
-              placeholder="验证码"
-              name="captcha"
-              tabindex="2"
-              auto-complete="on"
-            />
+            <el-input v-model="loginForm.captcha" placeholder="验证码" name="captcha" tabindex="2" auto-complete="on" />
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <img :src="captchaSrc" style="margin-right:20px;width: 100%;height: 52px;" @click="refreshCaptcha">
+          <img :src="captchaSrc" style="margin-right:20px;width: 100%;height: 52px;cursor: pointer" @click="getCaptchaInfo">
         </el-col>
       </el-row>
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
-
-      <div class="tips">
-        <span style="margin-right:20px;">username: SuperAdmin</span>
-        <span> password: 123456</span>
-      </div>
-
     </el-form>
+    <div class="forTheRecord">
+      <a style="color: #ffffff;" href="" />
+    </div>
   </div>
 </template>
 <script>
+import request from '@/utils/request'
 export default {
   name: 'Login',
   data() {
     return {
       loginForm: {
-        account: 'SuperAdmin',
-        password: '123456',
+        account: '',
+        password: '',
         captcha: '',
+        captToken: '',
         src: ''
       },
-      captchaSrc: process.env.VUE_APP_BASE_API + '/pie-admin/captcha.jpg',
+      base64Prefix: 'data:image/png;base64,',
+      captchaSrc: '',
       loginRules: {
         account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
@@ -93,13 +69,17 @@ export default {
   },
   watch: {
     $route: {
-      handler: function(route) {
+      handler: function (route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true
     }
   },
+  created() {
+    this.getCaptchaInfo()
+  },
   mounted() {
+    // this.getCaptchaInfo()
   },
   methods: {
     showPwd() {
@@ -113,20 +93,23 @@ export default {
       })
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.loginForm.validate((valid) => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then((response) => {
-            const { code, msg } = response
-            if (code !== 200) {
-              this.$message({ message: '登录失败, ' + msg, type: 'error' })
-            }
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch((error) => {
-            console.log(error)
-            this.loading = false
-          })
+          this.$store
+            .dispatch('user/login', this.loginForm)
+            .then((response) => {
+              const { code, msg } = response
+              if (code !== 200) {
+                this.$message({ message: '登录失败, ' + msg, type: 'error' })
+              }
+              this.$router.push({ path: this.redirect || '/' })
+              this.loading = false
+            })
+            .catch((error) => {
+              console.log(error)
+              this.loading = false
+            })
         } else {
           console.log('error submit!!')
           return false
@@ -134,7 +117,24 @@ export default {
       })
     },
     refreshCaptcha() {
-      this.captchaSrc = process.env.VUE_APP_BASE_API + '/pie-admin/captcha.jpg?picId=' + Math.random()
+      this.captchaSrc =
+        process.env.VUE_APP_BASE_API +
+        '/pie-admin/captcha.jpg?picId=' +
+        Math.random()
+    },
+    // 获取验证码信息
+    getCaptchaInfo() {
+      request({
+        url:
+          process.env.VUE_APP_BASE_API +
+          '/pie-admin/getLoginCaptcha?picId=' +
+          Math.random(),
+        method: 'get'
+      }).then((response) => {
+        const { capToken, imageInfo } = response.data
+        this.captchaSrc = this.base64Prefix + imageInfo
+        this.loginForm.captToken = capToken
+      })
     }
   }
 }
@@ -144,8 +144,8 @@ export default {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
-$light_gray:#fff;
+$bg: #283443;
+$light_gray: #fff;
 $cursor: #fff;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
@@ -188,9 +188,9 @@ $cursor: #fff;
 </style>
 
 <style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
+$bg: #2d3a4b;
+$dark_gray: #889aa4;
+$light_gray: #eee;
 
 .login-container {
   min-height: 100%;
@@ -248,5 +248,12 @@ $light_gray:#eee;
     cursor: pointer;
     user-select: none;
   }
+}
+.forTheRecord {
+  height: 5%;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  text-align: center;
 }
 </style>
