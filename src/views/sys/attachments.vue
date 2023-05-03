@@ -40,6 +40,7 @@
       <el-upload class="upload-demo" :http-request="uploadFiles" :on-preview="handlePreview" :on-remove="handleRemove" :before-remove="beforeRemove" action multiple :limit="5" :on-exceed="handleExceed" :file-list="fileList">
         <el-button size="small" type="primary">点击上传</el-button>
         <div slot="tip" class="el-upload__tip">只能上传jpg/png/zip文件，且不超过500kb</div>
+        <el-progress style="width: 150px;" :percentage="parseInt(fake.progress *100)" />
       </el-upload>
     </el-dialog>
   </div>
@@ -50,6 +51,7 @@ import KtButton from '@/components/KtButton'
 import Pagination from '@/components/Pagination'
 import { format } from '@/utils/datetime'
 import { findPage, uploadFiles, batchDelete, download } from '@/api/admin-server/attachments'
+var FakeProgress = require('fake-progress')
 import { memoryTurned } from '@/utils'
 export default {
   components: {
@@ -72,7 +74,11 @@ export default {
       selections: [], // 列表选中列
       checkAll: false,
       currentRoleMenus: [],
-      fileList: []
+      fileList: [],
+      fake: new FakeProgress({
+        timeConstant: 10000,
+        autoStart: false
+      })
 
     }
   },
@@ -131,11 +137,13 @@ export default {
       this.dialogVisible = true
     },
     uploadFiles(fileObject) {
+      this.fake.start()
       const formData = new FormData()
       formData.set('category', 'root')
       formData.set('serverCode', 'pie-file-server')
       formData.set('file', fileObject.file)
       uploadFiles(formData).then(response => {
+        this.fake.end()
         const { data } = response
         this.fileList.push({ id: data.id, name: data.fileName, url: data.filePath })
         console.log(this.fileList)
