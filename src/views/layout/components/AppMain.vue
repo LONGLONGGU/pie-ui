@@ -26,10 +26,10 @@ export default {
   position: relative;
   overflow: hidden;
 }
-.scrollbar{
-  height: calc(100vh - 120px);;
+.scrollbar {
+  height: calc(100vh - 60px);
 }
-.fixed-header+.app-main {
+.fixed-header + .app-main {
   padding-top: 50px;
 }
 </style>
