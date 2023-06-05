@@ -322,7 +322,9 @@ export enum WebGLConstants {
     COMPRESSED_RGB_PVRTC_2BPPV1_IMG = 35841,
     COMPRESSED_RGBA_PVRTC_4BPPV1_IMG = 35842,
     COMPRESSED_RGBA_PVRTC_2BPPV1_IMG = 35843,
+    COMPRESSED_RGBA_ASTC_4x4_WEBGL = 37808,
     COMPRESSED_RGB_ETC1_WEBGL = 36196,
+    COMPRESSED_RGBA_BPTC_UNORM = 36492,
     HALF_FLOAT_OES = 36193,
     DOUBLE = 5130,
     READ_BUFFER = 3074,
@@ -597,11 +599,13 @@ export enum WebGLConstants {
     MAX_ELEMENT_INDEX = 36203,
     TEXTURE_IMMUTABLE_LEVELS = 33503,
     MAX_TEXTURE_MAX_ANISOTROPY_EXT = 34047
-}/**
+}
+
+/**
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from Elevation Tiles of an an ArcGIS ImageService.
  * @example
- * var terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+ * const terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
  *   url : 'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer',
  *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..'
  * });
@@ -626,21 +630,21 @@ export class ArcGISTiledElevationTerrainProvider {
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
      */
-    errorEvent: Event;
+    readonly errorEvent: Event;
     /**
      * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
      */
-    credit: Credit;
+    readonly credit: Credit;
     /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
      */
-    tilingScheme: GeographicTilingScheme;
+    readonly tilingScheme: GeographicTilingScheme;
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      */
-    ready: boolean;
+    readonly ready: boolean;
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
      */
@@ -651,19 +655,19 @@ export class ArcGISTiledElevationTerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
      * information is not available.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link ArcGISTiledElevationTerrainProvider#ready} returns true.  The result includes terrain
@@ -690,7 +694,7 @@ export class ArcGISTiledElevationTerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -787,11 +791,22 @@ export class AxisAlignedBoundingBox {
      */
     center: Cartesian3;
     /**
+     * Creates an instance of an AxisAlignedBoundingBox from its corners.
+     * @example
+     * // Compute an axis aligned bounding box from the two corners.
+     * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
+     * @param minimum - The minimum point along the x, y, and z axes.
+     * @param maximum - The maximum point along the x, y, and z axes.
+     * @param [result] - The object onto which to store the result.
+     * @returns The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
+     */
+    static fromCorners(minimum: Cartesian3, maximum: Cartesian3, result?: AxisAlignedBoundingBox): AxisAlignedBoundingBox;
+    /**
      * Computes an instance of an AxisAlignedBoundingBox. The box is determined by
      * finding the points spaced the farthest apart on the x, y, and z axes.
      * @example
      * // Compute an axis aligned bounding box enclosing two points.
-     * var box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+     * const box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      * @param positions - List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
@@ -847,35 +862,15 @@ export class AxisAlignedBoundingBox {
 }
 
 /**
- * Object for setting and retrieving the default Bing Maps API key.
- *
- * A Bing API key is only required if you are using {@link BingMapsImageryProvider}
- * or {@link BingMapsGeocoderService}. You can create your own key at
- * {@link https://www.bingmapsportal.com/}.
- */
-export namespace BingMapsApi {
-    /**
-     * The default Bing Maps API key to use if one is not provided to the
-     * constructor of an object that uses the Bing Maps API.
-     */
-    var defaultKey: string;
-    /**
-     * Gets the key to use to access the Bing Maps API. If the provided
-     * key is defined, it is returned. Otherwise, returns {@link BingMapsApi.defaultKey}.
-     * @param providedKey - The provided key to use if defined.
-     * @returns The Bing Maps API key to use.
-     */
-    function getKey(providedKey: string | null | undefined): string | undefined;
-}
-
-/**
  * Provides geocoding through Bing Maps.
  * @param options - Object with the following properties:
- * @param [options.key] - A key to use with the Bing Maps geocoding service
+ * @param options.key - A key to use with the Bing Maps geocoding service
+ * @param [options.culture] - A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
 export class BingMapsGeocoderService {
     constructor(options: {
-        key?: string;
+        key: string;
+        culture?: string;
     });
     /**
      * The URL endpoint for the Bing geocoder service
@@ -979,7 +974,7 @@ export class BoundingRectangle {
      * Determines if two rectangles intersect.
      * @param left - A rectangle to check for intersection.
      * @param right - The other rectangle to check for intersection.
-     * @returns <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+     * @returns <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
      */
     static intersect(left: BoundingRectangle, right: BoundingRectangle): Intersect;
     /**
@@ -999,7 +994,7 @@ export class BoundingRectangle {
     /**
      * Determines if this rectangle intersects with another.
      * @param right - A rectangle to check for intersection.
-     * @returns <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+     * @returns <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
      */
     intersect(right: BoundingRectangle): Intersect;
     /**
@@ -1073,11 +1068,11 @@ export class BoundingSphere {
      * // Compute the bounding sphere from 3 positions, each specified relative to a center.
      * // In addition to the X, Y, and Z coordinates, the points array contains two additional
      * // elements per point which are ignored for the purpose of computing the bounding sphere.
-     * var center = new Cesium.Cartesian3(1.0, 2.0, 3.0);
-     * var points = [1.0, 2.0, 3.0, 0.1, 0.2,
+     * const center = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+     * const points = [1.0, 2.0, 3.0, 0.1, 0.2,
      *               4.0, 5.0, 6.0, 0.1, 0.2,
      *               7.0, 8.0, 9.0, 0.1, 0.2];
-     * var sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
+     * const sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
      * @param [positions] - An array of points that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
      * @param [center = Cartesian3.ZERO] - The position to which the positions are relative, which need not be the
@@ -1111,7 +1106,7 @@ export class BoundingSphere {
      * tighly and fully encompases the box.
      * @example
      * // Create a bounding sphere around the unit cube
-     * var sphere = Cesium.BoundingSphere.fromCornerPoints(new Cesium.Cartesian3(-0.5, -0.5, -0.5), new Cesium.Cartesian3(0.5, 0.5, 0.5));
+     * const sphere = Cesium.BoundingSphere.fromCornerPoints(new Cesium.Cartesian3(-0.5, -0.5, -0.5), new Cesium.Cartesian3(0.5, 0.5, 0.5));
      * @param [corner] - The minimum height over the rectangle.
      * @param [oppositeCorner] - The maximum height over the rectangle.
      * @param [result] - The object onto which to store the result.
@@ -1121,7 +1116,7 @@ export class BoundingSphere {
     /**
      * Creates a bounding sphere encompassing an ellipsoid.
      * @example
-     * var boundingSphere = Cesium.BoundingSphere.fromEllipsoid(ellipsoid);
+     * const boundingSphere = Cesium.BoundingSphere.fromEllipsoid(ellipsoid);
      * @param ellipsoid - The ellipsoid around which to create a bounding sphere.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new BoundingSphere instance if none was provided.
@@ -1141,6 +1136,13 @@ export class BoundingSphere {
      * @returns The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     static fromOrientedBoundingBox(orientedBoundingBox: OrientedBoundingBox, result?: BoundingSphere): BoundingSphere;
+    /**
+     * Computes a tight-fitting bounding sphere enclosing the provided affine transformation.
+     * @param transformation - The affine transformation.
+     * @param [result] - The object onto which to store the result.
+     * @returns The modified result parameter or a new BoundingSphere instance if none was provided.
+     */
+    static fromTransformation(transformation: Matrix4, result?: BoundingSphere): BoundingSphere;
     /**
      * Duplicates a BoundingSphere instance.
      * @param sphere - The bounding sphere to duplicate.
@@ -1211,7 +1213,7 @@ export class BoundingSphere {
      * });
      * @param sphere - The sphere.
      * @param cartesian - The point
-     * @returns The estimated distance squared from the bounding sphere to the point.
+     * @returns The distance squared from the bounding sphere to the point. Returns 0 if the point is inside the sphere.
      */
     static distanceSquaredTo(sphere: BoundingSphere, cartesian: Cartesian3): number;
     /**
@@ -1219,9 +1221,9 @@ export class BoundingSphere {
      * The transformation matrix is not verified to have a uniform scale of 1.
      * This method is faster than computing the general bounding sphere transform using {@link BoundingSphere.transform}.
      * @example
-     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
-     * var boundingSphere = new Cesium.BoundingSphere();
-     * var newBoundingSphere = Cesium.BoundingSphere.transformWithoutScale(boundingSphere, modelMatrix);
+     * const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
+     * const boundingSphere = new Cesium.BoundingSphere();
+     * const newBoundingSphere = Cesium.BoundingSphere.transformWithoutScale(boundingSphere, modelMatrix);
      * @param sphere - The bounding sphere to apply the transformation to.
      * @param transform - The transformation matrix to apply to the bounding sphere.
      * @param [result] - The object onto which to store the result.
@@ -1325,12 +1327,12 @@ export class BoundingSphere {
 /**
  * Describes a cube centered at the origin.
  * @example
- * var box = new Cesium.BoxGeometry({
+ * const box = new Cesium.BoxGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxGeometry.createGeometry(box);
  * @param options - Object with the following properties:
  * @param options.minimum - The minimum x, y, and z coordinates of the box.
  * @param options.maximum - The maximum x, y, and z coordinates of the box.
@@ -1345,11 +1347,11 @@ export class BoxGeometry {
     /**
      * Creates a cube centered at the origin given its dimensions.
      * @example
-     * var box = Cesium.BoxGeometry.fromDimensions({
+     * const box = Cesium.BoxGeometry.fromDimensions({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
-     * var geometry = Cesium.BoxGeometry.createGeometry(box);
+     * const geometry = Cesium.BoxGeometry.createGeometry(box);
      * @param options - Object with the following properties:
      * @param options.dimensions - The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      * @param [options.vertexFormat = VertexFormat.DEFAULT] - The vertex attributes to be computed.
@@ -1361,14 +1363,14 @@ export class BoxGeometry {
     /**
      * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
      * @example
-     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
      *      -70.0, 35.0,
      *      -75.0, 30.0,
      *      -70.0, 30.0,
      *      -68.0, 40.0
      * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
+     * const box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
      * @param boundingBox - A description of the AxisAlignedBoundingBox.
      */
     static fromAxisAlignedBoundingBox(boundingBox: AxisAlignedBoundingBox): BoxGeometry;
@@ -1403,11 +1405,11 @@ export class BoxGeometry {
 /**
  * A description of the outline of a cube centered at the origin.
  * @example
- * var box = new Cesium.BoxOutlineGeometry({
+ * const box = new Cesium.BoxOutlineGeometry({
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  * @param options - Object with the following properties:
  * @param options.minimum - The minimum x, y, and z coordinates of the box.
  * @param options.maximum - The maximum x, y, and z coordinates of the box.
@@ -1420,10 +1422,10 @@ export class BoxOutlineGeometry {
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
      * @example
-     * var box = Cesium.BoxOutlineGeometry.fromDimensions({
+     * const box = Cesium.BoxOutlineGeometry.fromDimensions({
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
-     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      * @param options - Object with the following properties:
      * @param options.dimensions - The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      */
@@ -1433,14 +1435,14 @@ export class BoxOutlineGeometry {
     /**
      * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
      * @example
-     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
      *      -70.0, 35.0,
      *      -75.0, 30.0,
      *      -70.0, 30.0,
      *      -68.0, 40.0
      * ]));
-     * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     * const box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
      *
      *
      * @param boundingBox - A description of the AxisAlignedBoundingBox.
@@ -1541,14 +1543,14 @@ export class Cartesian2 {
      */
     static unpack(array: number[], startingIndex?: number, result?: Cartesian2): Cartesian2;
     /**
-     * Flattens an array of Cartesian2s into and array of components.
+     * Flattens an array of Cartesian2s into an array of components.
      * @param array - The array of cartesians to pack.
      * @param [result] - The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
      * @returns The packed array.
      */
     static packArray(array: Cartesian2[], result?: number[]): number[];
     /**
-     * Unpacks an array of cartesian components into and array of Cartesian2s.
+     * Unpacks an array of cartesian components into an array of Cartesian2s.
      * @param array - The array of components to unpack.
      * @param [result] - The array onto which to store the result.
      * @returns The unpacked array.
@@ -1558,12 +1560,12 @@ export class Cartesian2 {
      * Creates a Cartesian2 from two consecutive elements in an array.
      * @example
      * // Create a Cartesian2 with (1.0, 2.0)
-     * var v = [1.0, 2.0];
-     * var p = Cesium.Cartesian2.fromArray(v);
+     * const v = [1.0, 2.0];
+     * const p = Cesium.Cartesian2.fromArray(v);
      *
      * // Create a Cartesian2 with (1.0, 2.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0];
-     * var p2 = Cesium.Cartesian2.fromArray(v2, 2);
+     * const v2 = [0.0, 0.0, 1.0, 2.0];
+     * const p2 = Cesium.Cartesian2.fromArray(v2, 2);
      * @param array - The array whose two consecutive elements correspond to the x and y components, respectively.
      * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to the x component.
      * @param [result] - The object onto which to store the result.
@@ -1614,7 +1616,7 @@ export class Cartesian2 {
      * Computes the distance between two points.
      * @example
      * // Returns 1.0
-     * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
+     * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
      * @param left - The first point to compute the distance from.
      * @param right - The second point to compute the distance to.
      * @returns The distance between two points.
@@ -1625,7 +1627,7 @@ export class Cartesian2 {
      * using this function is more efficient than comparing distances using {@link Cartesian2#distance}.
      * @example
      * // Returns 4.0, not 2.0
-     * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
+     * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
      * @param left - The first point to compute the distance from.
      * @param right - The second point to compute the distance to.
      * @returns The distance between two points.
@@ -1645,6 +1647,13 @@ export class Cartesian2 {
      * @returns The dot product.
      */
     static dot(left: Cartesian2, right: Cartesian2): number;
+    /**
+     * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
+     * @param left - The first Cartesian.
+     * @param right - The second Cartesian.
+     * @returns The cross product.
+     */
+    static cross(left: Cartesian2, right: Cartesian2): number;
     /**
      * Computes the componentwise product of two Cartesians.
      * @param left - The first Cartesian.
@@ -1753,6 +1762,10 @@ export class Cartesian2 {
      * An immutable Cartesian2 instance initialized to (0.0, 0.0).
      */
     static readonly ZERO: Cartesian2;
+    /**
+     * An immutable Cartesian2 instance initialized to (1.0, 1.0).
+     */
+    static readonly ONE: Cartesian2;
     /**
      * An immutable Cartesian2 instance initialized to (1.0, 0.0).
      */
@@ -1880,12 +1893,12 @@ export class Cartesian3 {
      * Creates a Cartesian3 from three consecutive elements in an array.
      * @example
      * // Create a Cartesian3 with (1.0, 2.0, 3.0)
-     * var v = [1.0, 2.0, 3.0];
-     * var p = Cesium.Cartesian3.fromArray(v);
+     * const v = [1.0, 2.0, 3.0];
+     * const p = Cesium.Cartesian3.fromArray(v);
      *
      * // Create a Cartesian3 with (1.0, 2.0, 3.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
-     * var p2 = Cesium.Cartesian3.fromArray(v2, 2);
+     * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
+     * const p2 = Cesium.Cartesian3.fromArray(v2, 2);
      * @param array - The array whose three consecutive elements correspond to the x, y, and z components, respectively.
      * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to the x component.
      * @param [result] - The object onto which to store the result.
@@ -1936,7 +1949,7 @@ export class Cartesian3 {
      * Computes the distance between two points.
      * @example
      * // Returns 1.0
-     * var d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(2.0, 0.0, 0.0));
+     * const d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(2.0, 0.0, 0.0));
      * @param left - The first point to compute the distance from.
      * @param right - The second point to compute the distance to.
      * @returns The distance between two points.
@@ -1947,7 +1960,7 @@ export class Cartesian3 {
      * using this function is more efficient than comparing distances using {@link Cartesian3#distance}.
      * @example
      * // Returns 4.0, not 2.0
-     * var d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
+     * const d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
      * @param left - The first point to compute the distance from.
      * @param right - The second point to compute the distance to.
      * @returns The distance between two points.
@@ -2098,7 +2111,7 @@ export class Cartesian3 {
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in degrees.
      * @example
-     * var position = Cesium.Cartesian3.fromDegrees(-115.0, 37.0);
+     * const position = Cesium.Cartesian3.fromDegrees(-115.0, 37.0);
      * @param longitude - The longitude, in degrees
      * @param latitude - The latitude, in degrees
      * @param [height = 0.0] - The height, in meters, above the ellipsoid.
@@ -2110,7 +2123,7 @@ export class Cartesian3 {
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in radians.
      * @example
-     * var position = Cesium.Cartesian3.fromRadians(-2.007, 0.645);
+     * const position = Cesium.Cartesian3.fromRadians(-2.007, 0.645);
      * @param longitude - The longitude, in radians
      * @param latitude - The latitude, in radians
      * @param [height = 0.0] - The height, in meters, above the ellipsoid.
@@ -2122,7 +2135,7 @@ export class Cartesian3 {
     /**
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in degrees.
      * @example
-     * var positions = Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
+     * const positions = Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
      * @param coordinates - A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid on which the coordinates lie.
      * @param [result] - An array of Cartesian3 objects to store the result.
@@ -2132,7 +2145,7 @@ export class Cartesian3 {
     /**
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in radians.
      * @example
-     * var positions = Cesium.Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
+     * const positions = Cesium.Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
      * @param coordinates - A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid on which the coordinates lie.
      * @param [result] - An array of Cartesian3 objects to store the result.
@@ -2142,7 +2155,7 @@ export class Cartesian3 {
     /**
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in degrees.
      * @example
-     * var positions = Cesium.Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
+     * const positions = Cesium.Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
      * @param coordinates - A list of longitude, latitude and height values. Values alternate [longitude, latitude, height, longitude, latitude, height...].
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid on which the position lies.
      * @param [result] - An array of Cartesian3 objects to store the result.
@@ -2152,7 +2165,7 @@ export class Cartesian3 {
     /**
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in radians.
      * @example
-     * var positions = Cesium.Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
+     * const positions = Cesium.Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
      * @param coordinates - A list of longitude, latitude and height values. Values alternate [longitude, latitude, height, longitude, latitude, height...].
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid on which the position lies.
      * @param [result] - An array of Cartesian3 objects to store the result.
@@ -2163,6 +2176,10 @@ export class Cartesian3 {
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
      */
     static readonly ZERO: Cartesian3;
+    /**
+     * An immutable Cartesian3 instance initialized to (1.0, 1.0, 1.0).
+     */
+    static readonly ONE: Cartesian3;
     /**
      * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
      */
@@ -2276,14 +2293,14 @@ export class Cartesian4 {
      */
     static unpack(array: number[], startingIndex?: number, result?: Cartesian4): Cartesian4;
     /**
-     * Flattens an array of Cartesian4s into and array of components.
+     * Flattens an array of Cartesian4s into an array of components.
      * @param array - The array of cartesians to pack.
      * @param [result] - The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
      * @returns The packed array.
      */
     static packArray(array: Cartesian4[], result?: number[]): number[];
     /**
-     * Unpacks an array of cartesian components into and array of Cartesian4s.
+     * Unpacks an array of cartesian components into an array of Cartesian4s.
      * @param array - The array of components to unpack.
      * @param [result] - The array onto which to store the result.
      * @returns The unpacked array.
@@ -2293,12 +2310,12 @@ export class Cartesian4 {
      * Creates a Cartesian4 from four consecutive elements in an array.
      * @example
      * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
-     * var v = [1.0, 2.0, 3.0, 4.0];
-     * var p = Cesium.Cartesian4.fromArray(v);
+     * const v = [1.0, 2.0, 3.0, 4.0];
+     * const p = Cesium.Cartesian4.fromArray(v);
      *
      * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
-     * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+     * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+     * const p2 = Cesium.Cartesian4.fromArray(v2, 2);
      * @param array - The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
      * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to the x component.
      * @param [result] - The object onto which to store the result.
@@ -2349,7 +2366,7 @@ export class Cartesian4 {
      * Computes the 4-space distance between two points.
      * @example
      * // Returns 1.0
-     * var d = Cesium.Cartesian4.distance(
+     * const d = Cesium.Cartesian4.distance(
      *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
      *   new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
      * @param left - The first point to compute the distance from.
@@ -2362,7 +2379,7 @@ export class Cartesian4 {
      * using this function is more efficient than comparing distances using {@link Cartesian4#distance}.
      * @example
      * // Returns 4.0, not 2.0
-     * var d = Cesium.Cartesian4.distance(
+     * const d = Cesium.Cartesian4.distance(
      *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
      *   new Cesium.Cartesian4(3.0, 0.0, 0.0, 0.0));
      * @param left - The first point to compute the distance from.
@@ -2486,6 +2503,10 @@ export class Cartesian4 {
      */
     static readonly ZERO: Cartesian4;
     /**
+     * An immutable Cartesian4 instance initialized to (1.0, 1.0, 1.0, 1.0).
+     */
+    static readonly ONE: Cartesian4;
+    /**
      * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
      */
     static readonly UNIT_X: Cartesian4;
@@ -2531,7 +2552,7 @@ export class Cartesian4 {
     toString(): string;
     /**
      * Packs an arbitrary floating point value to 4 values representable using uint8.
-     * @param value - A floating point number
+     * @param value - A floating point number.
      * @param [result] - The Cartesian4 that will contain the packed float.
      * @returns A Cartesian4 representing the float packed to values in x, y, z, and w.
      */
@@ -2673,7 +2694,7 @@ export class CartographicGeocoderService {
  * Catmull-Rom splines are in the class C<sup>1</sup>.
  * @example
  * // spline above the earth from Philadelphia to Los Angeles
- * var spline = new Cesium.CatmullRomSpline({
+ * const spline = new Cesium.CatmullRomSpline({
  *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -2684,8 +2705,8 @@ export class CartographicGeocoderService {
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
- * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+ * const p0 = spline.evaluate(times[i]);         // equal to positions[i]
+ * const p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
  * @param options - Object with the following properties:
  * @param options.times - An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -2750,8 +2771,8 @@ export class CatmullRomSpline {
  * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
  * @example
  * // Create Arctic DEM terrain with normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : new CesiumTerrainProvider({
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
+ *     terrainProvider : new Cesium.CesiumTerrainProvider({
  *         url : Cesium.IonResource.fromAssetId(3956),
  *         requestVertexNormals : true
  *     })
@@ -2791,21 +2812,21 @@ export class CesiumTerrainProvider {
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
      */
-    errorEvent: Event;
+    readonly errorEvent: Event;
     /**
      * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
      */
-    credit: Credit;
+    readonly credit: Credit;
     /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link CesiumTerrainProvider#ready} returns true.
      */
-    tilingScheme: GeographicTilingScheme;
+    readonly tilingScheme: GeographicTilingScheme;
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      */
-    ready: boolean;
+    readonly ready: boolean;
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
      */
@@ -2816,35 +2837,35 @@ export class CesiumTerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link CesiumTerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include metadata.
      * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
      */
-    hasMetadata: boolean;
+    readonly hasMetadata: boolean;
     /**
      * Boolean flag that indicates if the client should request vertex normals from the server.
      * Vertex normals data is appended to the standard tile mesh data only if the client requests the vertex normals and
      * if the server provides vertex normals.
      */
-    requestVertexNormals: boolean;
+    readonly requestVertexNormals: boolean;
     /**
      * Boolean flag that indicates if the client should request a watermask from the server.
      * Watermask data is appended to the standard tile mesh data only if the client requests the watermask and
      * if the server provides a watermask.
      */
-    requestWaterMask: boolean;
+    readonly requestWaterMask: boolean;
     /**
      * Boolean flag that indicates if the client should request metadata from the server.
      * Metadata is appended to the standard tile mesh data only if the client requests the metadata and
      * if the server provides a metadata.
      */
-    requestMetadata: boolean;
+    readonly requestMetadata: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
@@ -2854,7 +2875,7 @@ export class CesiumTerrainProvider {
      * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
      * is available now will not become unavailable in the future.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      * @param level - The tile level for which to get the maximum geometric error.
@@ -2868,7 +2889,7 @@ export class CesiumTerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported or availability is unknown, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -2883,11 +2904,11 @@ export class CesiumTerrainProvider {
  * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  * @example
  * // Create a circle.
- * var circle = new Cesium.CircleGeometry({
+ * const circle = new Cesium.CircleGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   radius : 100000.0
  * });
- * var geometry = Cesium.CircleGeometry.createGeometry(circle);
+ * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  * @param options - Object with the following properties:
  * @param options.center - The circle's center point in the fixed frame.
  * @param options.radius - The radius in meters.
@@ -2941,11 +2962,11 @@ export class CircleGeometry {
  * A description of the outline of a circle on the ellipsoid.
  * @example
  * // Create a circle.
- * var circle = new Cesium.CircleOutlineGeometry({
+ * const circle = new Cesium.CircleOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   radius : 100000.0
  * });
- * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
+ * const geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
  * @param options - Object with the following properties:
  * @param options.center - The circle's center point in the fixed frame.
  * @param options.radius - The radius in meters.
@@ -2997,7 +3018,7 @@ export class CircleOutlineGeometry {
  * A simple clock for keeping track of simulated time.
  * @example
  * // Create a clock that loops on Christmas day 2013 and runs in real-time.
- * var clock = new Cesium.Clock({
+ * const clock = new Cesium.Clock({
  *    startTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
  *    currentTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
  *    stopTime : Cesium.JulianDate.fromIso8601("2013-12-26"),
@@ -3189,7 +3210,7 @@ export class Color {
      * Creates a new Color that has the same red, green, and blue components
      * of the specified color, but with the specified alpha value.
      * @example
-     * var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
+     * const translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
      * @param color - The base color
      * @param alpha - The new alpha component.
      * @param [result] - The object onto which to store the result.
@@ -3200,7 +3221,7 @@ export class Color {
      * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
      * of the system.
      * @example
-     * var color = Cesium.Color.fromRgba(0x67ADDFFF);
+     * const color = Cesium.Color.fromRgba(0x67ADDFFF);
      * @param rgba - A single numeric unsigned 32-bit RGBA value.
      * @param [result] - The object to store the result in, if undefined a new instance will be created.
      * @returns The color object.
@@ -3221,17 +3242,17 @@ export class Color {
      * call {@link Math#setRandomNumberSeed} once at the beginning of your application.
      * @example
      * //Create a completely random color
-     * var color = Cesium.Color.fromRandom();
+     * const color = Cesium.Color.fromRandom();
      *
      * //Create a random shade of yellow.
-     * var color = Cesium.Color.fromRandom({
+     * const color1 = Cesium.Color.fromRandom({
      *     red : 1.0,
      *     green : 1.0,
      *     alpha : 1.0
      * });
      *
      * //Create a random bright color.
-     * var color = Cesium.Color.fromRandom({
+     * const color2 = Cesium.Color.fromRandom({
      *     minimumRed : 0.75,
      *     minimumGreen : 0.75,
      *     minimumBlue : 0.75,
@@ -3270,8 +3291,8 @@ export class Color {
     /**
      * Creates a Color instance from a CSS color value.
      * @example
-     * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
-     * var green = Cesium.Color.fromCssColorString('green');
+     * const cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
+     * const green = Cesium.Color.fromCssColorString('green');
      * @param color - The CSS color value in #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), or hsla() format.
      * @param [result] - The object to store the result in, if undefined a new instance will be created.
      * @returns The color object, or undefined if the string was not a valid CSS color.
@@ -3355,6 +3376,11 @@ export class Color {
      */
     toCssColorString(): string;
     /**
+     * Creates a string containing CSS hex string color value for this color.
+     * @returns The CSS hex string equivalent of this color.
+     */
+    toCssHexString(): string;
+    /**
      * Converts this color to an array of red, green, blue, and alpha values
      * that are in the range of 0 to 255.
      * @param [result] - The array to store the result in, if undefined a new instance will be created.
@@ -3365,14 +3391,14 @@ export class Color {
      * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
      * of the system.
      * @example
-     * var rgba = Cesium.Color.BLUE.toRgba();
+     * const rgba = Cesium.Color.BLUE.toRgba();
      * @returns A single numeric unsigned 32-bit RGBA value.
      */
     toRgba(): number;
     /**
      * Brightens this color by the provided magnitude.
      * @example
-     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
+     * const brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
      * @param magnitude - A positive number indicating the amount to brighten.
      * @param result - The object onto which to store the result.
      * @returns The modified result parameter.
@@ -3381,7 +3407,7 @@ export class Color {
     /**
      * Darkens this color by the provided magnitude.
      * @example
-     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
+     * const darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
      * @param magnitude - A positive number indicating the amount to darken.
      * @param result - The object onto which to store the result.
      * @returns The modified result parameter.
@@ -3391,7 +3417,7 @@ export class Color {
      * Creates a new Color that has the same red, green, and blue components
      * as this Color, but with the specified alpha value.
      * @example
-     * var translucentRed = Cesium.Color.RED.withAlpha(0.9);
+     * const translucentRed = Cesium.Color.RED.withAlpha(0.9);
      * @param alpha - The new alpha component.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new Color instance if one was not provided.
@@ -4202,7 +4228,7 @@ export class Color {
 /**
  * Value and type information for per-instance geometry color.
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : Cesium.BoxGeometry.fromDimensions({
  *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  *   }),
@@ -4242,7 +4268,7 @@ export class ColorGeometryInstanceAttribute {
     /**
      * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.
      * @example
-     * var instance = new Cesium.GeometryInstance({
+     * const instance = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   attributes : {
      *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
@@ -4255,7 +4281,7 @@ export class ColorGeometryInstanceAttribute {
     /**
      * Converts a color to a typed array that can be used to assign a color attribute.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
      * @param color - The color.
      * @param [result] - The array to store the result in, if undefined a new instance will be created.
@@ -4323,16 +4349,21 @@ export enum ComponentDatatype {
 /**
  * Describes a compressed texture and contains a compressed texture buffer.
  * @param internalFormat - The pixel format of the compressed texture.
+ * @param pixelDatatype - The pixel datatype of the compressed texture.
  * @param width - The width of the texture.
  * @param height - The height of the texture.
  * @param buffer - The compressed texture buffer.
  */
 export class CompressedTextureBuffer {
-    constructor(internalFormat: PixelFormat, width: number, height: number, buffer: Uint8Array);
+    constructor(internalFormat: PixelFormat, pixelDatatype: PixelDatatype, width: number, height: number, buffer: Uint8Array);
     /**
      * The format of the compressed texture.
      */
     readonly internalFormat: PixelFormat;
+    /**
+     * The datatype of the compressed texture.
+     */
+    readonly pixelDatatype: PixelDatatype;
     /**
      * The width of the texture.
      */
@@ -4361,15 +4392,15 @@ export class CompressedTextureBuffer {
 /**
  * A description of a polygon composed of arbitrary coplanar positions.
  * @example
- * var polygon = new Cesium.CoplanarPolygonGeometry({
- *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+ * const polygonGeometry = new Cesium.CoplanarPolygonGeometry({
+ *  polygonHierarchy: new Cesium.PolygonHierarchy(
+ *     Cesium.Cartesian3.fromDegreesArrayHeights([
  *      -90.0, 30.0, 0.0,
- *      -90.0, 30.0, 1000.0,
- *      -80.0, 30.0, 1000.0,
+ *      -90.0, 30.0, 300000.0,
+ *      -80.0, 30.0, 300000.0,
  *      -80.0, 30.0, 0.0
- *   ])
+ *   ]))
  * });
- * var geometry = Cesium.CoplanarPolygonGeometry.createGeometry(polygon);
  * @param options - Object with the following properties:
  * @param options.polygonHierarchy - A polygon hierarchy that can include holes.
  * @param [options.stRotation = 0.0] - The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
@@ -4391,7 +4422,7 @@ export class CoplanarPolygonGeometry {
      * A description of a coplanar polygon from an array of positions.
      * @example
      * // create a polygon from points
-     * var polygon = Cesium.CoplanarPolygonGeometry.fromPositions({
+     * const polygon = Cesium.CoplanarPolygonGeometry.fromPositions({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
@@ -4400,7 +4431,7 @@ export class CoplanarPolygonGeometry {
      *     -68.0, 40.0
      *   ])
      * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      * @param options - Object with the following properties:
      * @param options.positions - An array of positions that defined the corner points of the polygon.
      * @param [options.vertexFormat = VertexFormat.DEFAULT] - The vertex attributes to be computed.
@@ -4440,7 +4471,7 @@ export class CoplanarPolygonGeometry {
 /**
  * A description of the outline of a polygon composed of arbitrary coplanar positions.
  * @example
- * var polygonOutline = new Cesium.CoplanarPolygonOutlineGeometry({
+ * const polygonOutline = new Cesium.CoplanarPolygonOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
  *      -90.0, 30.0, 0.0,
  *      -90.0, 30.0, 1000.0,
@@ -4448,7 +4479,7 @@ export class CoplanarPolygonGeometry {
  *      -80.0, 30.0, 0.0
  *   ])
  * });
- * var geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
+ * const geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
  * @param options - Object with the following properties:
  * @param options.polygonHierarchy - A polygon hierarchy that can include holes.
  */
@@ -4519,7 +4550,7 @@ export enum CornerType {
 /**
  * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  * @example
- * var corridor = new Cesium.CorridorGeometry({
+ * const corridor = new Cesium.CorridorGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
  *   width : 100000
@@ -4592,7 +4623,7 @@ export class CorridorGeometry {
 /**
  * A description of a corridor outline.
  * @example
- * var corridor = new Cesium.CorridorOutlineGeometry({
+ * const corridor = new Cesium.CorridorOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
  *   width : 100000
  * });
@@ -4647,7 +4678,7 @@ export class CorridorOutlineGeometry {
  * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
  * @example
  * //Create a credit with a tooltip, image and link
- * var credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+ * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
  * @param html - An string representing an html code snippet
  * @param [showOnScreen = false] - If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
  */
@@ -4660,7 +4691,7 @@ export class Credit {
     /**
      * Whether the credit should be displayed on screen or in a lightbox
      */
-    readonly showOnScreen: boolean;
+    showOnScreen: boolean;
     /**
      * Gets the credit element
      */
@@ -4738,16 +4769,145 @@ export class CullingVolume {
     computeVisibility(boundingVolume: any): Intersect;
 }
 
+export namespace CustomHeightmapTerrainProvider {
+    /**
+     * @param x - The X coordinate of the tile for which to request geometry.
+     * @param y - The Y coordinate of the tile for which to request geometry.
+     * @param level - The level of the tile for which to request geometry.
+     */
+    type GeometryCallback = (x: number, y: number, level: number) => Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | number[] | Promise<Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | number[]> | undefined;
+}
+
+/**
+ * A simple {@link TerrainProvider} that gets height values from a callback function.
+ * It can be used for procedurally generated terrain or as a way to load custom
+ * heightmap data without creating a subclass of {@link TerrainProvider}.
+ *
+ * There are some limitations such as no water mask, no vertex normals, and no
+ * availability, so a full-fledged {@link TerrainProvider} subclass is better suited
+ * for these more sophisticated use cases.
+ * @example
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   terrainProvider: new Cesium.CustomHeightmapTerrainProvider({
+ *     width: 32,
+ *     height: 32,
+ *     callback: function (x, y, level) {
+ *       return new Float32Array(32 * 32); // all zeros
+ *     },
+ *   }),
+ * });
+ * @param options - Object with the following properties:
+ * @param options.callback - The callback function for requesting tile geometry.
+ * @param options.width - The number of columns per heightmap tile.
+ * @param options.height - The number of rows per heightmap tile.
+ * @param [options.tilingScheme] - The tiling scheme specifying how the ellipsoidal
+ * surface is broken into tiles. If this parameter is not provided, a {@link GeographicTilingScheme}
+ * is used.
+ * @param [options.ellipsoid] - The ellipsoid.  If the tilingScheme is specified,
+ * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+ * parameter is specified, the WGS84 ellipsoid is used.
+ * @param [options.credit] - A credit for the data source, which is displayed on the canvas.
+ */
+export class CustomHeightmapTerrainProvider {
+    constructor(options: {
+        callback: CustomHeightmapTerrainProvider.GeometryCallback;
+        width: number;
+        height: number;
+        tilingScheme?: TilingScheme;
+        ellipsoid?: Ellipsoid;
+        credit?: Credit | string;
+    });
+    /**
+     * Gets an event that is raised when the terrain provider encounters an asynchronous error. By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it. Event listeners
+     * are passed an instance of {@link TileProviderError}.
+     */
+    readonly errorEvent: Event;
+    /**
+     * Gets the credit to display when this terrain provider is active. Typically this is used to credit
+     * the source of the terrain.
+     */
+    readonly credit: Credit;
+    /**
+     * Gets the tiling scheme used by this provider.
+     */
+    readonly tilingScheme: TilingScheme;
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     */
+    readonly ready: boolean;
+    /**
+     * Gets a promise that resolves to true when the provider is ready for use.
+     */
+    readonly readyPromise: Promise<boolean>;
+    /**
+     * Gets a value indicating whether or not the provider includes a water mask. The water mask
+     * indicates which areas of the globe are water rather than land, so they can be rendered
+     * as a reflective surface with animated waves.
+     * Water mask is not supported by {@link CustomHeightmapTerrainProvider}, so the return
+     * value will always be false.
+     */
+    readonly hasWaterMask: boolean;
+    /**
+     * Gets a value indicating whether or not the requested tiles include vertex normals.
+     * Vertex normals are not supported by {@link CustomHeightmapTerrainProvider}, so the return
+     * value will always be false.
+     */
+    readonly hasVertexNormals: boolean;
+    /**
+     * Gets the number of columns per heightmap tile.
+     */
+    readonly width: boolean;
+    /**
+     * Gets the number of rows per heightmap tile.
+     */
+    readonly height: boolean;
+    /**
+     * Requests the geometry for a given tile. The result includes terrain
+     * data and indicates that all child tiles are available.
+     * @param x - The X coordinate of the tile for which to request geometry.
+     * @param y - The Y coordinate of the tile for which to request geometry.
+     * @param level - The level of the tile for which to request geometry.
+     * @param [request] - The request object. Intended for internal use only.
+     * @returns A promise for the requested geometry. If this method
+     *          returns undefined instead of a promise, it is an indication that too many requests are already
+     *          pending and the request will be retried later.
+     */
+    requestTileGeometry(x: number, y: number, level: number, request?: Request): Promise<TerrainData> | undefined;
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     * @param level - The tile level for which to get the maximum geometric error.
+     * @returns The maximum geometric error.
+     */
+    getLevelMaximumGeometricError(level: number): number;
+    /**
+     * Determines whether data for a tile is available to be loaded.
+     * @param x - The X coordinate of the tile for which to request geometry.
+     * @param y - The Y coordinate of the tile for which to request geometry.
+     * @param level - The level of the tile for which to request geometry.
+     * @returns Undefined if not supported, otherwise true or false.
+     */
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
+    /**
+     * Makes sure we load availability data for a tile
+     * @param x - The X coordinate of the tile for which to request geometry.
+     * @param y - The Y coordinate of the tile for which to request geometry.
+     * @param level - The level of the tile for which to request geometry.
+     * @returns Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    loadTileDataAvailability(x: number, y: number, level: number): undefined | Promise<void>;
+}
+
 /**
  * A description of a cylinder.
  * @example
  * // create cylinder geometry
- * var cylinder = new Cesium.CylinderGeometry({
+ * const cylinder = new Cesium.CylinderGeometry({
  *     length: 200000,
  *     topRadius: 80000,
  *     bottomRadius: 200000,
  * });
- * var geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
+ * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  * @param options - Object with the following properties:
  * @param options.length - The length of the cylinder.
  * @param options.topRadius - The radius of the top of the cylinder.
@@ -4795,12 +4955,12 @@ export class CylinderGeometry {
  * A description of the outline of a cylinder.
  * @example
  * // create cylinder geometry
- * var cylinder = new Cesium.CylinderOutlineGeometry({
+ * const cylinder = new Cesium.CylinderOutlineGeometry({
  *     length: 200000,
  *     topRadius: 80000,
  *     bottomRadius: 200000,
  * });
- * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
+ * const geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
  * @param options - Object with the following properties:
  * @param options.length - The length of the cylinder.
  * @param options.topRadius - The radius of the top of the cylinder.
@@ -4955,7 +5115,7 @@ export class DistanceDisplayCondition {
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance has a distance display condition.
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
@@ -4995,8 +5155,8 @@ export class DistanceDisplayConditionGeometryInstanceAttribute {
     /**
      * Creates a new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
      * @example
-     * var distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
-     * var instance = new Cesium.GeometryInstance({
+     * const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
+     * const instance = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   attributes : {
      *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
@@ -5009,7 +5169,7 @@ export class DistanceDisplayConditionGeometryInstanceAttribute {
     /**
      * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
      * @param distanceDisplayCondition - The distance display condition value.
      * @param [result] - The array to store the result in, if undefined a new instance will be created.
@@ -5031,15 +5191,15 @@ export namespace EasingFunction {
     /**
      * Quadratic in.
      */
-    const QUADRACTIC_IN: EasingFunction.Callback;
+    const QUADRATIC_IN: EasingFunction.Callback;
     /**
      * Quadratic out.
      */
-    const QUADRACTIC_OUT: EasingFunction.Callback;
+    const QUADRATIC_OUT: EasingFunction.Callback;
     /**
      * Quadratic in then out.
      */
-    const QUADRACTIC_IN_OUT: EasingFunction.Callback;
+    const QUADRATIC_IN_OUT: EasingFunction.Callback;
     /**
      * Cubic in.
      */
@@ -5167,13 +5327,13 @@ export namespace EasingFunction {
  * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  * @example
  * // Create an ellipse.
- * var ellipse = new Cesium.EllipseGeometry({
+ * const ellipse = new Cesium.EllipseGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   semiMajorAxis : 500000.0,
  *   semiMinorAxis : 300000.0,
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
- * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+ * const geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
  * @param options - Object with the following properties:
  * @param options.center - The ellipse's center point in the fixed frame.
  * @param options.semiMajorAxis - The length of the ellipse's semi-major axis in meters.
@@ -5250,13 +5410,13 @@ export class EllipseGeometry {
 /**
  * A description of the outline of an ellipse on an ellipsoid.
  * @example
- * var ellipse = new Cesium.EllipseOutlineGeometry({
+ * const ellipse = new Cesium.EllipseOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   semiMajorAxis : 500000.0,
  *   semiMinorAxis : 300000.0,
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
- * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
+ * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  * @param options - Object with the following properties:
  * @param options.center - The ellipse's center point in the fixed frame.
  * @param options.semiMajorAxis - The length of the ellipse's semi-major axis in meters.
@@ -5422,15 +5582,15 @@ export class Ellipsoid {
      * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
      * @param cartesian - The Cartesian position for which to to determine the surface normal.
      * @param [result] - The object onto which to store the result.
-     * @returns The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
      */
     geodeticSurfaceNormal(cartesian: Cartesian3, result?: Cartesian3): Cartesian3;
     /**
      * Converts the provided cartographic to Cartesian representation.
      * @example
      * //Create a Cartographic and determine it's Cartesian representation on a WGS84 ellipsoid.
-     * var position = new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 5000);
-     * var cartesianPosition = Cesium.Ellipsoid.WGS84.cartographicToCartesian(position);
+     * const position = new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 5000);
+     * const cartesianPosition = Cesium.Ellipsoid.WGS84.cartographicToCartesian(position);
      * @param cartographic - The cartographic position.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new Cartesian3 instance if none was provided.
@@ -5440,10 +5600,10 @@ export class Ellipsoid {
      * Converts the provided array of cartographics to an array of Cartesians.
      * @example
      * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
-     * var positions = [new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 0),
+     * const positions = [new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 0),
      *                  new Cesium.Cartographic(Cesium.Math.toRadians(21.321), Cesium.Math.toRadians(78.123), 100),
      *                  new Cesium.Cartographic(Cesium.Math.toRadians(21.645), Cesium.Math.toRadians(78.456), 250)];
-     * var cartesianPositions = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
+     * const cartesianPositions = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
      * @param cartographics - An array of cartographic positions.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new Array instance if none was provided.
@@ -5454,8 +5614,8 @@ export class Ellipsoid {
      * The cartesian is undefined at the center of the ellipsoid.
      * @example
      * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
-     * var position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
-     * var cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
+     * const position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
+     * const cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
      * @param cartesian - The Cartesian position to convert to cartographic representation.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
@@ -5465,10 +5625,10 @@ export class Ellipsoid {
      * Converts the provided array of cartesians to an array of cartographics.
      * @example
      * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
-     * var positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
+     * const positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
      *                  new Cesium.Cartesian3(17832.13, 83234.53, 952313.73),
      *                  new Cesium.Cartesian3(17832.14, 83234.54, 952313.73)]
-     * var cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
+     * const cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
      * @param cartesians - An array of Cartesian positions.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new Array instance if none was provided.
@@ -5535,6 +5695,13 @@ export class Ellipsoid {
      * @returns the intersection point if it's inside the ellipsoid, undefined otherwise
      */
     getSurfaceNormalIntersectionWithZAxis(position: Cartesian3, buffer?: number, result?: Cartesian3): Cartesian3 | undefined;
+    /**
+     * Computes an approximation of the surface area of a rectangle on the surface of an ellipsoid using
+     * Gauss-Legendre 10th order quadrature.
+     * @param rectangle - The rectangle used for computing the surface area.
+     * @returns The approximate area of the rectangle on the surface of this ellipsoid.
+     */
+    surfaceArea(rectangle: Rectangle): number;
 }
 
 /**
@@ -5578,27 +5745,27 @@ export class EllipsoidGeodesic {
     /**
      * Provides the location of a point at the indicated portion along the geodesic.
      * @param fraction - The portion of the distance between the initial and final points.
-     * @param result - The object in which to store the result.
+     * @param [result] - The object in which to store the result.
      * @returns The location of the point along the geodesic.
      */
-    interpolateUsingFraction(fraction: number, result: Cartographic): Cartographic;
+    interpolateUsingFraction(fraction: number, result?: Cartographic): Cartographic;
     /**
      * Provides the location of a point at the indicated distance along the geodesic.
      * @param distance - The distance from the inital point to the point of interest along the geodesic
-     * @param result - The object in which to store the result.
+     * @param [result] - The object in which to store the result.
      * @returns The location of the point along the geodesic.
      */
-    interpolateUsingSurfaceDistance(distance: number, result: Cartographic): Cartographic;
+    interpolateUsingSurfaceDistance(distance: number, result?: Cartographic): Cartographic;
 }
 
 /**
  * A description of an ellipsoid centered at the origin.
  * @example
- * var ellipsoid = new Cesium.EllipsoidGeometry({
+ * const ellipsoid = new Cesium.EllipsoidGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
+ * const geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
  * @param [options] - Object with the following properties:
  * @param [options.radii = Cartesian3(1.0, 1.0, 1.0)] - The radii of the ellipsoid in the x, y, and z directions.
  * @param [options.innerRadii = options.radii] - The inner radii of the ellipsoid in the x, y, and z directions.
@@ -5653,12 +5820,12 @@ export class EllipsoidGeometry {
 /**
  * A description of the outline of an ellipsoid centered at the origin.
  * @example
- * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
+ * const ellipsoid = new Cesium.EllipsoidOutlineGeometry({
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
  *   stackPartitions: 6,
  *   slicePartitions: 5
  * });
- * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
+ * const geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
  * @param [options] - Object with the following properties:
  * @param [options.radii = Cartesian3(1.0, 1.0, 1.0)] - The radii of the ellipsoid in the x, y, and z directions.
  * @param [options.innerRadii = options.radii] - The inner radii of the ellipsoid in the x, y, and z directions.
@@ -5824,8 +5991,9 @@ export class EllipsoidTangentPlane {
      * point of the provided Cartesians.
      * @param cartesians - The list of positions surrounding the center point.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid to use.
+     * @returns The new instance of EllipsoidTangentPlane.
      */
-    static fromPoints(cartesians: Cartesian3, ellipsoid?: Ellipsoid): void;
+    static fromPoints(cartesians: Cartesian3[], ellipsoid?: Ellipsoid): EllipsoidTangentPlane;
     /**
      * Computes the projection of the provided 3D position onto the 2D plane, radially outward from the {@link EllipsoidTangentPlane.ellipsoid} coordinate system origin.
      * @param cartesian - The point to project.
@@ -5892,21 +6060,21 @@ export class EllipsoidTerrainProvider {
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
      */
-    errorEvent: Event;
+    readonly errorEvent: Event;
     /**
      * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
      */
-    credit: Credit;
+    readonly credit: Credit;
     /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link EllipsoidTerrainProvider#ready} returns true.
      */
-    tilingScheme: GeographicTilingScheme;
+    readonly tilingScheme: GeographicTilingScheme;
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      */
-    ready: boolean;
+    readonly ready: boolean;
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
      */
@@ -5917,19 +6085,19 @@ export class EllipsoidTerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link EllipsoidTerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
      * information is not available.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  The result includes terrain
@@ -5956,7 +6124,7 @@ export class EllipsoidTerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -5977,8 +6145,8 @@ export class EllipsoidTerrainProvider {
  *     this.myArg2Copy = arg2;
  * }
  *
- * var myObjectInstance = new MyObject();
- * var evt = new Cesium.Event();
+ * const myObjectInstance = new MyObject();
+ * const evt = new Cesium.Event();
  * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
  * evt.raiseEvent('1', '2');
  * evt.removeEventListener(MyObject.prototype.myListener);
@@ -6025,7 +6193,7 @@ export namespace Event {
  * to several events, then removing all those listeners at once later, for example, in
  * a destroy method.
  * @example
- * var helper = new Cesium.EventHelper();
+ * const helper = new Cesium.EventHelper();
  *
  * helper.add(someObject.event, listener1, this);
  * helper.add(otherObject.event, listener2, this);
@@ -6058,6 +6226,23 @@ export namespace EventHelper {
 }
 
 /**
+ * Flags to enable experimental features in CesiumJS. Stability and performance
+ * may not be optimal when these are enabled. Experimental features are subject
+ * to change without Cesium's standard deprecation policy.
+ * <p>
+ * Experimental features must still uphold Cesium's quality standards. Here
+ * are some guidelines:
+ * </p>
+ * <ul>
+ *   <li>Experimental features must have high unit test coverage like any other feature.</li>
+ *   <li>Experimental features are intended for large features where there is benefit of merging some of the code sooner (e.g. to avoid long-running staging branches)</li>
+ *   <li>Experimental flags should be short-lived. Make it clear in the PR what it would take to promote the feature to a regular feature.</li>
+ *   <li>To avoid cluttering the code, check the flag in as few places as possible. Ideally this would be a single place.</li>
+ * </ul>
+ */
+export const ExperimentalFeatures: any;
+
+/**
  * Constants to determine how an interpolated value is extrapolated
  * when querying outside the bounds of available data.
  */
@@ -6082,6 +6267,11 @@ export enum ExtrapolationType {
  */
 export namespace FeatureDetection {
     /**
+     * Detects whether the current browser supports Basis Universal textures and the web assembly modules needed to transcode them.
+     * @returns true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
+     */
+    function supportsBasis(scene: Scene): boolean;
+    /**
      * Detects whether the current browser supports the full screen standard.
      * @returns true if the browser supports the full screen standard, false if not.
      */
@@ -6091,6 +6281,21 @@ export namespace FeatureDetection {
      * @returns true if the browser supports typed arrays, false if not.
      */
     function supportsTypedArrays(): boolean;
+    /**
+     * Detects whether the current browser supports BigInt64Array typed arrays.
+     * @returns true if the browser supports BigInt64Array typed arrays, false if not.
+     */
+    function supportsBigInt64Array(): boolean;
+    /**
+     * Detects whether the current browser supports BigUint64Array typed arrays.
+     * @returns true if the browser supports BigUint64Array typed arrays, false if not.
+     */
+    function supportsBigUint64Array(): boolean;
+    /**
+     * Detects whether the current browser supports BigInt.
+     * @returns true if the browser supports BigInt, false if not.
+     */
+    function supportsBigInt(): boolean;
     /**
      * Detects whether the current browser supports Web Workers.
      * @returns true if the browsers supports Web Workers, false if not.
@@ -6420,13 +6625,13 @@ export class GeographicTilingScheme {
  * </p>
  * @example
  * // Create geometry with a position attribute and indexed lines.
- * var positions = new Float64Array([
+ * const positions = new Float64Array([
  *   0.0, 0.0, 0.0,
  *   7500000.0, 0.0, 0.0,
  *   0.0, 7500000.0, 0.0
  * ]);
  *
- * var geometry = new Cesium.Geometry({
+ * const geometry = new Cesium.Geometry({
  *   attributes : {
  *     position : new Cesium.GeometryAttribute({
  *       componentDatatype : Cesium.ComponentDatatype.DOUBLE,
@@ -6508,7 +6713,7 @@ export class Geometry {
      * Computes the number of vertices in a geometry.  The runtime is linear with
      * respect to the number of attributes in a vertex, not the number of vertices.
      * @example
-     * var numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
+     * const numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
      * @param geometry - The geometry.
      * @returns The number of vertices in the geometry.
      */
@@ -6520,7 +6725,7 @@ export class Geometry {
  * generally contains one or more attributes.  All attributes together form
  * the geometry's vertices.
  * @example
- * var geometry = new Cesium.Geometry({
+ * const geometry = new Cesium.Geometry({
  *   attributes : {
  *     position : new Cesium.GeometryAttribute({
  *       componentDatatype : Cesium.ComponentDatatype.FLOAT,
@@ -6655,6 +6860,20 @@ export class GeometryAttributes {
 }
 
 /**
+ * Base class for all geometry creation utility classes that can be passed to {@link GeometryInstance}
+ * for asynchronous geometry creation.
+ */
+export class GeometryFactory {
+    constructor();
+    /**
+     * Returns a geometry.
+     * @param geometryFactory - A description of the circle.
+     * @returns The computed vertices and indices.
+     */
+    static createGeometry(geometryFactory: GeometryFactory): Geometry | undefined;
+}
+
+/**
  * Geometry instancing allows one {@link Geometry} object to be positions in several
  * different locations and colored uniquely.  For example, one {@link BoxGeometry} can
  * be instanced several times, each with a different <code>modelMatrix</code> to change
@@ -6663,11 +6882,11 @@ export class GeometryAttributes {
  * // Create geometry for a box, and two instances that refer to it.
  * // One instance positions the box on the bottom and colored aqua.
  * // The other instance positions the box on the top and color white.
- * var geometry = Cesium.BoxGeometry.fromDimensions({
+ * const geometry = Cesium.BoxGeometry.fromDimensions({
  *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  * });
- * var instanceBottom = new Cesium.GeometryInstance({
+ * const instanceBottom = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
  *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
@@ -6676,7 +6895,7 @@ export class GeometryAttributes {
  *   },
  *   id : 'bottom'
  * });
- * var instanceTop = new Cesium.GeometryInstance({
+ * const instanceTop = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
  *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 3000000.0), new Cesium.Matrix4()),
@@ -6693,7 +6912,7 @@ export class GeometryAttributes {
  */
 export class GeometryInstance {
     constructor(options: {
-        geometry: Geometry;
+        geometry: Geometry | GeometryFactory;
         modelMatrix?: Matrix4;
         id?: any;
         attributes?: any;
@@ -6723,7 +6942,7 @@ export class GeometryInstance {
 /**
  * Values and type information for per-instance geometry attributes.
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : Cesium.BoxGeometry.fromDimensions({
  *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  *   }),
@@ -6826,7 +7045,7 @@ export namespace GeometryPipeline {
      * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
      * visualize vector attributes like normals, tangents, and bitangents.
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
+     * const geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
      * @param geometry - The <code>Geometry</code> instance with the attribute.
      * @param [attributeName = 'normal'] - The name of the attribute.
      * @param [length = 10000.0] - The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
@@ -6837,7 +7056,7 @@ export namespace GeometryPipeline {
      * Creates an object that maps attribute names to unique locations (indices)
      * for matching vertex attributes and shader programs.
      * @example
-     * var attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
+     * const attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
      * // Example output
      * // {
      * //   'position' : 0,
@@ -6874,7 +7093,7 @@ export namespace GeometryPipeline {
      * If the geometry does not have any <code>indices</code>, this function has no effect.
      * </p>
      * @example
-     * var geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
+     * const geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
      * @param geometry - The geometry to be split into multiple geometries.
      * @returns An array of geometries, each with indices that fit into unsigned shorts.
      */
@@ -7025,9 +7244,9 @@ export class GoogleEarthEnterpriseMetadata {
 /**
  * Terrain data for a single tile from a Google Earth Enterprise server.
  * @example
- * var buffer = ...
- * var childTileMask = ...
- * var terrainData = new Cesium.GoogleEarthEnterpriseTerrainData({
+ * const buffer = ...
+ * const childTileMask = ...
+ * const terrainData = new Cesium.GoogleEarthEnterpriseTerrainData({
  *   buffer : heightBuffer,
  *   childTileMask : childTileMask
  * });
@@ -7119,8 +7338,8 @@ export class GoogleEarthEnterpriseTerrainData {
 /**
  * Provides tiled terrain using the Google Earth Enterprise REST API.
  * @example
- * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
- * var gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
+ * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+ * const gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
  *     metadata : geeMetadata
  * });
  * @param options - Object with the following properties:
@@ -7174,19 +7393,19 @@ export class GoogleEarthEnterpriseTerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
      * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  This property may be undefined if availability
      * information is not available.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  The result must include terrain data and
@@ -7213,7 +7432,7 @@ export class GoogleEarthEnterpriseTerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -7275,13 +7494,13 @@ export class GregorianDate {
 /**
  * A description of a polyline on terrain or 3D Tiles. Only to be used with {@link GroundPolylinePrimitive}.
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -112.1340164450331, 36.05494287836128,
  *   -112.08821010582645, 36.097804071380715,
  *   -112.13296079730024, 36.168769146801104
  * ]);
  *
- * var geometry = new Cesium.GroundPolylineGeometry({
+ * const geometry = new Cesium.GroundPolylineGeometry({
  *   positions : positions
  * });
  * @param options - Options with the following properties:
@@ -7378,6 +7597,18 @@ export class HeadingPitchRange {
 export class HeadingPitchRoll {
     constructor(heading?: number, pitch?: number, roll?: number);
     /**
+     * Gets or sets the heading.
+     */
+    heading: number;
+    /**
+     * Gets or sets the pitch.
+     */
+    pitch: number;
+    /**
+     * Gets or sets the roll.
+     */
+    roll: number;
+    /**
      * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
      * @param quaternion - The quaternion from which to retrieve heading, pitch, and roll, all expressed in radians.
      * @param [result] - The object in which to store the result. If not provided, a new instance is created and returned.
@@ -7467,11 +7698,11 @@ export enum HeightmapEncoding {
  * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
  * is a rectangular array of heights in row-major order from north to south and west to east.
  * @example
- * var buffer = ...
- * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
- * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
- * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
- * var terrainData = new Cesium.HeightmapTerrainData({
+ * const buffer = ...
+ * const heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
+ * const childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
+ * const waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
+ * const terrainData = new Cesium.HeightmapTerrainData({
  *   buffer : heightBuffer,
  *   width : 65,
  *   height : 65,
@@ -7656,8 +7887,8 @@ export namespace HermitePolynomialApproximation {
  * respectively.
  * @example
  * // Create a G<sup>1</sup> continuous Hermite spline
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var spline = new Cesium.HermiteSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const spline = new Cesium.HermiteSpline({
  *     times : times,
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -7680,7 +7911,7 @@ export namespace HermitePolynomialApproximation {
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  * @param options - Object with the following properties:
  * @param options.times - An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -7715,7 +7946,7 @@ export class HermiteSpline {
      * Creates a spline where the tangents at each control point are the same.
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
      * @example
-     * var points = [
+     * const points = [
      *     new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *     new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
      *     new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
@@ -7724,15 +7955,15 @@ export class HermiteSpline {
      * ];
      *
      * // Add tangents
-     * var tangents = new Array(points.length);
+     * const tangents = new Array(points.length);
      * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
-     * var temp = new Cesium.Cartesian3();
-     * for (var i = 1; i < tangents.length - 1; ++i) {
+     * const temp = new Cesium.Cartesian3();
+     * for (let i = 1; i < tangents.length - 1; ++i) {
      *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cesium.Cartesian3());
      * }
      * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
      *
-     * var spline = Cesium.HermiteSpline.createC1({
+     * const spline = Cesium.HermiteSpline.createC1({
      *     times : times,
      *     points : points,
      *     tangents : tangents
@@ -7753,7 +7984,7 @@ export class HermiteSpline {
      * to create a curve in the class C<sup>2</sup>.
      * @example
      * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = Cesium.HermiteSpline.createNaturalCubic({
+     * const spline = Cesium.HermiteSpline.createNaturalCubic({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -7777,7 +8008,7 @@ export class HermiteSpline {
      * to create a curve in the class C<sup>2</sup>.
      * @example
      * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = Cesium.HermiteSpline.createClampedCubic({
+     * const spline = Cesium.HermiteSpline.createClampedCubic({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -7829,6 +8060,11 @@ export class HermiteSpline {
      */
     evaluate(time: number, result?: Cartesian3): Cartesian3;
 }
+
+/**
+ * Hilbert Order helper functions.
+ */
+export namespace HilbertOrder { }
 
 /**
  * Constants for WebGL index datatypes.  These corresponds to the
@@ -7903,7 +8139,7 @@ export interface InterpolationAlgorithm {
 /**
  * This enumerated type is used in determining where, relative to the frustum, an
  * object is located. The object can either be fully contained within the frustum (INSIDE),
- * partially inside the frustum and partially outside (INTERSECTING), or somwhere entirely
+ * partially inside the frustum and partially outside (INTERSECTING), or somewhere entirely
  * outside of the frustum's 6 planes (OUTSIDE).
  */
 export enum Intersect {
@@ -8009,15 +8245,15 @@ export namespace IntersectionTests {
     /**
      * Computes the intersection of a line segment and a plane.
      * @example
-     * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-     * var normal = ellipsoid.geodeticSurfaceNormal(origin);
-     * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+     * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+     * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+     * const plane = Cesium.Plane.fromPointNormal(origin, normal);
      *
-     * var p0 = new Cesium.Cartesian3(...);
-     * var p1 = new Cesium.Cartesian3(...);
+     * const p0 = new Cesium.Cartesian3(...);
+     * const p1 = new Cesium.Cartesian3(...);
      *
      * // find the intersection of the line segment from p0 to p1 and the tangent plane at origin.
-     * var intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
+     * const intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
      * @param endPoint0 - An end point of the line segment.
      * @param endPoint1 - The other end point of the line segment.
      * @param plane - The plane.
@@ -8028,16 +8264,16 @@ export namespace IntersectionTests {
     /**
      * Computes the intersection of a triangle and a plane
      * @example
-     * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-     * var normal = ellipsoid.geodeticSurfaceNormal(origin);
-     * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+     * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+     * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+     * const plane = Cesium.Plane.fromPointNormal(origin, normal);
      *
-     * var p0 = new Cesium.Cartesian3(...);
-     * var p1 = new Cesium.Cartesian3(...);
-     * var p2 = new Cesium.Cartesian3(...);
+     * const p0 = new Cesium.Cartesian3(...);
+     * const p1 = new Cesium.Cartesian3(...);
+     * const p2 = new Cesium.Cartesian3(...);
      *
      * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
-     * var triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
+     * const triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
      * @param p0 - First point of the triangle
      * @param p1 - Second point of the triangle
      * @param p2 - Third point of the triangle
@@ -8056,7 +8292,7 @@ export namespace Intersections2D {
      * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
      * 3, or 4 vertices.
      * @example
-     * var result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     * const result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
      * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
      * @param threshold - The threshold coordinate value at which to clip the triangle.
      * @param keepAbove - true to keep the portion of the triangle above the threshold, or false
@@ -8079,7 +8315,7 @@ export namespace Intersections2D {
     /**
      * Compute the barycentric coordinates of a 2D position within a 2D triangle.
      * @example
-     * var result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
+     * const result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
      * // result === new Cesium.Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
      * @param x - The x coordinate of the position for which to find the barycentric coordinates.
      * @param y - The y coordinate of the position for which to find the barycentric coordinates.
@@ -8097,7 +8333,7 @@ export namespace Intersections2D {
     /**
      * Compute the intersection between 2 line segments
      * @example
-     * var result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
+     * const result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
      * // result === new Cesium.Cartesian2(0.0, 1.0);
      * @param x00 - The x coordinate of the first line's first vertex.
      * @param y00 - The y coordinate of the first line's first vertex.
@@ -8181,7 +8417,7 @@ export class IonResource extends Resource {
      * Asynchronously creates an instance.
      * @example
      * //Load a Cesium3DTileset with asset ID of 124624234
-     * viewer.scene.primitives.add(new Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(124624234) }));
+     * viewer.scene.primitives.add(new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(124624234) }));
      * @example
      * //Load a CZML file with asset ID of 10890
      * Cesium.IonResource.fromAssetId(10890)
@@ -8228,12 +8464,14 @@ export class IonResource extends Resource {
      * @param [options.preferBlob = false] - If true, we will load the image via a blob.
      * @param [options.preferImageBitmap = false] - If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
      * @param [options.flipY = false] - If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+     * @param [options.skipColorSpaceConversion = false] - If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
      * @returns a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     fetchImage(options?: {
         preferBlob?: boolean;
         preferImageBitmap?: boolean;
         flipY?: boolean;
+        skipColorSpaceConversion?: boolean;
     }): Promise<ImageBitmap> | Promise<HTMLImageElement> | undefined;
 }
 
@@ -8575,8 +8813,8 @@ export namespace LinearApproximation {
 /**
  * A spline that uses piecewise linear interpolation to create a curve.
  * @example
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var spline = new Cesium.LinearSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const spline = new Cesium.LinearSpline({
  *     times : times,
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -8587,7 +8825,7 @@ export namespace LinearApproximation {
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  * @param options - Object with the following properties:
  * @param options.times - An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -8665,19 +8903,6 @@ export class MapProjection {
      *          created and returned.
      */
     unproject(cartesian: Cartesian3, result?: Cartographic): Cartographic;
-}
-
-export namespace MapboxApi {
-    /**
-     * The default Mapbox API access token to use if one is not provided to the
-     * constructor of an object that uses the Mapbox API.  If this property is undefined,
-     * Cesium's default access token is used, which is only suitable for use early in development.
-     * Please supply your own access token as soon as possible and prior to deployment.
-     * Visit {@link https://www.mapbox.com/help/create-api-access-token/} for details.
-     * When Cesium's default access token is used, a message is printed to the console the first
-     * time the Mapbox API is used.
-     */
-    var defaultAccessToken: string;
 }
 
 /**
@@ -8871,7 +9096,7 @@ export namespace Math {
     /**
      * Computes the linear interpolation of two values.
      * @example
-     * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+     * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
      * @param p - The start value to interpolate.
      * @param q - The end value to interpolate.
      * @param time - The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
@@ -8942,7 +9167,7 @@ export namespace Math {
      * Converts a longitude value, in radians, to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
      * @example
      * // Convert 270 degrees to -90 degrees longitude
-     * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
+     * const longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
      * @param angle - The longitude value, in radians, to convert to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
      * @returns The equivalent longitude value in the range [<code>-Math.PI</code>, <code>Math.PI</code>).
      */
@@ -8952,7 +9177,7 @@ export namespace Math {
      * Useful for sanitizing data before use in objects requiring correct range.
      * @example
      * // Clamp 108 degrees latitude to 90 degrees latitude
-     * var latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
+     * const latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
      * @param angle - The latitude value, in radians, to clamp to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
      * @returns The latitude value clamped to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
      */
@@ -8982,10 +9207,10 @@ export namespace Math {
      * first compared using an absolute tolerance test. If that fails, a relative tolerance test is performed.
      * Use this test if you are unsure of the magnitudes of left and right.
      * @example
-     * var a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
-     * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
-     * var c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
-     * var d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+     * const a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+     * const b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
+     * const c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+     * const d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
      * @param left - The first value to compare.
      * @param right - The other value to compare.
      * @param [relativeEpsilon = 0] - The maximum inclusive delta between <code>left</code> and <code>right</code> for the relative tolerance test.
@@ -9039,7 +9264,7 @@ export namespace Math {
      * Computes the factorial of the provided number.
      * @example
      * //Compute 7!, which is equal to 5040
-     * var computedFactorial = Cesium.Math.factorial(7);
+     * const computedFactorial = Cesium.Math.factorial(7);
      * @param n - The number whose factorial is to be computed.
      * @returns The factorial of the provided number or undefined if the number is less than 0.
      */
@@ -9047,8 +9272,8 @@ export namespace Math {
     /**
      * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
      * @example
-     * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
-     * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
+     * const n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
+     * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
      * @param [n] - The number to be incremented.
      * @param [maximumValue] - The maximum incremented value before rolling over to the minimum value.
      * @param [minimumValue = 0.0] - The number reset to after the maximum value has been exceeded.
@@ -9056,23 +9281,35 @@ export namespace Math {
      */
     function incrementWrap(n?: number, maximumValue?: number, minimumValue?: number): number;
     /**
-     * Determines if a positive integer is a power of two.
+     * Determines if a non-negative integer is a power of two.
+     * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
      * @example
-     * var t = Cesium.Math.isPowerOfTwo(16); // true
-     * var f = Cesium.Math.isPowerOfTwo(20); // false
-     * @param n - The positive integer to test.
+     * const t = Cesium.Math.isPowerOfTwo(16); // true
+     * const f = Cesium.Math.isPowerOfTwo(20); // false
+     * @param n - The integer to test in the range [0, (2^32)-1].
      * @returns <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
      */
     function isPowerOfTwo(n: number): boolean;
     /**
-     * Computes the next power-of-two integer greater than or equal to the provided positive integer.
+     * Computes the next power-of-two integer greater than or equal to the provided non-negative integer.
+     * The maximum allowed input is 2^31 due to 32-bit bitwise operator limitation in Javascript.
      * @example
-     * var n = Cesium.Math.nextPowerOfTwo(29); // 32
-     * var m = Cesium.Math.nextPowerOfTwo(32); // 32
-     * @param n - The positive integer to test.
+     * const n = Cesium.Math.nextPowerOfTwo(29); // 32
+     * const m = Cesium.Math.nextPowerOfTwo(32); // 32
+     * @param n - The integer to test in the range [0, 2^31].
      * @returns The next power-of-two integer.
      */
     function nextPowerOfTwo(n: number): number;
+    /**
+     * Computes the previous power-of-two integer less than or equal to the provided non-negative integer.
+     * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
+     * @example
+     * const n = Cesium.Math.previousPowerOfTwo(29); // 16
+     * const m = Cesium.Math.previousPowerOfTwo(32); // 32
+     * @param n - The integer to test in the range [0, (2^32)-1].
+     * @returns The previous power-of-two integer.
+     */
+    function previousPowerOfTwo(n: number): number;
     /**
      * Constraint a value to lie between two values.
      * @param value - The value to constrain.
@@ -9199,6 +9436,21 @@ export class Matrix2 implements ArrayLike<number> {
      */
     static unpack(array: number[], startingIndex?: number, result?: Matrix2): Matrix2;
     /**
+     * Flattens an array of Matrix2s into an array of components. The components
+     * are stored in column-major order.
+     * @param array - The array of matrices to pack.
+     * @param [result] - The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+     * @returns The packed array.
+     */
+    static packArray(array: Matrix2[], result?: number[]): number[];
+    /**
+     * Unpacks an array of column-major matrix components into an array of Matrix2s.
+     * @param array - The array of components to unpack.
+     * @param [result] - The array onto which to store the result.
+     * @returns The unpacked array.
+     */
+    static unpackArray(array: number[], result?: Matrix2[]): Matrix2[];
+    /**
      * Duplicates a Matrix2 instance.
      * @param matrix - The matrix to duplicate.
      * @param [result] - The object onto which to store the result.
@@ -9212,18 +9464,14 @@ export class Matrix2 implements ArrayLike<number> {
      * // [1.0, 2.0]
      * // [1.0, 2.0]
      *
-     * var v = [1.0, 1.0, 2.0, 2.0];
-     * var m = Cesium.Matrix2.fromArray(v);
+     * const v = [1.0, 1.0, 2.0, 2.0];
+     * const m = Cesium.Matrix2.fromArray(v);
      *
      * // Create same Matrix2 with using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
-     * var m2 = Cesium.Matrix2.fromArray(v2, 2);
-     * @param array - The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
-     * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to first column first row position in the matrix.
-     * @param [result] - The object onto which to store the result.
-     * @returns The modified result parameter or a new Matrix2 instance if one was not provided.
+     * const v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
+     * const m2 = Cesium.Matrix2.fromArray(v2, 2);
      */
-    static fromArray(array: number[], startingIndex?: number, result?: Matrix2): Matrix2;
+    static fromArray: any;
     /**
      * Creates a Matrix2 instance from a column-major order array.
      * @param values - The column-major order array.
@@ -9245,7 +9493,7 @@ export class Matrix2 implements ArrayLike<number> {
      * // Creates
      * //   [7.0, 0.0]
      * //   [0.0, 8.0]
-     * var m = Cesium.Matrix2.fromScale(new Cesium.Cartesian2(7.0, 8.0));
+     * const m = Cesium.Matrix2.fromScale(new Cesium.Cartesian2(7.0, 8.0));
      * @param scale - The x and y scale factors.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
@@ -9257,7 +9505,7 @@ export class Matrix2 implements ArrayLike<number> {
      * // Creates
      * //   [2.0, 0.0]
      * //   [0.0, 2.0]
-     * var m = Cesium.Matrix2.fromUniformScale(2.0);
+     * const m = Cesium.Matrix2.fromUniformScale(2.0);
      * @param scale - The uniform scale factor.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
@@ -9267,9 +9515,9 @@ export class Matrix2 implements ArrayLike<number> {
      * Creates a rotation matrix.
      * @example
      * // Rotate a point 45 degrees counterclockwise.
-     * var p = new Cesium.Cartesian2(5, 6);
-     * var m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix2.multiplyByVector(m, p, new Cesium.Cartesian2());
+     * const p = new Cesium.Cartesian2(5, 6);
+     * const m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
+     * const rotated = Cesium.Matrix2.multiplyByVector(m, p, new Cesium.Cartesian2());
      * @param angle - The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
@@ -9286,9 +9534,9 @@ export class Matrix2 implements ArrayLike<number> {
     /**
      * Computes the array index of the element at the provided row and column.
      * @example
-     * var myMatrix = new Cesium.Matrix2();
-     * var column1Row0Index = Cesium.Matrix2.getElementIndex(1, 0);
-     * var column1Row0 = myMatrix[column1Row0Index]
+     * const myMatrix = new Cesium.Matrix2();
+     * const column1Row0Index = Cesium.Matrix2.getElementIndex(1, 0);
+     * const column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      * @param row - The zero-based index of the row.
      * @param column - The zero-based index of the column.
@@ -9330,6 +9578,24 @@ export class Matrix2 implements ArrayLike<number> {
      */
     static setRow(matrix: Matrix2, index: number, cartesian: Cartesian2, result: Matrix2): Matrix2;
     /**
+     * Computes a new matrix that replaces the scale with the provided scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setScale(matrix: Matrix2, scale: Cartesian2, result: Matrix2): Matrix2;
+    /**
+     * Computes a new matrix that replaces the scale with the provided uniform scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The uniform scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setUniformScale(matrix: Matrix2, scale: number, result: Matrix2): Matrix2;
+    /**
      * Extracts the non-uniform scale assuming the matrix is an affine transformation.
      * @param matrix - The matrix.
      * @param result - The object onto which to store the result.
@@ -9343,6 +9609,20 @@ export class Matrix2 implements ArrayLike<number> {
      * @returns The maximum scale.
      */
     static getMaximumScale(matrix: Matrix2): number;
+    /**
+     * Sets the rotation assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param rotation - The rotation matrix.
+     * @returns The modified result parameter.
+     */
+    static setRotation(matrix: Matrix2, rotation: Matrix2): Matrix2;
+    /**
+     * Extracts the rotation matrix assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static getRotation(matrix: Matrix2, result: Matrix2): Matrix2;
     /**
      * Computes the product of two matrices.
      * @param left - The first matrix.
@@ -9393,7 +9673,18 @@ export class Matrix2 implements ArrayLike<number> {
      * @param result - The object onto which to store the result.
      * @returns The modified result parameter.
      */
-    static multiplyByScale(matrix: Matrix2, scale: Cartesian2, result: Matrix2): Matrix2;
+    static multiplyByScale(matrix: Matrix2, scale: number, result: Matrix2): Matrix2;
+    /**
+     * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
+     * @example
+     * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromUniformScale(scale), m);
+     * Cesium.Matrix2.multiplyByUniformScale(m, scale, m);
+     * @param matrix - The matrix on the left-hand side.
+     * @param scale - The uniform scale on the right-hand side.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static multiplyByUniformScale(matrix: Matrix2, scale: number, result: Matrix2): Matrix2;
     /**
      * Creates a negated copy of the provided matrix.
      * @param matrix - The matrix to negate.
@@ -9444,28 +9735,28 @@ export class Matrix2 implements ArrayLike<number> {
     /**
      * The index into Matrix2 for column 0, row 0.
      * @example
-     * var matrix = new Cesium.Matrix2();
+     * const matrix = new Cesium.Matrix2();
      * matrix[Cesium.Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
      */
     static readonly COLUMN0ROW0: number;
     /**
      * The index into Matrix2 for column 0, row 1.
      * @example
-     * var matrix = new Cesium.Matrix2();
+     * const matrix = new Cesium.Matrix2();
      * matrix[Cesium.Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
      */
     static readonly COLUMN0ROW1: number;
     /**
      * The index into Matrix2 for column 1, row 0.
      * @example
-     * var matrix = new Cesium.Matrix2();
+     * const matrix = new Cesium.Matrix2();
      * matrix[Cesium.Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
      */
     static readonly COLUMN1ROW0: number;
     /**
      * The index into Matrix2 for column 1, row 1.
      * @example
-     * var matrix = new Cesium.Matrix2();
+     * const matrix = new Cesium.Matrix2();
      * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
      */
     static readonly COLUMN1ROW1: number;
@@ -9542,6 +9833,21 @@ export class Matrix3 implements ArrayLike<number> {
      */
     static unpack(array: number[], startingIndex?: number, result?: Matrix3): Matrix3;
     /**
+     * Flattens an array of Matrix3s into an array of components. The components
+     * are stored in column-major order.
+     * @param array - The array of matrices to pack.
+     * @param [result] - The array onto which to store the result. If this is a typed array, it must have array.length * 9 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 9) elements.
+     * @returns The packed array.
+     */
+    static packArray(array: Matrix3[], result?: number[]): number[];
+    /**
+     * Unpacks an array of column-major matrix components into an array of Matrix3s.
+     * @param array - The array of components to unpack.
+     * @param [result] - The array onto which to store the result.
+     * @returns The unpacked array.
+     */
+    static unpackArray(array: number[], result?: Matrix3[]): Matrix3[];
+    /**
      * Duplicates a Matrix3 instance.
      * @param matrix - The matrix to duplicate.
      * @param [result] - The object onto which to store the result.
@@ -9556,18 +9862,14 @@ export class Matrix3 implements ArrayLike<number> {
      * // [1.0, 2.0, 3.0]
      * // [1.0, 2.0, 3.0]
      *
-     * var v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
-     * var m = Cesium.Matrix3.fromArray(v);
+     * const v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+     * const m = Cesium.Matrix3.fromArray(v);
      *
      * // Create same Matrix3 with using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
-     * var m2 = Cesium.Matrix3.fromArray(v2, 2);
-     * @param array - The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
-     * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to first column first row position in the matrix.
-     * @param [result] - The object onto which to store the result.
-     * @returns The modified result parameter or a new Matrix3 instance if one was not provided.
+     * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+     * const m2 = Cesium.Matrix3.fromArray(v2, 2);
      */
-    static fromArray(array: number[], startingIndex?: number, result?: Matrix3): Matrix3;
+    static fromArray: any;
     /**
      * Creates a Matrix3 instance from a column-major order array.
      * @param values - The column-major order array.
@@ -9604,7 +9906,7 @@ export class Matrix3 implements ArrayLike<number> {
      * //   [7.0, 0.0, 0.0]
      * //   [0.0, 8.0, 0.0]
      * //   [0.0, 0.0, 9.0]
-     * var m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+     * const m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
      * @param scale - The x, y, and z scale factors.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9617,7 +9919,7 @@ export class Matrix3 implements ArrayLike<number> {
      * //   [2.0, 0.0, 0.0]
      * //   [0.0, 2.0, 0.0]
      * //   [0.0, 0.0, 2.0]
-     * var m = Cesium.Matrix3.fromUniformScale(2.0);
+     * const m = Cesium.Matrix3.fromUniformScale(2.0);
      * @param scale - The uniform scale factor.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9630,7 +9932,7 @@ export class Matrix3 implements ArrayLike<number> {
      * //   [0.0, -9.0,  8.0]
      * //   [9.0,  0.0, -7.0]
      * //   [-8.0, 7.0,  0.0]
-     * var m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+     * const m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
      * @param vector - the vector on the left hand side of the cross product operation.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9640,9 +9942,9 @@ export class Matrix3 implements ArrayLike<number> {
      * Creates a rotation matrix around the x-axis.
      * @example
      * // Rotate a point 45 degrees counterclockwise around the x-axis.
-     * var p = new Cesium.Cartesian3(5, 6, 7);
-     * var m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+     * const p = new Cesium.Cartesian3(5, 6, 7);
+     * const m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
+     * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      * @param angle - The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9652,9 +9954,9 @@ export class Matrix3 implements ArrayLike<number> {
      * Creates a rotation matrix around the y-axis.
      * @example
      * // Rotate a point 45 degrees counterclockwise around the y-axis.
-     * var p = new Cesium.Cartesian3(5, 6, 7);
-     * var m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+     * const p = new Cesium.Cartesian3(5, 6, 7);
+     * const m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
+     * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      * @param angle - The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9664,9 +9966,9 @@ export class Matrix3 implements ArrayLike<number> {
      * Creates a rotation matrix around the z-axis.
      * @example
      * // Rotate a point 45 degrees counterclockwise around the z-axis.
-     * var p = new Cesium.Cartesian3(5, 6, 7);
-     * var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+     * const p = new Cesium.Cartesian3(5, 6, 7);
+     * const m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
+     * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      * @param angle - The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
@@ -9683,15 +9985,15 @@ export class Matrix3 implements ArrayLike<number> {
     /**
      * Computes the array index of the element at the provided row and column.
      * @example
-     * var myMatrix = new Cesium.Matrix3();
-     * var column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
-     * var column1Row0 = myMatrix[column1Row0Index]
+     * const myMatrix = new Cesium.Matrix3();
+     * const column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
+     * const column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
-     * @param row - The zero-based index of the row.
      * @param column - The zero-based index of the column.
+     * @param row - The zero-based index of the row.
      * @returns The index of the element at the provided row and column.
      */
-    static getElementIndex(row: number, column: number): number;
+    static getElementIndex(column: number, row: number): number;
     /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
      * @param matrix - The matrix to use.
@@ -9727,6 +10029,24 @@ export class Matrix3 implements ArrayLike<number> {
      */
     static setRow(matrix: Matrix3, index: number, cartesian: Cartesian3, result: Matrix3): Matrix3;
     /**
+     * Computes a new matrix that replaces the scale with the provided scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setScale(matrix: Matrix3, scale: Cartesian3, result: Matrix3): Matrix3;
+    /**
+     * Computes a new matrix that replaces the scale with the provided uniform scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The uniform scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setUniformScale(matrix: Matrix3, scale: number, result: Matrix3): Matrix3;
+    /**
      * Extracts the non-uniform scale assuming the matrix is an affine transformation.
      * @param matrix - The matrix.
      * @param result - The object onto which to store the result.
@@ -9740,6 +10060,20 @@ export class Matrix3 implements ArrayLike<number> {
      * @returns The maximum scale.
      */
     static getMaximumScale(matrix: Matrix3): number;
+    /**
+     * Sets the rotation assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param rotation - The rotation matrix.
+     * @returns The modified result parameter.
+     */
+    static setRotation(matrix: Matrix3, rotation: Matrix3): Matrix3;
+    /**
+     * Extracts the rotation matrix assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static getRotation(matrix: Matrix3, result: Matrix3): Matrix3;
     /**
      * Computes the product of two matrices.
      * @param left - The first matrix.
@@ -9790,7 +10124,18 @@ export class Matrix3 implements ArrayLike<number> {
      * @param result - The object onto which to store the result.
      * @returns The modified result parameter.
      */
-    static multiplyByScale(matrix: Matrix3, scale: Cartesian3, result: Matrix3): Matrix3;
+    static multiplyByScale(matrix: Matrix3, scale: number, result: Matrix3): Matrix3;
+    /**
+     * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
+     * @example
+     * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromUniformScale(scale), m);
+     * Cesium.Matrix3.multiplyByUniformScale(m, scale, m);
+     * @param matrix - The matrix on the left-hand side.
+     * @param scale - The uniform scale on the right-hand side.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static multiplyByUniformScale(matrix: Matrix3, scale: number, result: Matrix3): Matrix3;
     /**
      * Creates a negated copy of the provided matrix.
      * @param matrix - The matrix to negate.
@@ -9806,13 +10151,6 @@ export class Matrix3 implements ArrayLike<number> {
      */
     static transpose(matrix: Matrix3, result: Matrix3): Matrix3;
     /**
-     * Extracts the rotation assuming the matrix is an affine transformation.
-     * @param matrix - The matrix.
-     * @param result - The object onto which to store the result.
-     * @returns The modified result parameter
-     */
-    static getRotation(matrix: Matrix3, result: Matrix3): Matrix3;
-    /**
      * Computes the eigenvectors and eigenvalues of a symmetric matrix.
      * <p>
      * Returns a diagonal matrix and unitary matrix such that:
@@ -9823,20 +10161,20 @@ export class Matrix3 implements ArrayLike<number> {
      * of the unitary matrix are the corresponding eigenvectors.
      * </p>
      * @example
-     * var a = //... symetric matrix
-     * var result = {
+     * const a = //... symetric matrix
+     * const result = {
      *     unitary : new Cesium.Matrix3(),
      *     diagonal : new Cesium.Matrix3()
      * };
      * Cesium.Matrix3.computeEigenDecomposition(a, result);
      *
-     * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
-     * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
+     * const unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
+     * const b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
      * Cesium.Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
      *
-     * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
-     * var v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
-     * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
+     * const lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
+     * const v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
+     * const c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
      * @param matrix - The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
      * @param [result] - An object with unitary and diagonal properties which are matrices onto which to store the result.
      * @returns An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
@@ -9862,6 +10200,13 @@ export class Matrix3 implements ArrayLike<number> {
      * @returns The modified result parameter.
      */
     static inverse(matrix: Matrix3, result: Matrix3): Matrix3;
+    /**
+     * Computes the inverse transpose of a matrix.
+     * @param matrix - The matrix to transpose and invert.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static inverseTranspose(matrix: Matrix3, result: Matrix3): Matrix3;
     /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -10004,6 +10349,21 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static unpack(array: number[], startingIndex?: number, result?: Matrix4): Matrix4;
     /**
+     * Flattens an array of Matrix4s into an array of components. The components
+     * are stored in column-major order.
+     * @param array - The array of matrices to pack.
+     * @param [result] - The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
+     * @returns The packed array.
+     */
+    static packArray(array: Matrix4[], result?: number[]): number[];
+    /**
+     * Unpacks an array of column-major matrix components into an array of Matrix4s.
+     * @param array - The array of components to unpack.
+     * @param [result] - The array onto which to store the result.
+     * @returns The unpacked array.
+     */
+    static unpackArray(array: number[], result?: Matrix4[]): Matrix4[];
+    /**
      * Duplicates a Matrix4 instance.
      * @param matrix - The matrix to duplicate.
      * @param [result] - The object onto which to store the result.
@@ -10019,12 +10379,12 @@ export class Matrix4 implements ArrayLike<number> {
      * // [1.0, 2.0, 3.0, 4.0]
      * // [1.0, 2.0, 3.0, 4.0]
      *
-     * var v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
-     * var m = Cesium.Matrix4.fromArray(v);
+     * const v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+     * const m = Cesium.Matrix4.fromArray(v);
      *
      * // Create same Matrix4 with using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
-     * var m2 = Cesium.Matrix4.fromArray(v2, 2);
+     * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+     * const m2 = Cesium.Matrix4.fromArray(v2, 2);
      * @param array - The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param [startingIndex = 0] - The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param [result] - The object onto which to store the result.
@@ -10059,7 +10419,7 @@ export class Matrix4 implements ArrayLike<number> {
      * Computes a Matrix4 instance from a translation, rotation, and scale (TRS)
      * representation with the rotation represented as a quaternion.
      * @example
-     * var result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
+     * const result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
      *   new Cesium.Cartesian3(1.0, 2.0, 3.0), // translation
      *   Cesium.Quaternion.IDENTITY,           // rotation
      *   new Cesium.Cartesian3(7.0, 8.0, 9.0), // scale
@@ -10093,7 +10453,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //   [0.0, 8.0, 0.0, 0.0]
      * //   [0.0, 0.0, 9.0, 0.0]
      * //   [0.0, 0.0, 0.0, 1.0]
-     * var m = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+     * const m = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
      * @param scale - The x, y, and z scale factors.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -10107,12 +10467,19 @@ export class Matrix4 implements ArrayLike<number> {
      * //   [0.0, 2.0, 0.0, 0.0]
      * //   [0.0, 0.0, 2.0, 0.0]
      * //   [0.0, 0.0, 0.0, 1.0]
-     * var m = Cesium.Matrix4.fromUniformScale(2.0);
+     * const m = Cesium.Matrix4.fromUniformScale(2.0);
      * @param scale - The uniform scale factor.
      * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     static fromUniformScale(scale: number, result?: Matrix4): Matrix4;
+    /**
+     * Creates a rotation matrix.
+     * @param rotation - The rotation matrix.
+     * @param [result] - The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     */
+    static fromRotation(rotation: Matrix3, result?: Matrix4): Matrix4;
     /**
      * Computes a Matrix4 instance from a Camera.
      * @param camera - The camera to use.
@@ -10169,7 +10536,7 @@ export class Matrix4 implements ArrayLike<number> {
      * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
      * @example
      * // Create viewport transformation using an explicit viewport and depth range.
-     * var m = Cesium.Matrix4.computeViewportTransformation({
+     * const m = Cesium.Matrix4.computeViewportTransformation({
      *     x : 0.0,
      *     y : 0.0,
      *     width : 1024.0,
@@ -10201,7 +10568,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [11.0, 15.0, 19.0, 23.0]
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
-     * var a = Cesium.Matrix4.toArray(m);
+     * const a = Cesium.Matrix4.toArray(m);
      *
      * // m remains the same
      * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
@@ -10213,9 +10580,9 @@ export class Matrix4 implements ArrayLike<number> {
     /**
      * Computes the array index of the element at the provided row and column.
      * @example
-     * var myMatrix = new Cesium.Matrix4();
-     * var column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
-     * var column1Row0 = myMatrix[column1Row0Index];
+     * const myMatrix = new Cesium.Matrix4();
+     * const column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
+     * const column1Row0 = myMatrix[column1Row0Index];
      * myMatrix[column1Row0Index] = 10.0;
      * @param row - The zero-based index of the row.
      * @param column - The zero-based index of the column.
@@ -10232,10 +10599,10 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [22.0, 23.0, 24.0, 25.0]
      *
      * //Example 1: Creates an instance of Cartesian
-     * var a = Cesium.Matrix4.getColumn(m, 2, new Cesium.Cartesian4());
+     * const a = Cesium.Matrix4.getColumn(m, 2, new Cesium.Cartesian4());
      * @example
      * //Example 2: Sets values for Cartesian instance
-     * var a = new Cesium.Cartesian4();
+     * const a = new Cesium.Cartesian4();
      * Cesium.Matrix4.getColumn(m, 2, a);
      *
      * // a.x = 12.0; a.y = 16.0; a.z = 20.0; a.w = 24.0;
@@ -10254,7 +10621,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Cesium.Matrix4.setColumn(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
+     * const a = Cesium.Matrix4.setColumn(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
      *
      * // m remains the same
      * // a = [10.0, 11.0, 99.0, 13.0]
@@ -10269,23 +10636,6 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static setColumn(matrix: Matrix4, index: number, cartesian: Cartesian4, result: Matrix4): Matrix4;
     /**
-     * Computes a new matrix that replaces the translation in the rightmost column of the provided
-     * matrix with the provided translation.  This assumes the matrix is an affine transformation
-     * @param matrix - The matrix to use.
-     * @param translation - The translation that replaces the translation of the provided matrix.
-     * @param result - The object onto which to store the result.
-     * @returns The modified result parameter.
-     */
-    static setTranslation(matrix: Matrix4, translation: Cartesian3, result: Matrix4): Matrix4;
-    /**
-     * Computes a new matrix that replaces the scale with the provided scale.  This assumes the matrix is an affine transformation
-     * @param matrix - The matrix to use.
-     * @param scale - The scale that replaces the scale of the provided matrix.
-     * @param result - The object onto which to store the result.
-     * @returns The modified result parameter.
-     */
-    static setScale(matrix: Matrix4, scale: Cartesian3, result: Matrix4): Matrix4;
-    /**
      * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
      * @example
      * //returns a Cartesian4 instance with values from the specified column
@@ -10295,10 +10645,10 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [22.0, 23.0, 24.0, 25.0]
      *
      * //Example 1: Returns an instance of Cartesian
-     * var a = Cesium.Matrix4.getRow(m, 2, new Cesium.Cartesian4());
+     * const a = Cesium.Matrix4.getRow(m, 2, new Cesium.Cartesian4());
      * @example
      * //Example 2: Sets values for a Cartesian instance
-     * var a = new Cesium.Cartesian4();
+     * const a = new Cesium.Cartesian4();
      * Cesium.Matrix4.getRow(m, 2, a);
      *
      * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
@@ -10317,7 +10667,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Cesium.Matrix4.setRow(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
+     * const a = Cesium.Matrix4.setRow(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
      *
      * // m remains the same
      * // a = [10.0, 11.0, 12.0, 13.0]
@@ -10331,6 +10681,33 @@ export class Matrix4 implements ArrayLike<number> {
      * @returns The modified result parameter.
      */
     static setRow(matrix: Matrix4, index: number, cartesian: Cartesian4, result: Matrix4): Matrix4;
+    /**
+     * Computes a new matrix that replaces the translation in the rightmost column of the provided
+     * matrix with the provided translation. This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param translation - The translation that replaces the translation of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setTranslation(matrix: Matrix4, translation: Cartesian3, result: Matrix4): Matrix4;
+    /**
+     * Computes a new matrix that replaces the scale with the provided scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setScale(matrix: Matrix4, scale: Cartesian3, result: Matrix4): Matrix4;
+    /**
+     * Computes a new matrix that replaces the scale with the provided uniform scale.
+     * This assumes the matrix is an affine transformation.
+     * @param matrix - The matrix to use.
+     * @param scale - The uniform scale that replaces the scale of the provided matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static setUniformScale(matrix: Matrix4, scale: number, result: Matrix4): Matrix4;
     /**
      * Extracts the non-uniform scale assuming the matrix is an affine transformation.
      * @param matrix - The matrix.
@@ -10346,6 +10723,20 @@ export class Matrix4 implements ArrayLike<number> {
      * @returns The maximum scale.
      */
     static getMaximumScale(matrix: Matrix4): number;
+    /**
+     * Sets the rotation assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param rotation - The rotation matrix.
+     * @returns The modified result parameter.
+     */
+    static setRotation(matrix: Matrix4, rotation: Matrix4): Matrix4;
+    /**
+     * Extracts the rotation matrix assuming the matrix is an affine transformation.
+     * @param matrix - The matrix.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static getRotation(matrix: Matrix4, result: Matrix4): Matrix4;
     /**
      * Computes the product of two matrices.
      * @param left - The first matrix.
@@ -10371,17 +10762,17 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static subtract(left: Matrix4, right: Matrix4, result: Matrix4): Matrix4;
     /**
-     * Computes the product of two matrices assuming the matrices are
-     * affine transformation matrices, where the upper left 3x3 elements
-     * are a rotation matrix, and the upper three elements in the fourth
-     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * Computes the product of two matrices assuming the matrices are affine transformation matrices,
+     * where the upper left 3x3 elements are any matrix, and
+     * the upper three elements in the fourth column are the translation.
+     * The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the product for general 4x4
      * matrices using {@link Matrix4.multiply}.
      * @example
-     * var m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-     * var m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
-     * var m3 = Cesium.Matrix4.multiplyTransformation(m1, m2, new Cesium.Matrix4());
+     * const m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+     * const m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
+     * const m3 = Cesium.Matrix4.multiplyTransformation(m1, m2, new Cesium.Matrix4());
      * @param left - The first matrix.
      * @param right - The second matrix.
      * @param result - The object onto which to store the result.
@@ -10416,22 +10807,7 @@ export class Matrix4 implements ArrayLike<number> {
     static multiplyByTranslation(matrix: Matrix4, translation: Cartesian3, result: Matrix4): Matrix4;
     /**
      * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
-     * by an implicit uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
-     * <code>m</code> must be an affine matrix.
-     * This function performs fewer allocations and arithmetic operations.
-     * @example
-     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
-     * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
-     * @param matrix - The affine matrix on the left-hand side.
-     * @param scale - The uniform scale on the right-hand side.
-     * @param result - The object onto which to store the result.
-     * @returns The modified result parameter.
-     */
-    static multiplyByUniformScale(matrix: Matrix4, scale: number, result: Matrix4): Matrix4;
-    /**
-     * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
-     * by an implicit non-uniform scale matrix.  This is an optimization
+     * by an implicit non-uniform scale matrix. This is an optimization
      * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
      * <code>m</code> must be an affine matrix.
      * This function performs fewer allocations and arithmetic operations.
@@ -10445,6 +10821,17 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static multiplyByScale(matrix: Matrix4, scale: Cartesian3, result: Matrix4): Matrix4;
     /**
+     * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
+     * @example
+     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
+     * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
+     * @param matrix - The matrix on the left-hand side.
+     * @param scale - The uniform scale on the right-hand side.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static multiplyByUniformScale(matrix: Matrix4, scale: number, result: Matrix4): Matrix4;
+    /**
      * Computes the product of a matrix and a column vector.
      * @param matrix - The matrix.
      * @param cartesian - The vector.
@@ -10456,8 +10843,8 @@ export class Matrix4 implements ArrayLike<number> {
      * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
      * with a {@link Cartesian4} with a <code>w</code> component of zero.
      * @example
-     * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
-     * var result = Cesium.Matrix4.multiplyByPointAsVector(matrix, p, new Cesium.Cartesian3());
+     * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+     * const result = Cesium.Matrix4.multiplyByPointAsVector(matrix, p, new Cesium.Cartesian3());
      * // A shortcut for
      * //   Cartesian3 p = ...
      * //   Cesium.Matrix4.multiplyByVector(matrix, new Cesium.Cartesian4(p.x, p.y, p.z, 0.0), result);
@@ -10471,8 +10858,8 @@ export class Matrix4 implements ArrayLike<number> {
      * Computes the product of a matrix and a {@link Cartesian3}. This is equivalent to calling {@link Matrix4.multiplyByVector}
      * with a {@link Cartesian4} with a <code>w</code> component of 1, but returns a {@link Cartesian3} instead of a {@link Cartesian4}.
      * @example
-     * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
-     * var result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());
+     * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+     * const result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());
      * @param matrix - The matrix.
      * @param cartesian - The point.
      * @param result - The object onto which to store the result.
@@ -10488,7 +10875,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Cesium.Matrix4.multiplyByScalar(m, -2, new Cesium.Matrix4());
+     * const a = Cesium.Matrix4.multiplyByScalar(m, -2, new Cesium.Matrix4());
      *
      * // m remains the same
      * // a = [-20.0, -22.0, -24.0, -26.0]
@@ -10510,7 +10897,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Cesium.Matrix4.negate(m, new Cesium.Matrix4());
+     * const a = Cesium.Matrix4.negate(m, new Cesium.Matrix4());
      *
      * // m remains the same
      * // a = [-10.0, -11.0, -12.0, -13.0]
@@ -10531,7 +10918,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Cesium.Matrix4.transpose(m, new Cesium.Matrix4());
+     * const a = Cesium.Matrix4.transpose(m, new Cesium.Matrix4());
      *
      * // m remains the same
      * // a = [10.0, 14.0, 18.0, 22.0]
@@ -10609,14 +10996,14 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static equalsEpsilon(left?: Matrix4, right?: Matrix4, epsilon?: number): boolean;
     /**
-     * Gets the translation portion of the provided matrix, assuming the matrix is a affine transformation matrix.
+     * Gets the translation portion of the provided matrix, assuming the matrix is an affine transformation matrix.
      * @param matrix - The matrix to use.
      * @param result - The object onto which to store the result.
      * @returns The modified result parameter.
      */
     static getTranslation(matrix: Matrix4, result: Cartesian3): Cartesian3;
     /**
-     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is an affine transformation matrix.
+     * Gets the upper left 3x3 matrix of the provided matrix.
      * @example
      * // returns a Matrix3 instance from a Matrix4 instance
      *
@@ -10625,7 +11012,7 @@ export class Matrix4 implements ArrayLike<number> {
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      *
-     * var b = new Cesium.Matrix3();
+     * const b = new Cesium.Matrix3();
      * Cesium.Matrix4.getMatrix3(m,b);
      *
      * // b = [10.0, 14.0, 18.0]
@@ -10639,7 +11026,7 @@ export class Matrix4 implements ArrayLike<number> {
     /**
      * Computes the inverse of the provided matrix using Cramers Rule.
      * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
-     * If the matrix is an affine transformation matrix, it is more efficient
+     * If the matrix is a proper rigid transformation, it is more efficient
      * to invert it with {@link Matrix4.inverseTransformation}.
      * @param matrix - The matrix to invert.
      * @param result - The object onto which to store the result.
@@ -10647,10 +11034,10 @@ export class Matrix4 implements ArrayLike<number> {
      */
     static inverse(matrix: Matrix4, result: Matrix4): Matrix4;
     /**
-     * Computes the inverse of the provided matrix assuming it is
-     * an affine transformation matrix, where the upper left 3x3 elements
-     * are a rotation matrix, and the upper three elements in the fourth
-     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * Computes the inverse of the provided matrix assuming it is a proper rigid matrix,
+     * where the upper left 3x3 elements are a rotation matrix,
+     * and the upper three elements in the fourth column are the translation.
+     * The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the inverse for a general 4x4
      * matrix using {@link Matrix4.inverse}.
@@ -10659,6 +11046,13 @@ export class Matrix4 implements ArrayLike<number> {
      * @returns The modified result parameter.
      */
     static inverseTransformation(matrix: Matrix4, result: Matrix4): Matrix4;
+    /**
+     * Computes the inverse transpose of a matrix.
+     * @param matrix - The matrix to transpose and invert.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter.
+     */
+    static inverseTranspose(matrix: Matrix4, result: Matrix4): Matrix4;
     /**
      * An immutable Matrix4 instance initialized to the identity matrix.
      */
@@ -10846,9 +11240,9 @@ export class NearFarScalar {
  * visible horizon defined by the occluder and camera position.
  * @example
  * // Construct an occluder one unit away from the origin with a radius of one.
- * var cameraPosition = Cesium.Cartesian3.ZERO;
- * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
- * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
+ * const cameraPosition = Cesium.Cartesian3.ZERO;
+ * const occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
+ * const occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
  * @param occluderBoundingSphere - The bounding sphere surrounding the occluder.
  * @param cameraPosition - The coordinate of the viewer/camera.
  */
@@ -10877,10 +11271,10 @@ export class Occluder {
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      * @example
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
-     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
-     * var point = new Cesium.Cartesian3(0, 0, -3);
+     * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+     * const littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
+     * const occluder = new Cesium.Occluder(littleSphere, cameraPosition);
+     * const point = new Cesium.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
      * @param occludee - The point surrounding the occludee object.
      * @returns <code>true</code> if the occludee is visible; otherwise <code>false</code>.
@@ -10889,10 +11283,10 @@ export class Occluder {
     /**
      * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
      * @example
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
-     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
-     * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
+     * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+     * const littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
+     * const occluder = new Cesium.Occluder(littleSphere, cameraPosition);
+     * const bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
      * occluder.isBoundingSphereVisible(bigSphere); //returns true
      * @param occludee - The bounding sphere surrounding the occludee object.
      * @returns <code>true</code> if the occludee is visible; otherwise <code>false</code>.
@@ -10901,17 +11295,17 @@ export class Occluder {
     /**
      * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
      * @example
-     * var sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
-     * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
+     * const sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
+     * const sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
+     * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+     * const occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.computeVisibility(sphere2); //returns Visibility.NONE
      * @param occludeeBS - The bounding sphere of the occludee.
      * @returns Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
      */
-    computeVisibility(occludeeBS: BoundingSphere): number;
+    computeVisibility(occludeeBS: BoundingSphere): Visibility;
     /**
      * Computes a point that can be used as the occludee position to the visibility functions.
      * Use a radius of zero for the occludee radius.  Typically, a user computes a bounding sphere around
@@ -10921,13 +11315,13 @@ export class Occluder {
      * terrain.  You are better off not calling this and using the object's bounding sphere for objects
      * such as a satellite or ground vehicle.
      * @example
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -8), 2);
-     * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
-     * var positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
-     * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
-     * var occludeePosition = tileOccluderSphere.center;
-     * var occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
+     * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+     * const occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -8), 2);
+     * const occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
+     * const positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
+     * const tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
+     * const occludeePosition = tileOccluderSphere.center;
+     * const occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      * @param occluderBoundingSphere - The bounding sphere surrounding the occluder.
      * @param occludeePosition - The point where the occludee (bounding sphere of radius 0) is located.
      * @param positions - List of altitude points on the horizon near the surface of the occluder.
@@ -10949,7 +11343,7 @@ export class Occluder {
  * Provides geocoding via a {@link https://opencagedata.com/|OpenCage} server.
  * @example
  * // Configure a Viewer to use the OpenCage Geocoder
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *   geocoder: new Cesium.OpenCageGeocoderService('https://api.opencagedata.com/geocode/v1/', '<API key>')
  * });
  * @param url - The endpoint to the OpenCage server.
@@ -10992,10 +11386,10 @@ export class OpenCageGeocoderService {
  * An OrientedBoundingBox of some object is a closed and convex cuboid. It can provide a tighter bounding volume than {@link BoundingSphere} or {@link AxisAlignedBoundingBox} in many cases.
  * @example
  * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
- * var center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
- * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
+ * const center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
+ * const halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
  *
- * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+ * const obb = new Cesium.OrientedBoundingBox(center, halfAxes);
  * @param [center = Cartesian3.ZERO] - The center of the box.
  * @param [halfAxes = Matrix3.ZERO] - The three orthogonal half-axes of the bounding box.
  *                                          Equivalently, the transformation matrix, to rotate and scale a 0x0x0
@@ -11037,7 +11431,7 @@ export class OrientedBoundingBox {
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+     * const box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      * @param [positions] - List of {@link Cartesian3} points that the bounding box will enclose.
      * @param [result] - The object onto which to store the result.
      * @returns The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
@@ -11054,6 +11448,13 @@ export class OrientedBoundingBox {
      * @returns The modified result parameter or a new OrientedBoundingBox instance if none was provided.
      */
     static fromRectangle(rectangle: Rectangle, minimumHeight?: number, maximumHeight?: number, ellipsoid?: Ellipsoid, result?: OrientedBoundingBox): OrientedBoundingBox;
+    /**
+     * Computes an OrientedBoundingBox that bounds an affine transformation.
+     * @param transformation - The affine transformation.
+     * @param [result] - The object onto which to store the result.
+     * @returns The modified result parameter or a new OrientedBoundingBox instance if none was provided.
+     */
+    static fromTransformation(transformation: Matrix4, result?: OrientedBoundingBox): OrientedBoundingBox;
     /**
      * Duplicates a OrientedBoundingBox instance.
      * @param box - The bounding box to duplicate.
@@ -11080,7 +11481,7 @@ export class OrientedBoundingBox {
      * });
      * @param box - The box.
      * @param cartesian - The point
-     * @returns The estimated distance squared from the bounding sphere to the point.
+     * @returns The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
      */
     static distanceSquaredTo(box: OrientedBoundingBox, cartesian: Cartesian3): number;
     /**
@@ -11095,6 +11496,20 @@ export class OrientedBoundingBox {
      * @returns The nearest and farthest distances on the bounding box from position in direction.
      */
     static computePlaneDistances(box: OrientedBoundingBox, position: Cartesian3, direction: Cartesian3, result?: Interval): Interval;
+    /**
+     * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
+     * @param box - The oriented bounding box.
+     * @param [result] - An array of eight {@link Cartesian3} instances onto which to store the corners.
+     * @returns The modified result parameter or a new array if none was provided.
+     */
+    static computeCorners(box: OrientedBoundingBox, result?: Cartesian3[]): Cartesian3[];
+    /**
+     * Computes a transformation matrix from an oriented bounding box.
+     * @param box - The oriented bounding box.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter or a new {@link Matrix4} instance if none was provided.
+     */
+    static computeTransformation(box: OrientedBoundingBox, result: Matrix4): Matrix4;
     /**
      * Determines whether or not a bounding box is hidden from view by the occluder.
      * @param box - The bounding box surrounding the occludee object.
@@ -11134,6 +11549,18 @@ export class OrientedBoundingBox {
      */
     computePlaneDistances(position: Cartesian3, direction: Cartesian3, result?: Interval): Interval;
     /**
+     * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
+     * @param [result] - An array of eight {@link Cartesian3} instances onto which to store the corners.
+     * @returns The modified result parameter or a new array if none was provided.
+     */
+    computeCorners(result?: Cartesian3[]): Cartesian3[];
+    /**
+     * Computes a transformation matrix from an oriented bounding box.
+     * @param result - The object onto which to store the result.
+     * @returns The modified result parameter or a new {@link Matrix4} instance if none was provided.
+     */
+    computeTransformation(result: Matrix4): Matrix4;
+    /**
      * Determines whether or not a bounding box is hidden from view by the occluder.
      * @param occluder - The occluder.
      * @returns <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
@@ -11168,9 +11595,9 @@ export class OrientedBoundingBox {
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
  * @example
- * var maxRadii = ellipsoid.maximumRadius;
+ * const maxRadii = ellipsoid.maximumRadius;
  *
- * var frustum = new Cesium.OrthographicFrustum();
+ * const frustum = new Cesium.OrthographicFrustum();
  * frustum.near = 0.01 * maxRadii;
  * frustum.far = 50.0 * maxRadii;
  * @param [options] - An object with the following properties:
@@ -11230,8 +11657,8 @@ export class OrthographicFrustum {
      * Creates a culling volume for this frustum.
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.computeVisibility(boundingVolume);
+     * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * const intersect = cullingVolume.computeVisibility(boundingVolume);
      * @param position - The eye position.
      * @param direction - The view direction.
      * @param up - The up direction.
@@ -11243,7 +11670,7 @@ export class OrthographicFrustum {
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      * @param drawingBufferWidth - The width of the drawing buffer.
      * @param drawingBufferHeight - The height of the drawing buffer.
      * @param distance - The distance to the near plane in meters.
@@ -11283,9 +11710,9 @@ export class OrthographicFrustum {
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
  * @example
- * var maxRadii = ellipsoid.maximumRadius;
+ * const maxRadii = ellipsoid.maximumRadius;
  *
- * var frustum = new Cesium.OrthographicOffCenterFrustum();
+ * const frustum = new Cesium.OrthographicOffCenterFrustum();
  * frustum.right = maxRadii * Cesium.Math.PI;
  * frustum.left = -c.frustum.right;
  * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
@@ -11341,8 +11768,8 @@ export class OrthographicOffCenterFrustum {
      * Creates a culling volume for this frustum.
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.computeVisibility(boundingVolume);
+     * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * const intersect = cullingVolume.computeVisibility(boundingVolume);
      * @param position - The eye position.
      * @param direction - The view direction.
      * @param up - The up direction.
@@ -11354,7 +11781,7 @@ export class OrthographicOffCenterFrustum {
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      * @param drawingBufferWidth - The width of the drawing buffer.
      * @param drawingBufferHeight - The height of the drawing buffer.
      * @param distance - The distance to the near plane in meters.
@@ -11452,7 +11879,7 @@ export namespace PackableForInterpolation {
  * Provides geocoding via a {@link https://pelias.io/|Pelias} server.
  * @example
  * // Configure a Viewer to use the Pelias server hosted by https://geocode.earth/
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *   geocoder: new Cesium.PeliasGeocoderService(new Cesium.Resource({
  *     url: 'https://api.geocode.earth/v1/',
  *       queryParameters: {
@@ -11481,7 +11908,7 @@ export class PeliasGeocoderService {
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
  * @example
- * var frustum = new Cesium.PerspectiveFrustum({
+ * const frustum = new Cesium.PerspectiveFrustum({
  *     fov : Cesium.Math.PI_OVER_THREE,
  *     aspectRatio : canvas.clientWidth / canvas.clientHeight
  *     near : 1.0,
@@ -11566,8 +11993,8 @@ export class PerspectiveFrustum {
      * Creates a culling volume for this frustum.
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.computeVisibility(boundingVolume);
+     * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * const intersect = cullingVolume.computeVisibility(boundingVolume);
      * @param position - The eye position.
      * @param direction - The view direction.
      * @param up - The up direction.
@@ -11579,17 +12006,17 @@ export class PerspectiveFrustum {
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
      * @example
      * // Example 2
      * // Get the width and height of a pixel if the near plane was set to 'distance'.
      * // For example, get the size of a pixel of an image on a billboard.
-     * var position = camera.position;
-     * var direction = camera.direction;
-     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
-     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
-     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
+     * const position = camera.position;
+     * const direction = camera.direction;
+     * const toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
+     * const toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
+     * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
      * @param drawingBufferWidth - The width of the drawing buffer.
      * @param drawingBufferHeight - The height of the drawing buffer.
      * @param distance - The distance to the near plane in meters.
@@ -11629,7 +12056,7 @@ export class PerspectiveFrustum {
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
  * @example
- * var frustum = new Cesium.PerspectiveOffCenterFrustum({
+ * const frustum = new Cesium.PerspectiveOffCenterFrustum({
  *     left : -1.0,
  *     right : 1.0,
  *     top : 1.0,
@@ -11690,8 +12117,8 @@ export class PerspectiveOffCenterFrustum {
      * Creates a culling volume for this frustum.
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.computeVisibility(boundingVolume);
+     * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * const intersect = cullingVolume.computeVisibility(boundingVolume);
      * @param position - The eye position.
      * @param direction - The view direction.
      * @param up - The up direction.
@@ -11703,17 +12130,17 @@ export class PerspectiveOffCenterFrustum {
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
      * @example
      * // Example 2
      * // Get the width and height of a pixel if the near plane was set to 'distance'.
      * // For example, get the size of a pixel of an image on a billboard.
-     * var position = camera.position;
-     * var direction = camera.direction;
-     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
-     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
-     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
+     * const position = camera.position;
+     * const direction = camera.direction;
+     * const toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
+     * const toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
+     * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
+     * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
      * @param drawingBufferWidth - The width of the drawing buffer.
      * @param drawingBufferHeight - The height of the drawing buffer.
      * @param distance - The distance to the near plane in meters.
@@ -11856,9 +12283,25 @@ export enum PixelFormat {
      */
     RGBA_PVRTC_2BPPV1 = WebGLConstants.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG,
     /**
+     * A pixel format containing red, green, blue, and alpha channels that is ASTC compressed.
+     */
+    RGBA_ASTC = WebGLConstants.COMPRESSED_RGBA_ASTC_4x4_WEBGL,
+    /**
      * A pixel format containing red, green, and blue channels that is ETC1 compressed.
      */
-    RGB_ETC1 = WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL
+    RGB_ETC1 = WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL,
+    /**
+     * A pixel format containing red, green, and blue channels that is ETC2 compressed.
+     */
+    RGB8_ETC2 = WebGLConstants.COMPRESSED_RGB8_ETC2,
+    /**
+     * A pixel format containing red, green, blue, and alpha channels that is ETC2 compressed.
+     */
+    RGBA8_ETC2_EAC = WebGLConstants.COMPRESSED_RGBA8_ETC2_EAC,
+    /**
+     * A pixel format containing red, green, blue, and alpha channels that is BC7 compressed.
+     */
+    RGBA_BC7 = WebGLConstants.COMPRESSED_RGBA_BPTC_UNORM
 }
 
 /**
@@ -11871,7 +12314,7 @@ export enum PixelFormat {
  * the plane.
  * @example
  * // The plane x=0
- * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+ * const plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
  * @param normal - The plane's normal (normalized).
  * @param distance - The shortest distance from the origin to the plane.  The sign of
  * <code>distance</code> determines which side of the plane the origin
@@ -11896,9 +12339,9 @@ export class Plane {
     /**
      * Creates a plane from a normal and a point on the plane.
      * @example
-     * var point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
-     * var normal = ellipsoid.geodeticSurfaceNormal(point);
-     * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
+     * const point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
+     * const normal = ellipsoid.geodeticSurfaceNormal(point);
+     * const tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
      * @param point - The point on the plane.
      * @param normal - The plane's normal (normalized).
      * @param [result] - The object onto which to store the result.
@@ -11971,14 +12414,14 @@ export class Plane {
 /**
  * Describes geometry representing a plane centered at the origin, with a unit width and length.
  * @example
- * var planeGeometry = new Cesium.PlaneGeometry({
+ * const planeGeometry = new Cesium.PlaneGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
- * @param options - Object with the following properties:
+ * @param [options] - Object with the following properties:
  * @param [options.vertexFormat = VertexFormat.DEFAULT] - The vertex attributes to be computed.
  */
 export class PlaneGeometry {
-    constructor(options: {
+    constructor(options?: {
         vertexFormat?: VertexFormat;
     });
     /**
@@ -12044,7 +12487,7 @@ export class PlaneOutlineGeometry {
  * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  * @example
  * // 1. create a polygon from points
- * var polygon = new Cesium.PolygonGeometry({
+ * const polygon = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -12055,10 +12498,10 @@ export class PlaneOutlineGeometry {
  *     ])
  *   )
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
  *
  * // 2. create a nested polygon with holes
- * var polygonWithHole = new Cesium.PolygonGeometry({
+ * const polygonWithHole = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -109.0, 30.0,
@@ -12092,10 +12535,10 @@ export class PlaneOutlineGeometry {
  *     )]
  *   )
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
  *
  * // 3. create extruded polygon
- * var extrudedPolygon = new Cesium.PolygonGeometry({
+ * const extrudedPolygon = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -12107,7 +12550,7 @@ export class PlaneOutlineGeometry {
  *   ),
  *   extrudedHeight: 300000
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
  * @param options - Object with the following properties:
  * @param options.polygonHierarchy - A polygon hierarchy that can include holes.
  * @param [options.height = 0.0] - The distance in meters between the polygon and the ellipsoid surface.
@@ -12143,7 +12586,7 @@ export class PolygonGeometry {
      * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      * @example
      * // create a polygon from points
-     * var polygon = Cesium.PolygonGeometry.fromPositions({
+     * const polygon = Cesium.PolygonGeometry.fromPositions({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
@@ -12152,7 +12595,7 @@ export class PolygonGeometry {
      *     -68.0, 40.0
      *   ])
      * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      * @param options - Object with the following properties:
      * @param options.positions - An array of positions that defined the corner points of the polygon.
      * @param [options.height = 0.0] - The height of the polygon.
@@ -12240,7 +12683,7 @@ export class PolygonHierarchy {
  * A description of the outline of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy.
  * @example
  * // 1. create a polygon outline from points
- * var polygon = new Cesium.PolygonOutlineGeometry({
+ * const polygon = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -12251,10 +12694,10 @@ export class PolygonHierarchy {
  *     ])
  *   )
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
  *
  * // 2. create a nested polygon with holes outline
- * var polygonWithHole = new Cesium.PolygonOutlineGeometry({
+ * const polygonWithHole = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -109.0, 30.0,
@@ -12288,10 +12731,10 @@ export class PolygonHierarchy {
  *     )]
  *   )
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
  *
  * // 3. create extruded polygon outline
- * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
+ * const extrudedPolygon = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -12303,7 +12746,7 @@ export class PolygonHierarchy {
  *   ),
  *   extrudedHeight: 300000
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
  * @param options - Object with the following properties:
  * @param options.polygonHierarchy - A polygon hierarchy that can include holes.
  * @param [options.height = 0.0] - The distance in meters between the polygon and the ellipsoid surface.
@@ -12349,7 +12792,7 @@ export class PolygonOutlineGeometry {
      * A description of a polygon outline from an array of positions.
      * @example
      * // create a polygon from points
-     * var polygon = Cesium.PolygonOutlineGeometry.fromPositions({
+     * const polygon = Cesium.PolygonOutlineGeometry.fromPositions({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
@@ -12358,7 +12801,7 @@ export class PolygonOutlineGeometry {
      *     -68.0, 40.0
      *   ])
      * });
-     * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+     * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
      * @param options - Object with the following properties:
      * @param options.positions - An array of positions that defined the corner points of the polygon.
      * @param [options.height = 0.0] - The height of the polygon.
@@ -12391,7 +12834,7 @@ export class PolygonOutlineGeometry {
  * displaying with a material.
  * @example
  * // A polyline with two connected line segments
- * var polyline = new Cesium.PolylineGeometry({
+ * const polyline = new Cesium.PolylineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     0.0, 0.0,
  *     5.0, 0.0,
@@ -12399,7 +12842,7 @@ export class PolygonOutlineGeometry {
  *   ]),
  *   width : 10.0
  * });
- * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
+ * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  * @param options - Object with the following properties:
  * @param options.positions - An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
  * @param [options.width = 1.0] - The width in pixels.
@@ -12453,15 +12896,15 @@ export class PolylineGeometry {
  * A description of a polyline with a volume (a 2D shape extruded along a polyline).
  * @example
  * function computeCircle(radius) {
- *   var positions = [];
- *   for (var i = 0; i < 360; i++) {
- *     var radians = Cesium.Math.toRadians(i);
+ *   const positions = [];
+ *   for (let i = 0; i < 360; i++) {
+ *     const radians = Cesium.Math.toRadians(i);
  *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
  *   }
  *   return positions;
  * }
  *
- * var volume = new Cesium.PolylineVolumeGeometry({
+ * const volume = new Cesium.PolylineVolumeGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
@@ -12470,7 +12913,7 @@ export class PolylineGeometry {
  *   shapePositions : computeCircle(100000.0)
  * });
  * @param options - Object with the following properties:
- * @param options.polylinePositions - An array of {@link Cartesain3} positions that define the center of the polyline volume.
+ * @param options.polylinePositions - An array of {@link Cartesian3} positions that define the center of the polyline volume.
  * @param options.shapePositions - An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
  * @param [options.ellipsoid = Ellipsoid.WGS84] - The ellipsoid to be used as a reference.
  * @param [options.granularity = Math.RADIANS_PER_DEGREE] - The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -12518,15 +12961,15 @@ export class PolylineVolumeGeometry {
  * A description of a polyline with a volume (a 2D shape extruded along a polyline).
  * @example
  * function computeCircle(radius) {
- *   var positions = [];
- *   for (var i = 0; i < 360; i++) {
- *     var radians = Cesium.Math.toRadians(i);
+ *   const positions = [];
+ *   for (let i = 0; i < 360; i++) {
+ *     const radians = Cesium.Math.toRadians(i);
  *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
  *   }
  *   return positions;
  * }
  *
- * var volumeOutline = new Cesium.PolylineVolumeOutlineGeometry({
+ * const volumeOutline = new Cesium.PolylineVolumeOutlineGeometry({
  *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
  *     -70.0, 35.0
@@ -12656,7 +13099,7 @@ export namespace QuadraticRealPolynomial {
  * of the tile and 32767 at the northeast corner.  Height is zero at the minimum height in the tile
  * and 32767 at the maximum height in the tile.
  * @example
- * var data = new Cesium.QuantizedMeshTerrainData({
+ * const data = new Cesium.QuantizedMeshTerrainData({
  *     minimumHeight : -100,
  *     maximumHeight : 2101,
  *     quantizedVertices : new Uint16Array([// order is SW NW SE NE
@@ -13065,13 +13508,13 @@ export class Quaternion {
      * Computes the spherical quadrangle interpolation between quaternions.
      * @example
      * // 1. compute the squad interpolation between two quaternions on a curve
-     * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
-     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
-     * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
+     * const s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
+     * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
+     * const q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
      *
      * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
-     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
-     * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
+     * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
+     * const q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
      * @param q0 - The first quaternion.
      * @param q1 - The second quaternion.
      * @param s0 - The first inner quadrangle.
@@ -13287,8 +13730,8 @@ export class Ray {
      * where o is the origin of the ray and d is the direction.
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
-     * var intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
-     * var point = Cesium.Ray.getPoint(ray, intersection.start);
+     * const intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
+     * const point = Cesium.Ray.getPoint(ray, intersection.start);
      * @param ray - The ray.
      * @param t - A scalar value.
      * @param [result] - The object in which the result will be stored.
@@ -13325,11 +13768,11 @@ export class Rectangle {
     /**
      * Gets the width of the rectangle in radians.
      */
-    width: number;
+    readonly width: number;
     /**
      * Gets the height of the rectangle in radians.
      */
-    height: number;
+    readonly height: number;
     /**
      * The number of elements used to pack the object into an array.
      */
@@ -13365,7 +13808,7 @@ export class Rectangle {
     /**
      * Creates a rectangle given the boundary longitude and latitude in degrees.
      * @example
-     * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
+     * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
      * @param [west = 0.0] - The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param [south = 0.0] - The southernmost latitude in degrees in the range [-90.0, 90.0].
      * @param [east = 0.0] - The easternmost longitude in degrees in the range [-180.0, 180.0].
@@ -13377,7 +13820,7 @@ export class Rectangle {
     /**
      * Creates a rectangle given the boundary longitude and latitude in radians.
      * @example
-     * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
+     * const rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
      * @param [west = 0.0] - The westernmost longitude in radians in the range [-Math.PI, Math.PI].
      * @param [south = 0.0] - The southernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
      * @param [east = 0.0] - The easternmost longitude in radians in the range [-Math.PI, Math.PI].
@@ -13546,6 +13989,17 @@ export class Rectangle {
      */
     static subsample(rectangle: Rectangle, ellipsoid?: Ellipsoid, surfaceHeight?: number, result?: Cartesian3[]): Cartesian3[];
     /**
+     * Computes a subsection of a rectangle from normalized coordinates in the range [0.0, 1.0].
+     * @param rectangle - The rectangle to subsection.
+     * @param westLerp - The west interpolation factor in the range [0.0, 1.0]. Must be less than or equal to eastLerp.
+     * @param southLerp - The south interpolation factor in the range [0.0, 1.0]. Must be less than or equal to northLerp.
+     * @param eastLerp - The east interpolation factor in the range [0.0, 1.0]. Must be greater than or equal to westLerp.
+     * @param northLerp - The north interpolation factor in the range [0.0, 1.0]. Must be greater than or equal to southLerp.
+     * @param [result] - The object onto which to store the result.
+     * @returns The modified result parameter or a new Rectangle instance if none was provided.
+     */
+    static subsection(rectangle: Rectangle, westLerp: number, southLerp: number, eastLerp: number, northLerp: number, result?: Rectangle): Rectangle;
+    /**
      * The largest possible rectangle.
      */
     static readonly MAX_VALUE: Rectangle;
@@ -13555,21 +14009,21 @@ export class Rectangle {
  * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
  * @example
  * // 1. create a rectangle
- * var rectangle = new Cesium.RectangleGeometry({
+ * const rectangle = new Cesium.RectangleGeometry({
  *   ellipsoid : Cesium.Ellipsoid.WGS84,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0
  * });
- * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+ * const geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
  *
  * // 2. create an extruded rectangle without a top
- * var rectangle = new Cesium.RectangleGeometry({
+ * const rectangle = new Cesium.RectangleGeometry({
  *   ellipsoid : Cesium.Ellipsoid.WGS84,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0,
  *   extrudedHeight: 300000
  * });
- * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+ * const geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
  * @param options - Object with the following properties:
  * @param options.rectangle - A cartographic rectangle with north, south, east and west properties in radians.
  * @param [options.vertexFormat = VertexFormat.DEFAULT] - The vertex attributes to be computed.
@@ -13638,12 +14092,12 @@ export class RectangleGeometry {
 /**
  * A description of the outline of a a cartographic rectangle on an ellipsoid centered at the origin.
  * @example
- * var rectangle = new Cesium.RectangleOutlineGeometry({
+ * const rectangle = new Cesium.RectangleOutlineGeometry({
  *   ellipsoid : Cesium.Ellipsoid.WGS84,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0
  * });
- * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
+ * const geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
  * @param options - Object with the following properties:
  * @param options.rectangle - A cartographic rectangle with north, south, east and west properties in radians.
  * @param [options.ellipsoid = Ellipsoid.WGS84] - The ellipsoid on which the rectangle lies.
@@ -13925,7 +14379,7 @@ export enum RequestType {
  *   return false;
  * }
  *
- * var resource = new Resource({
+ * const resource = new Resource({
  *    url: 'http://server.com/path/to/resource.json',
  *    proxy: new DefaultProxy('/proxy/'),
  *    headers: {
@@ -14015,9 +14469,15 @@ export class Resource {
      */
     hasHeaders: boolean;
     /**
+     * Override Object#toString so that implicit string conversion gives the
+     * complete URL represented by this Resource.
+     * @returns The URL represented by this Resource
+     */
+    toString(): string;
+    /**
      * Returns the url, optional with the query string and processed by a proxy.
      * @param [query = false] - If true, the query string is included.
-     * @param [proxy = false] - If true, the url is processed the proxy object if defined.
+     * @param [proxy = false] - If true, the url is processed by the proxy object, if defined.
      * @returns The url with all the requested components.
      */
     getUrlComponent(query?: boolean, proxy?: boolean): string;
@@ -14178,12 +14638,14 @@ export class Resource {
      * @param [options.preferBlob = false] - If true, we will load the image via a blob.
      * @param [options.preferImageBitmap = false] - If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
      * @param [options.flipY = false] - If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+     * @param [options.skipColorSpaceConversion = false] - If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
      * @returns a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     fetchImage(options?: {
         preferBlob?: boolean;
         preferImageBitmap?: boolean;
         flipY?: boolean;
+        skipColorSpaceConversion?: boolean;
     }): Promise<ImageBitmap> | Promise<HTMLImageElement> | undefined;
     /**
      * Creates a Resource and calls fetchImage() on it.
@@ -14199,6 +14661,7 @@ export class Resource {
      * @param [options.request] - A Request object that will be used. Intended for internal use only.
      * @param [options.preferBlob = false] - If true, we will load the image via a blob.
      * @param [options.preferImageBitmap = false] - If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @param [options.skipColorSpaceConversion = false] - If true, any custom gamma or color profiles in the image will be ignored. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
      * @returns a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     static fetchImage(options: {
@@ -14213,6 +14676,7 @@ export class Resource {
         request?: Request;
         preferBlob?: boolean;
         preferImageBitmap?: boolean;
+        skipColorSpaceConversion?: boolean;
     }): Promise<ImageBitmap> | Promise<HTMLImageElement> | undefined;
     /**
      * Asynchronously loads the given resource as text.  Returns a promise that will resolve to
@@ -14221,7 +14685,7 @@ export class Resource {
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      * @example
      * // load text from a URL, setting a custom header
-     * var resource = new Resource({
+     * const resource = new Resource({
      *   url: 'http://someUrl.com/someJson.txt',
      *   headers: {
      *     'X-Custom-Header' : 'some value'
@@ -14800,8 +15264,9 @@ export class ScreenSpaceEventHandler {
      * @param type - The ScreenSpaceEventType of input event.
      * @param [modifier] - A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
+     * @returns The function to be executed on an input event.
      */
-    getInputAction(type: number, modifier?: number): void;
+    getInputAction(type: number, modifier?: number): (...params: any[]) => any;
     /**
      * Removes the function to be executed on an input event.
      * @param type - The ScreenSpaceEventType of input event.
@@ -14908,7 +15373,7 @@ export enum ScreenSpaceEventType {
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
@@ -14947,7 +15412,7 @@ export class ShowGeometryInstanceAttribute {
     /**
      * Converts a boolean show to a typed array that can be used to assign a show attribute.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
      * @param show - The show value.
      * @param [result] - The array to store the result in, if undefined a new instance will be created.
@@ -14982,14 +15447,14 @@ export namespace Simon1994PlanetaryPositions {
  * and each additional position defines a line segment from the previous position.
  * @example
  * // A polyline with two connected line segments
- * var polyline = new Cesium.SimplePolylineGeometry({
+ * const polyline = new Cesium.SimplePolylineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     0.0, 0.0,
  *     5.0, 0.0,
  *     5.0, 5.0
  *   ])
  * });
- * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
+ * const geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
  * @param options - Object with the following properties:
  * @param options.positions - An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
  * @param [options.colors] - An Array of {@link Color} defining the per vertex or per segment colors.
@@ -15032,17 +15497,17 @@ export class SimplePolylineGeometry {
      * @param simplePolylineGeometry - A description of the polyline.
      * @returns The computed vertices and indices.
      */
-    static createGeometry(simplePolylineGeometry: SimplePolylineGeometry): Geometry;
+    static createGeometry(simplePolylineGeometry: SimplePolylineGeometry): Geometry | undefined;
 }
 
 /**
  * A description of a sphere centered at the origin.
  * @example
- * var sphere = new Cesium.SphereGeometry({
+ * const sphere = new Cesium.SphereGeometry({
  *   radius : 100.0,
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
- * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
+ * const geometry = Cesium.SphereGeometry.createGeometry(sphere);
  * @param [options] - Object with the following properties:
  * @param [options.radius = 1.0] - The radius of the sphere.
  * @param [options.stackPartitions = 64] - The number of times to partition the ellipsoid into stacks.
@@ -15081,18 +15546,18 @@ export class SphereGeometry {
      * @param sphereGeometry - A description of the sphere.
      * @returns The computed vertices and indices.
      */
-    static createGeometry(sphereGeometry: SphereGeometry): Geometry;
+    static createGeometry(sphereGeometry: SphereGeometry): Geometry | undefined;
 }
 
 /**
  * A description of the outline of a sphere.
  * @example
- * var sphere = new Cesium.SphereOutlineGeometry({
+ * const sphere = new Cesium.SphereOutlineGeometry({
  *   radius : 100.0,
  *   stackPartitions : 6,
  *   slicePartitions: 5
  * });
- * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
+ * const geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
  * @param [options] - Object with the following properties:
  * @param [options.radius = 1.0] - The radius of the sphere.
  * @param [options.stackPartitions = 10] - The count of stacks for the sphere (1 greater than the number of parallel lines).
@@ -15131,7 +15596,7 @@ export class SphereOutlineGeometry {
      * @param sphereGeometry - A description of the sphere outline.
      * @returns The computed vertices and indices.
      */
-    static createGeometry(sphereGeometry: SphereOutlineGeometry): Geometry;
+    static createGeometry(sphereGeometry: SphereOutlineGeometry): Geometry | undefined;
 }
 
 /**
@@ -15264,22 +15729,21 @@ export class Spline {
  * returning results asynchronously via a promise.
  *
  * The Worker is not constructed until a task is scheduled.
- * @param workerName - The name of the worker.  This is expected to be a script
- *                            in the Workers folder.
- * @param [maximumActiveTasks = 5] - The maximum number of active tasks.  Once exceeded,
+ * @param workerPath - The Url to the worker. This can either be an absolute path or relative to the Cesium Workers folder.
+ * @param [maximumActiveTasks = Number.POSITIVE_INFINITY] - The maximum number of active tasks.  Once exceeded,
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
 export class TaskProcessor {
-    constructor(workerName: string, maximumActiveTasks?: number);
+    constructor(workerPath: string, maximumActiveTasks?: number);
     /**
      * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
      * tasks active than the maximum set by the constructor, will immediately return undefined.
      * Otherwise, returns a promise that will resolve to the result posted back by the worker when
      * finished.
      * @example
-     * var taskProcessor = new Cesium.TaskProcessor('myWorkerName');
-     * var promise = taskProcessor.scheduleTask({
+     * const taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
+     * const promise = taskProcessor.scheduleTask({
      *     someParameter : true,
      *     another : 'hello'
      * });
@@ -15403,22 +15867,22 @@ export class TerrainProvider {
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
      */
-    errorEvent: Event;
+    readonly errorEvent: Event;
     /**
      * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain. This function should
      * not be called before {@link TerrainProvider#ready} returns true.
      */
-    credit: Credit;
+    readonly credit: Credit;
     /**
      * Gets the tiling scheme used by the provider.  This function should
      * not be called before {@link TerrainProvider#ready} returns true.
      */
-    tilingScheme: TilingScheme;
+    readonly tilingScheme: TilingScheme;
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      */
-    ready: boolean;
+    readonly ready: boolean;
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
      */
@@ -15429,19 +15893,19 @@ export class TerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link TerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
      * information is not available.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
      * this function multiple times with the same grid width and height returns the
@@ -15495,7 +15959,7 @@ export class TerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported by the terrain provider, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -15746,7 +16210,7 @@ export class TilingScheme {
  * @example
  * // Create an instance that spans August 1st, 1980 and is associated
  * // with a Cartesian position.
- * var timeInterval = new Cesium.TimeInterval({
+ * const timeInterval = new Cesium.TimeInterval({
  *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
  *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
  *     isStartIncluded : true,
@@ -15756,29 +16220,29 @@ export class TilingScheme {
  * @example
  * // Create two instances from ISO 8601 intervals with associated numeric data
  * // then compute their intersection, summing the data they contain.
- * var left = Cesium.TimeInterval.fromIso8601({
+ * const left = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2000/2010',
  *     data : 2
  * });
  *
- * var right = Cesium.TimeInterval.fromIso8601({
+ * const right = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '1995/2005',
  *     data : 3
  * });
  *
  * //The result of the below intersection will be an interval equivalent to
- * //var intersection = Cesium.TimeInterval.fromIso8601({
+ * //const intersection = Cesium.TimeInterval.fromIso8601({
  * //  iso8601 : '2000/2005',
  * //  data : 5
  * //});
- * var intersection = new Cesium.TimeInterval();
+ * const intersection = new Cesium.TimeInterval();
  * Cesium.TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
  *     return leftData + rightData;
  * });
  * @example
  * // Check if an interval contains a specific time.
- * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
- * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
+ * const dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
+ * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  * @param [options] - Object with the following properties:
  * @param [options.start = new JulianDate()] - The start time of the interval.
  * @param [options.stop = new JulianDate()] - The stop time of the interval.
@@ -16191,8 +16655,8 @@ export namespace Transforms {
      * </ul>
      * @example
      * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      * @param origin - The center point of the local reference frame.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
      * @param [result] - The object onto which to store the result.
@@ -16210,8 +16674,8 @@ export namespace Transforms {
      * </ul>
      * @example
      * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const transform = Cesium.Transforms.northEastDownToFixedFrame(center);
      * @param origin - The center point of the local reference frame.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
      * @param [result] - The object onto which to store the result.
@@ -16229,8 +16693,8 @@ export namespace Transforms {
      * </ul>
      * @example
      * // Get the transform from local north-up-east at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var transform = Cesium.Transforms.northUpEastToFixedFrame(center);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const transform = Cesium.Transforms.northUpEastToFixedFrame(center);
      * @param origin - The center point of the local reference frame.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
      * @param [result] - The object onto which to store the result.
@@ -16248,8 +16712,8 @@ export namespace Transforms {
      * </ul>
      * @example
      * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const transform = Cesium.Transforms.northWestUpToFixedFrame(center);
      * @param origin - The center point of the local reference frame.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
      * @param [result] - The object onto which to store the result.
@@ -16263,12 +16727,12 @@ export namespace Transforms {
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      * @example
      * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-     * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const heading = -Cesium.Math.PI_OVER_TWO;
+     * const pitch = Cesium.Math.PI_OVER_FOUR;
+     * const roll = 0.0;
+     * const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+     * const transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      * @param origin - The center point of the local reference frame.
      * @param headingPitchRoll - The heading, pitch, and roll.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
@@ -16285,12 +16749,12 @@ export namespace Transforms {
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      * @example
      * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var hpr = new HeadingPitchRoll(heading, pitch, roll);
-     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
+     * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const heading = -Cesium.Math.PI_OVER_TWO;
+     * const pitch = Cesium.Math.PI_OVER_FOUR;
+     * const roll = 0.0;
+     * const hpr = new HeadingPitchRoll(heading, pitch, roll);
+     * const quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      * @param origin - The center point of the local reference frame.
      * @param headingPitchRoll - The heading, pitch, and roll.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
@@ -16318,10 +16782,10 @@ export namespace Transforms {
      * @example
      * //Set the view to the inertial frame.
      * scene.postUpdate.addEventListener(function(scene, time) {
-     *    var now = Cesium.JulianDate.now();
-     *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
-     *    var transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
-     *    var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
+     *    const now = Cesium.JulianDate.now();
+     *    const offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+     *    const transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
+     *    const inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
      *    Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
      *    camera.lookAtTransform(transform, offset);
      * });
@@ -16335,7 +16799,7 @@ export namespace Transforms {
      * direction, over a given interval.  This function returns a promise that, when resolved,
      * indicates that the preload has completed.
      * @example
-     * var interval = new Cesium.TimeInterval(...);
+     * const interval = new Cesium.TimeInterval(...);
      * when(Cesium.Transforms.preloadIcrfFixed(interval), function() {
      *     // the data is now loaded
      * });
@@ -16353,10 +16817,10 @@ export namespace Transforms {
      * @example
      * scene.postUpdate.addEventListener(function(scene, time) {
      *   // View in ICRF.
-     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+     *   const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
-     *     var offset = Cesium.Cartesian3.clone(camera.position);
-     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+     *     const offset = Cesium.Cartesian3.clone(camera.position);
+     *     const transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
      *     camera.lookAtTransform(transform, offset);
      *   }
      * });
@@ -16374,10 +16838,10 @@ export namespace Transforms {
      * do the transformation is not yet loaded.
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
-     * var now = Cesium.JulianDate.now();
-     * var pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     * var pointInInertial = new Cesium.Cartesian3();
+     * const now = Cesium.JulianDate.now();
+     * const pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+     * let pointInInertial = new Cesium.Cartesian3();
      * if (Cesium.defined(fixedToIcrf)) {
      *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
      * }
@@ -16397,6 +16861,15 @@ export namespace Transforms {
      * @returns The modified result parameter or a new Cartesian2 instance if none was provided.
      */
     function pointToWindowCoordinates(modelViewProjectionMatrix: Matrix4, viewportTransformation: Matrix4, point: Cartesian3, result?: Cartesian2): Cartesian2;
+    /**
+     * Transform a position and velocity to a rotation matrix.
+     * @param position - The position to transform.
+     * @param velocity - The velocity vector to transform.
+     * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid whose fixed frame is used in the transformation.
+     * @param [result] - The object onto which to store the result.
+     * @returns The modified result parameter or a new Matrix3 instance if none was provided.
+     */
+    function rotationMatrixFromPositionVelocity(position: Cartesian3, velocity: Cartesian3, ellipsoid?: Ellipsoid, result?: Matrix3): Matrix3;
 }
 
 /**
@@ -16436,10 +16909,10 @@ export namespace TridiagonalSystemSolver {
     /**
      * Solves a tridiagonal system of linear equations.
      * @example
-     * var lowerDiagonal = [1.0, 1.0, 1.0, 1.0];
-     * var diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
-     * var upperDiagonal = [1.0, 1.0, 1.0, 1.0];
-     * var rightHandSide = [
+     * const lowerDiagonal = [1.0, 1.0, 1.0, 1.0];
+     * const diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
+     * const upperDiagonal = [1.0, 1.0, 1.0, 1.0];
+     * const rightHandSide = [
      *     new Cesium.Cartesian3(410757.0, -1595711.0, 1375302.0),
      *     new Cesium.Cartesian3(-5986705.0, -2190640.0, 1099600.0),
      *     new Cesium.Cartesian3(-12593180.0, 288588.0, -1755549.0),
@@ -16447,7 +16920,7 @@ export namespace TridiagonalSystemSolver {
      *     new Cesium.Cartesian3(845820.0, 1573488.0, -1205591.0)
      * ];
      *
-     * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
+     * const solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      * @param diagonal - An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
      * @param lower - An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
      * @param upper - An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
@@ -16510,7 +16983,7 @@ export namespace TrustedServers {
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  * @example
- * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
+ * const terrainProvider = new Cesium.VRTheWorldTerrainProvider({
  *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
  * });
  * viewer.terrainProvider = terrainProvider;
@@ -16531,21 +17004,21 @@ export class VRTheWorldTerrainProvider {
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
      */
-    errorEvent: Event;
+    readonly errorEvent: Event;
     /**
      * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
      */
-    credit: Credit;
+    readonly credit: Credit;
     /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
      */
-    tilingScheme: GeographicTilingScheme;
+    readonly tilingScheme: GeographicTilingScheme;
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      */
-    ready: boolean;
+    readonly ready: boolean;
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
      */
@@ -16556,19 +17029,19 @@ export class VRTheWorldTerrainProvider {
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link VRTheWorldTerrainProvider#ready} returns true.
      */
-    hasWaterMask: boolean;
+    readonly hasWaterMask: boolean;
     /**
      * Gets a value indicating whether or not the requested tiles include vertex normals.
      * This function should not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
      */
-    hasVertexNormals: boolean;
+    readonly hasVertexNormals: boolean;
     /**
      * Gets an object that can be used to determine availability of terrain from this provider, such as
      * at points and in rectangles.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
      * information is not available.
      */
-    availability: TileAvailability;
+    readonly availability: TileAvailability;
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link VRTheWorldTerrainProvider#ready} returns true.  The result includes terrain
@@ -16595,7 +17068,7 @@ export class VRTheWorldTerrainProvider {
      * @param level - The level of the tile for which to request geometry.
      * @returns Undefined if not supported, otherwise true or false.
      */
-    getTileDataAvailable(x: number, y: number, level: number): boolean;
+    getTileDataAvailable(x: number, y: number, level: number): boolean | undefined;
     /**
      * Makes sure we load availability data for a tile
      * @param x - The X coordinate of the tile for which to request geometry.
@@ -16612,7 +17085,7 @@ export class VRTheWorldTerrainProvider {
  * position and normal, etc.
  * @example
  * // Create a vertex format with position and 2D texture coordinate attributes.
- * var format = new Cesium.VertexFormat({
+ * const format = new Cesium.VertexFormat({
  *   position : true,
  *   st : true
  * });
@@ -16798,7 +17271,7 @@ export enum Visibility {
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
  * @example
  * // create a wall that spans from ground level to 10000 meters
- * var wall = new Cesium.WallGeometry({
+ * const wall = new Cesium.WallGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
  *     19.0, 47.0, 10000.0,
  *     19.0, 48.0, 10000.0,
@@ -16807,7 +17280,7 @@ export enum Visibility {
  *     19.0, 47.0, 10000.0
  *   ])
  * });
- * var geometry = Cesium.WallGeometry.createGeometry(wall);
+ * const geometry = Cesium.WallGeometry.createGeometry(wall);
  * @param options - Object with the following properties:
  * @param options.positions - An array of Cartesian objects, which are the points of the wall.
  * @param [options.granularity = Math.RADIANS_PER_DEGREE] - The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -16852,7 +17325,7 @@ export class WallGeometry {
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = Cesium.WallGeometry.fromConstantHeights({
+     * const wall = Cesium.WallGeometry.fromConstantHeights({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     19.0, 47.0,
      *     19.0, 48.0,
@@ -16863,7 +17336,7 @@ export class WallGeometry {
      *   minimumHeight : 20000.0,
      *   maximumHeight : 10000.0
      * });
-     * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * const geometry = Cesium.WallGeometry.createGeometry(wall);
      * @param options - Object with the following properties:
      * @param options.positions - An array of Cartesian objects, which are the points of the wall.
      * @param [options.maximumHeight] - A constant that defines the maximum height of the
@@ -16893,7 +17366,7 @@ export class WallGeometry {
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
  * @example
  * // create a wall outline that spans from ground level to 10000 meters
- * var wall = new Cesium.WallOutlineGeometry({
+ * const wall = new Cesium.WallOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
  *     19.0, 47.0, 10000.0,
  *     19.0, 48.0, 10000.0,
@@ -16902,7 +17375,7 @@ export class WallGeometry {
  *     19.0, 47.0, 10000.0
  *   ])
  * });
- * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
+ * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
  * @param options - Object with the following properties:
  * @param options.positions - An array of Cartesian objects, which are the points of the wall.
  * @param [options.granularity = Math.RADIANS_PER_DEGREE] - The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -16945,7 +17418,7 @@ export class WallOutlineGeometry {
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = Cesium.WallOutlineGeometry.fromConstantHeights({
+     * const wall = Cesium.WallOutlineGeometry.fromConstantHeights({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     19.0, 47.0,
      *     19.0, 48.0,
@@ -16956,7 +17429,7 @@ export class WallOutlineGeometry {
      *   minimumHeight : 20000.0,
      *   maximumHeight : 10000.0
      * });
-     * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
+     * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      * @param options - Object with the following properties:
      * @param options.positions - An array of Cartesian objects, which are the points of the wall.
      * @param [options.maximumHeight] - A constant that defines the maximum height of the
@@ -17140,14 +17613,14 @@ export class WebMercatorTilingScheme {
 /**
  * A spline that linearly interpolates over an array of weight values used by morph targets.
  * @example
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
- * var spline = new Cesium.WeightSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
+ * const spline = new Cesium.WeightSpline({
  *     times : times,
  *     weights : weights
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  * @param options - Object with the following properties:
  * @param options.times - An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -17215,8 +17688,8 @@ export enum WindingOrder {
  * Computes the barycentric coordinates for a point with respect to a triangle.
  * @example
  * // Returns Cartesian3.UNIT_X
- * var p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
- * var b = Cesium.barycentricCoordinates(p,
+ * const p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
+ * const b = Cesium.barycentricCoordinates(p,
  *   new Cesium.Cartesian3(-1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
@@ -17225,9 +17698,9 @@ export enum WindingOrder {
  * @param p1 - The second point of the triangle, corresponding to the barycentric y-axis.
  * @param p2 - The third point of the triangle, corresponding to the barycentric z-axis.
  * @param [result] - The object onto which to store the result.
- * @returns The modified result parameter or a new Cartesian3 instance if one was not provided.
+ * @returns The modified result parameter or a new Cartesian3 instance if one was not provided. If the triangle is degenerate the function will return undefined.
  */
-export function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Cartesian2 | Cartesian3, p1: Cartesian2 | Cartesian3, p2: Cartesian2 | Cartesian3, result?: Cartesian3): Cartesian3;
+export function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Cartesian2 | Cartesian3, p1: Cartesian2 | Cartesian3, p2: Cartesian2 | Cartesian3, result?: Cartesian3): Cartesian3 | undefined;
 
 /**
  * Finds an item in a sorted array.
@@ -17236,8 +17709,8 @@ export function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Carte
  * function comparator(a, b) {
  *     return a - b;
  * };
- * var numbers = [0, 2, 4, 6, 8];
- * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
+ * const numbers = [0, 2, 4, 6, 8];
+ * const index = Cesium.binarySearch(numbers, 6, comparator); // 3
  * @param array - The sorted array to search.
  * @param itemToFind - The item to find in the array.
  * @param comparator - The function to use to compare the item to
@@ -17261,6 +17734,20 @@ export function binarySearch(array: any[], itemToFind: any, comparator: binarySe
 export type binarySearchComparator = (a: any, b: any) => number;
 
 /**
+ * Given a relative URL under the Cesium base URL, returns an absolute URL.
+ * @example
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   imageryProvider: new Cesium.TileMapServiceImageryProvider({
+ *   url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+ *   }),
+ *   baseLayerPicker: false,
+ * });
+ * @param relativeUrl - The relative path.
+ * @returns The absolutely URL representation of the provided path.
+ */
+export function buildModuleUrl(relativeUrl: string): string;
+
+/**
  * A browser-independent function to cancel an animation frame requested using {@link requestAnimationFrame}.
  * @param requestID - The value returned by {@link requestAnimationFrame}.
  */
@@ -17279,16 +17766,16 @@ export function clone(object: any, deep?: boolean): any;
  * property, the value of the property on the first object is used.  If either object is undefined,
  * it will be treated as an empty object.
  * @example
- * var object1 = {
+ * const object1 = {
  *     propOne : 1,
  *     propTwo : {
  *         value1 : 10
  *     }
  * }
- * var object2 = {
+ * const object2 = {
  *     propTwo : 2
  * }
- * var final = Cesium.combine(object1, object2);
+ * const final = Cesium.combine(object1, object2);
  *
  * // final === {
  * //     propOne : 1,
@@ -17314,12 +17801,12 @@ export function createGuid(): string;
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
  * @example
  * // Create Cesium World Terrain with default settings
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     terrainProvider : Cesium.createWorldTerrain();
  * });
  * @example
  * // Create Cesium World Terrain with water and normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer1 = new Cesium.Viewer('cesiumContainer', {
  *     terrainProvider : Cesium.createWorldTerrain({
  *         requestWaterMask : true,
  *         requestVertexNormals : true
@@ -17389,7 +17876,7 @@ export function formatError(object: any): string;
  * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.
  * @example
  * //absolute Uri will be "https://test.com/awesome.png";
- * var absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
+ * const absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
  * @param relative - The relative Uri.
  * @param [base] - The base Uri.
  * @returns The absolute Uri of the given relative Uri.
@@ -17400,10 +17887,10 @@ export function getAbsoluteUri(relative: string, base?: string): string;
  * Given a URI, returns the base path of the URI.
  * @example
  * // basePath will be "/Gallery/";
- * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
+ * const basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
  *
  * // basePath will be "/Gallery/?value=true&example=false";
- * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
+ * const basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
  * @param uri - The Uri.
  * @param [includeQuery = false] - Whether or not to include the query string and fragment form the uri
  * @returns The base path of the Uri.
@@ -17414,7 +17901,7 @@ export function getBaseUri(uri: string, includeQuery?: boolean): string;
  * Given a URI, returns the extension of the URI.
  * @example
  * //extension will be "czml";
- * var extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
+ * const extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
  * @param uri - The Uri.
  * @returns The extension of the Uri.
  */
@@ -17424,7 +17911,7 @@ export function getExtensionFromUri(uri: string): string;
  * Given a URI, returns the last segment of the URI, removing any path or query information.
  * @example
  * //fileName will be"simple.czml";
- * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
+ * const fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
  * @param uri - The Uri.
  * @returns The last segment of the Uri.
  */
@@ -17438,7 +17925,7 @@ export function getFilenameFromUri(uri: string): string;
  * @param height - The height of the image. If not defined, then image.height is assigned.
  * @returns The pixels of the image.
  */
-export function getImagePixels(image: HTMLImageElement, width: number, height: number): ImageData;
+export function getImagePixels(image: HTMLImageElement | ImageBitmap, width: number, height: number): ImageData;
 
 /**
  * Gets a timestamp that can be used in measuring the time between events.  Timestamps
@@ -17452,73 +17939,18 @@ export function getTimestamp(): number;
 /**
  * Determines if a given date is a leap year.
  * @example
- * var leapYear = Cesium.isLeapYear(2000); // true
+ * const leapYear = Cesium.isLeapYear(2000); // true
  * @param year - The year to be tested.
  * @returns True if <code>year</code> is a leap year.
  */
 export function isLeapYear(year: number): boolean;
 
 /**
- * Asynchronously loads and parses the given URL to a CRN file or parses the raw binary data of a CRN file.
- * Returns a promise that will resolve to an object containing the image buffer, width, height and format once loaded,
- * or reject if the URL failed to load or failed to parse the data.  The data is loaded
- * using XMLHttpRequest, which means that in order to make requests to another origin,
- * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
- * @example
- * // load a single URL asynchronously
- * Cesium.loadCRN('some/url').then(function(textureData) {
- *     var width = textureData.width;
- *     var height = textureData.height;
- *     var format = textureData.internalFormat;
- *     var arrayBufferView = textureData.bufferView;
- *     // use the data to create a texture
- * }).otherwise(function(error) {
- *     // an error occurred
- * });
- * @param resourceOrUrlOrBuffer - The URL of the binary data or an ArrayBuffer.
- * @returns A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
- */
-export function loadCRN(resourceOrUrlOrBuffer: Resource | string | ArrayBuffer): Promise<CompressedTextureBuffer> | undefined;
-
-/**
- * Asynchronously loads and parses the given URL to a KTX file or parses the raw binary data of a KTX file.
- * Returns a promise that will resolve to an object containing the image buffer, width, height and format once loaded,
- * or reject if the URL failed to load or failed to parse the data.  The data is loaded
- * using XMLHttpRequest, which means that in order to make requests to another origin,
- * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
- * <p>
- * The following are part of the KTX format specification but are not supported:
- * <ul>
- *     <li>Big-endian files</li>
- *     <li>Metadata</li>
- *     <li>3D textures</li>
- *     <li>Texture Arrays</li>
- *     <li>Cubemaps</li>
- *     <li>Mipmaps</li>
- * </ul>
- * </p>
- * @example
- * // load a single URL asynchronously
- * Cesium.loadKTX('some/url').then(function(ktxData) {
- *     var width = ktxData.width;
- *     var height = ktxData.height;
- *     var format = ktxData.internalFormat;
- *     var arrayBufferView = ktxData.bufferView;
- *     // use the data to create a texture
- * }).otherwise(function(error) {
- *     // an error occurred
- * });
- * @param resourceOrUrlOrBuffer - The URL of the binary data or an ArrayBuffer.
- * @returns A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
- */
-export function loadKTX(resourceOrUrlOrBuffer: Resource | string | ArrayBuffer): Promise<CompressedTextureBuffer> | undefined;
-
-/**
  * A stable merge sort.
  * @example
  * // Assume array contains BoundingSpheres in world coordinates.
  * // Sort them in ascending order of distance from the camera.
- * var position = camera.positionWC;
+ * const position = camera.positionWC;
  * Cesium.mergeSort(array, function(a, b, position) {
  *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
  * }, position);
@@ -17545,7 +17977,7 @@ export type mergeSortComparator = (a: any, b: any, userDefinedObject?: any) => n
  * with names and values encoded properly for use in a URL.  Values that are arrays
  * will produce multiple values with the same name.
  * @example
- * var str = Cesium.objectToQuery({
+ * const str = Cesium.objectToQuery({
  *     key1 : 'some value',
  *     key2 : 'a/b',
  *     key3 : ['x', 'y']
@@ -17559,8 +17991,8 @@ export function objectToQuery(obj: any): string;
  * Determines if a point is inside a triangle.
  * @example
  * // Returns true
- * var p = new Cesium.Cartesian2(0.25, 0.25);
- * var b = Cesium.pointInsideTriangle(p,
+ * const p = new Cesium.Cartesian2(0.25, 0.25);
+ * const b = Cesium.pointInsideTriangle(p,
  *   new Cesium.Cartesian2(0.0, 0.0),
  *   new Cesium.Cartesian2(1.0, 0.0),
  *   new Cesium.Cartesian2(0.0, 1.0));
@@ -17577,7 +18009,7 @@ export function pointInsideTriangle(point: Cartesian2 | Cartesian3, p0: Cartesia
  * name/value pairs from the query string, decoded. If a name appears multiple times,
  * the value in the object will be an array of values.
  * @example
- * var obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
+ * const obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
  * // obj will be:
  * // {
  * //   key1 : 'some value',
@@ -17626,12 +18058,12 @@ export type requestAnimationFrameCallback = (timestamp: number) => void;
  * as possible (i.e. with maximum level of detail) use {@link sampleTerrainMostDetailed}.
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
  * Cesium.when(promise, function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
@@ -17647,12 +18079,12 @@ export function sampleTerrain(terrainProvider: TerrainProvider, level: number, p
  * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+ * const promise = Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
  * Cesium.when(promise, function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
@@ -17699,7 +18131,7 @@ export function writeTextToCanvas(text: string, options?: {
     strokeWidth?: number;
     backgroundColor?: Color;
     padding?: number;
-}): HTMLCanvasElement;
+}): HTMLCanvasElement | undefined;
 
 export namespace BillboardGraphics {
     /**
@@ -18018,7 +18450,7 @@ export class BoxGraphics {
     /**
      * Gets or sets {@link Cartesian3} Property property specifying the length, width, and height of the box.
      */
-    dimensions: Property;
+    dimensions: Property | undefined;
     /**
      * Gets or sets the Property specifying the {@link HeightReference}.
      */
@@ -18041,6 +18473,9 @@ export class BoxGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -18199,9 +18634,9 @@ export class Cesium3DTilesetVisualizer {
  */
 export class CheckerboardMaterialProperty {
     constructor(options?: {
-        evenColor?: Property;
-        oddColor?: Property;
-        repeat?: Property;
+        evenColor?: Property | Color;
+        oddColor?: Property | Color;
+        repeat?: Property | Cartesian2;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -18217,15 +18652,15 @@ export class CheckerboardMaterialProperty {
     /**
      * Gets or sets the Property specifying the first {@link Color}.
      */
-    evenColor: Property;
+    evenColor: Property | undefined;
     /**
      * Gets or sets the Property specifying the second {@link Color}.
      */
-    oddColor: Property;
+    oddColor: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
      */
-    repeat: Property;
+    repeat: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -18253,7 +18688,7 @@ export class CheckerboardMaterialProperty {
  * @param [color = Color.WHITE] - The {@link Color} Property to be used.
  */
 export class ColorMaterialProperty {
-    constructor(color?: Property);
+    constructor(color?: Property | Color);
     /**
      * Gets a value indicating if this property is constant.  A property is considered
      * constant if getValue always returns the same result for the current definition.
@@ -18268,7 +18703,7 @@ export class ColorMaterialProperty {
     /**
      * Gets or sets the {@link Color} {@link Property}.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -18419,7 +18854,7 @@ export class CompositeEntityCollection {
      * @param id - The id of the entity to retrieve.
      * @returns The entity with the provided id or undefined if the id did not exist in the collection.
      */
-    getById(id: string): Entity;
+    getById(id: string): Entity | undefined;
 }
 
 /**
@@ -18521,14 +18956,14 @@ export class CompositePositionProperty {
  * data property of each {@link TimeInterval} is another Property instance which is
  * evaluated at the provided time.
  * @example
- * var constantProperty = ...;
- * var sampledProperty = ...;
+ * const constantProperty = ...;
+ * const sampledProperty = ...;
  *
  * //Create a composite property from two previously defined properties
  * //where the property is valid on August 1st, 2012 and uses a constant
  * //property for the first half of the day and a sampled property for the
  * //remaining half.
- * var composite = new Cesium.CompositeProperty();
+ * const composite = new Cesium.CompositeProperty();
  * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z',
  *     data : constantProperty
@@ -18720,7 +19155,7 @@ export namespace CorridorGraphics {
      */
     type ConstructorOptions = {
         show?: Property | boolean;
-        positions?: Property | Cartesian3;
+        positions?: Property | Cartesian3[];
         width?: Property | number;
         height?: Property | number;
         heightReference?: Property | HeightReference;
@@ -18761,7 +19196,7 @@ export class CorridorGraphics {
      */
     positions: Property | undefined;
     /**
-     * Gets or sets the numeric Property specifying the width of the corridor.
+     * Gets or sets the numeric Property specifying the width of the outline.
      */
     width: Property | undefined;
     /**
@@ -18808,6 +19243,9 @@ export class CorridorGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -18844,9 +19282,9 @@ export class CorridorGraphics {
 /**
  * A {@link DataSource} implementation which can be used to manually manage a group of entities.
  * @example
- * var dataSource = new Cesium.CustomDataSource('myData');
+ * const dataSource = new Cesium.CustomDataSource('myData');
  *
- * var entity = dataSource.entities.add({
+ * const entity = dataSource.entities.add({
  *    position : Cesium.Cartesian3.fromDegrees(1, 2, 0),
  *    billboard : {
  *        image : 'image.png'
@@ -19012,6 +19450,9 @@ export class CylinderGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -19600,7 +20041,7 @@ export class EllipseGraphics {
      */
     extrudedHeightReference: Property | undefined;
     /**
-     * Gets or sets the numeric property specifying the rotation of the ellipse clockwise from north.
+     * Gets or sets the numeric property specifying the rotation of the ellipse counter-clockwise from north.
      */
     rotation: Property | undefined;
     /**
@@ -19629,6 +20070,9 @@ export class EllipseGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -19796,6 +20240,9 @@ export class EllipsoidGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -20097,6 +20544,7 @@ export class Entity {
  * @param [options.clusterBillboards = true] - Whether or not to cluster the billboards of an entity.
  * @param [options.clusterLabels = true] - Whether or not to cluster the labels of an entity.
  * @param [options.clusterPoints = true] - Whether or not to cluster the points of an entity.
+ * @param [options.show = true] - Determines if the entities in the cluster will be shown.
  */
 export class EntityCluster {
     constructor(options?: {
@@ -20106,7 +20554,12 @@ export class EntityCluster {
         clusterBillboards?: boolean;
         clusterLabels?: boolean;
         clusterPoints?: boolean;
+        show?: boolean;
     });
+    /**
+     * Determines if entities in this collection will be shown.
+     */
+    show: boolean;
     /**
      * Gets or sets whether clustering is enabled.
      */
@@ -20258,7 +20711,7 @@ export class EntityCollection {
      * @param id - The id of the entity to retrieve.
      * @returns The entity with the provided id or undefined if the id did not exist in the collection.
      */
-    getById(id: string): Entity;
+    getById(id: string): Entity | undefined;
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
      * @param id - The id of the entity to retrieve or create.
@@ -20343,7 +20796,7 @@ export namespace GeoJsonDataSource {
  * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
  * are present.
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
  *   stroke: Cesium.Color.HOTPINK,
  *   fill: Cesium.Color.PINK,
@@ -20641,6 +21094,112 @@ export class GeometryVisualizer {
 }
 
 /**
+ * A {@link DataSource} which processes the GPS Exchange Format (GPX).
+ * @example
+ * const viewer = new Cesium.Viewer('cesiumContainer');
+ * viewer.dataSources.add(Cesium.GpxDataSource.load('../../SampleData/track.gpx'));
+ */
+export class GpxDataSource {
+    constructor();
+    /**
+     * Creates a Promise to a new instance loaded with the provided GPX data.
+     * @param data - A url, parsed GPX document, or Blob containing binary GPX data.
+     * @param [options] - An object with the following properties:
+     * @param [options.clampToGround] - True if the symbols should be rendered at the same height as the terrain
+     * @param [options.waypointImage] - Image to use for waypoint billboards.
+     * @param [options.trackImage] - Image to use for track billboards.
+     * @param [options.trackColor] - Color to use for track lines.
+     * @param [options.routeColor] - Color to use for route lines.
+     * @returns A promise that will resolve to a new GpxDataSource instance once the gpx is loaded.
+     */
+    static load(data: string | Document | Blob, options?: {
+        clampToGround?: boolean;
+        waypointImage?: string;
+        trackImage?: string;
+        trackColor?: string;
+        routeColor?: string;
+    }): Promise<GpxDataSource>;
+    /**
+     * Gets a human-readable name for this instance.
+     * This will be automatically be set to the GPX document name on load.
+     */
+    name: string;
+    /**
+     * Gets the version of the GPX Schema in use.
+     */
+    version: string;
+    /**
+     * Gets the creator of the GPX document.
+     */
+    creator: string;
+    /**
+     * Gets an object containing metadata about the GPX file.
+     */
+    metadata: any;
+    /**
+     * Gets the clock settings defined by the loaded GPX. This represents the total
+     * availability interval for all time-dynamic data. If the GPX does not contain
+     * time-dynamic data, this value is undefined.
+     */
+    clock: DataSourceClock;
+    /**
+     * Gets the collection of {@link Entity} instances.
+     */
+    entities: EntityCollection;
+    /**
+     * Gets a value indicating if the data source is currently loading data.
+     */
+    isLoading: boolean;
+    /**
+     * Gets an event that will be raised when the underlying data changes.
+     */
+    changedEvent: Event;
+    /**
+     * Gets an event that will be raised if an error is encountered during processing.
+     */
+    errorEvent: Event;
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     */
+    loadingEvent: Event;
+    /**
+     * Gets whether or not this data source should be displayed.
+     */
+    show: boolean;
+    /**
+     * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+     */
+    clustering: EntityCluster;
+    /**
+     * Updates the data source to the provided time.  This function is optional and
+     * is not required to be implemented.  It is provided for data sources which
+     * retrieve data based on the current animation time or scene state.
+     * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
+     * @param time - The simulation time.
+     * @returns True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    update(time: JulianDate): boolean;
+    /**
+     * Asynchronously loads the provided GPX data, replacing any existing data.
+     * @param data - A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
+     * @param [options] - An object with the following properties:
+     * @param [options.clampToGround] - True if the symbols should be rendered at the same height as the terrain
+     * @param [options.waypointImage] - Image to use for waypoint billboards.
+     * @param [options.trackImage] - Image to use for track billboards.
+     * @param [options.trackColor] - Color to use for track lines.
+     * @param [options.routeColor] - Color to use for route lines.
+     * @returns A promise that will resolve to this instances once the GPX is loaded.
+     */
+    load(data: string | Document | Blob, options?: {
+        clampToGround?: boolean;
+        waypointImage?: string;
+        trackImage?: string;
+        trackColor?: string;
+        routeColor?: string;
+    }): Promise<GpxDataSource>;
+}
+
+/**
  * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
  * @param [options] - Object with the following properties:
  * @param [options.color = Color.WHITE] - A Property specifying the grid {@link Color}.
@@ -20651,11 +21210,11 @@ export class GeometryVisualizer {
  */
 export class GridMaterialProperty {
     constructor(options?: {
-        color?: Property;
-        cellAlpha?: Property;
-        lineCount?: Property;
-        lineThickness?: Property;
-        lineOffset?: Property;
+        color?: Property | Color;
+        cellAlpha?: Property | number;
+        lineCount?: Property | Cartesian2;
+        lineThickness?: Property | Cartesian2;
+        lineOffset?: Property | Cartesian2;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -20671,23 +21230,23 @@ export class GridMaterialProperty {
     /**
      * Gets or sets the Property specifying the grid {@link Color}.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying cell alpha values.
      */
-    cellAlpha: Property;
+    cellAlpha: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian2} Property specifying the number of grid lines along each axis.
      */
-    lineCount: Property;
+    lineCount: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
      */
-    lineThickness: Property;
+    lineThickness: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian2} Property specifying the starting offset of grid lines along each axis.
      */
-    lineOffset: Property;
+    lineOffset: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -20747,10 +21306,10 @@ export class GroundGeometryUpdater {
  */
 export class ImageMaterialProperty {
     constructor(options?: {
-        image?: Property;
-        repeat?: Property;
-        color?: Property;
-        transparent?: Property;
+        image?: Property | string | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
+        repeat?: Property | Cartesian2;
+        color?: Property | Color;
+        transparent?: Property | boolean;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -20766,19 +21325,19 @@ export class ImageMaterialProperty {
     /**
      * Gets or sets the Property specifying Image, URL, Canvas, or Video to use.
      */
-    image: Property;
+    image: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
      */
-    repeat: Property;
+    repeat: Property | undefined;
     /**
      * Gets or sets the Color Property specifying the desired color applied to the image.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets or sets the Boolean Property specifying whether the image has transparency
      */
-    transparent: Property;
+    transparent: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -20819,6 +21378,7 @@ export namespace KmlDataSource {
      * @property [clampToGround = false] - true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
      * @property [ellipsoid = Ellipsoid.WGS84] - The global ellipsoid used for geographical calculations.
      * @property [credit] - A credit for the data source, which is displayed on the canvas.
+     * @property [screenOverlayContainer] - A container for ScreenOverlay images.
      */
     type LoadOptions = {
         camera: Camera;
@@ -20827,6 +21387,7 @@ export namespace KmlDataSource {
         clampToGround?: boolean;
         ellipsoid?: Ellipsoid;
         credit?: Credit | string;
+        screenOverlayContainer?: Element | string;
     };
 }
 
@@ -20836,7 +21397,7 @@ export namespace KmlDataSource {
  * KML support in Cesium is incomplete, but a large amount of the standard,
  * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
  * {@link https://github.com/CesiumGS/cesium/issues/873|#873} for a
- * detailed list of what is and isn't support. Cesium will also write information to the
+ * detailed list of what is and isn't supported. Cesium will also write information to the
  * console when it encounters most unsupported features.
  * </p>
  * <p>
@@ -20845,7 +21406,7 @@ export namespace KmlDataSource {
  * under the <code>kml</code> property.
  * </p>
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
  *      {
  *           camera: viewer.scene.camera,
@@ -20924,19 +21485,29 @@ export class KmlDataSource {
      */
     credit: Credit;
     /**
+     * Gets the KML Tours that are used to guide the camera to specified destinations on given time intervals.
+     */
+    kmlTours: KmlTour[];
+    /**
      * Asynchronously loads the provided KML data, replacing any existing data.
      * @param data - A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param [options] - An object with the following properties:
      * @param [options.sourceUri] - Overrides the url to use for resolving relative links and other KML network features.
      * @param [options.clampToGround = false] - true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      * @param [options.ellipsoid = Ellipsoid.WGS84] - The global ellipsoid used for geographical calculations.
+     * @param [options.screenOverlayContainer] - A container for ScreenOverlay images.
      * @returns A promise that will resolve to this instances once the KML is loaded.
      */
     load(data: Resource | string | Document | Blob, options?: {
         sourceUri?: Resource | string;
         clampToGround?: boolean;
         ellipsoid?: Ellipsoid;
+        screenOverlayContainer?: Element | string;
     }): Promise<KmlDataSource>;
+    /**
+     * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
+     */
+    destroy(): void;
     /**
      * Updates any NetworkLink that require updating.
      * @param time - The simulation time.
@@ -21016,9 +21587,11 @@ export class KmlLookAt {
 }
 
 /**
+ * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
+ * guide the camera to a specified destinations on given time intervals.
  * @param name - name parsed from KML
  * @param id - id parsed from KML
- * @param playlist - array with KMLTourFlyTos, KMLTourWaits and KMLTourSoundCues
+ * @param playlist - array with KmlTourFlyTos and KmlTourWaits
  */
 export class KmlTour {
     constructor(name: string, id: string, playlist: any[]);
@@ -21084,6 +21657,8 @@ export class KmlTour {
 }
 
 /**
+ * Transitions the KmlTour to the next destination. This transition is facilitated
+ * using a specified flyToMode over a given number of seconds.
  * @param duration - entry duration
  * @param flyToMode - KML fly to mode: bounce, smooth, etc
  * @param view - KmlCamera or KmlLookAt
@@ -21120,6 +21695,7 @@ export namespace KmlTourFlyTo {
 }
 
 /**
+ * Pauses the KmlTour for a given number of seconds.
  * @param duration - entry duration
  */
 export class KmlTourWait {
@@ -21641,9 +22217,9 @@ export class ModelVisualizer {
  */
 export class NodeTransformationProperty {
     constructor(options?: {
-        translation?: Property;
-        rotation?: Property;
-        scale?: Property;
+        translation?: Property | Cartesian3;
+        rotation?: Property | Quaternion;
+        scale?: Property | Cartesian3;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -21659,15 +22235,15 @@ export class NodeTransformationProperty {
     /**
      * Gets or sets the {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
      */
-    translation: Property;
+    translation: Property | undefined;
     /**
      * Gets or sets the {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
      */
-    rotation: Property;
+    rotation: Property | undefined;
     /**
      * Gets or sets the {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
      */
-    scale: Property;
+    scale: Property | undefined;
     /**
      * Gets the value of the property at the provided time.
      * @param time - The time for which to retrieve the value.
@@ -21873,6 +22449,9 @@ export class PlaneGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -22157,6 +22736,9 @@ export class PolygonGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -22213,7 +22795,7 @@ export class PolygonGraphics {
  * @param [color = Color.WHITE] - The {@link Color} Property to be used.
  */
 export class PolylineArrowMaterialProperty {
-    constructor(color?: Property);
+    constructor(color?: Property | Color);
     /**
      * Gets a value indicating if this property is constant.  A property is considered
      * constant if getValue always returns the same result for the current definition.
@@ -22228,7 +22810,7 @@ export class PolylineArrowMaterialProperty {
     /**
      * Gets or sets the {@link Color} {@link Property}.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -22261,10 +22843,10 @@ export class PolylineArrowMaterialProperty {
  */
 export class PolylineDashMaterialProperty {
     constructor(options?: {
-        color?: Property;
-        gapColor?: Property;
-        dashLength?: Property;
-        dashPattern?: Property;
+        color?: Property | Color;
+        gapColor?: Property | Color;
+        dashLength?: Property | number;
+        dashPattern?: Property | number;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -22280,19 +22862,19 @@ export class PolylineDashMaterialProperty {
     /**
      * Gets or sets the Property specifying the {@link Color} of the line.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets or sets the Property specifying the {@link Color} of the gaps in the line.
      */
-    gapColor: Property;
+    gapColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the length of a dash cycle
      */
-    dashLength: Property;
+    dashLength: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying a dash pattern
      */
-    dashPattern: Property;
+    dashPattern: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -22445,9 +23027,9 @@ export class PolylineGeometryUpdater {
  */
 export class PolylineGlowMaterialProperty {
     constructor(options?: {
-        color?: Property;
-        glowPower?: Property;
-        taperPower?: Property;
+        color?: Property | Color;
+        glowPower?: Property | number;
+        taperPower?: Property | number;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -22463,15 +23045,15 @@ export class PolylineGlowMaterialProperty {
     /**
      * Gets or sets the Property specifying the {@link Color} of the line.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
      */
-    glowPower: Property;
+    glowPower: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
      */
-    taperPower: Property;
+    taperPower: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -22616,9 +23198,9 @@ export class PolylineGraphics {
  */
 export class PolylineOutlineMaterialProperty {
     constructor(options?: {
-        color?: Property;
-        outlineColor?: Property;
-        outlineWidth?: Property;
+        color?: Property | Color;
+        outlineColor?: Property | Color;
+        outlineWidth?: Property | number;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -22634,15 +23216,15 @@ export class PolylineOutlineMaterialProperty {
     /**
      * Gets or sets the Property specifying the {@link Color} of the line.
      */
-    color: Property;
+    color: Property | undefined;
     /**
      * Gets or sets the Property specifying the {@link Color} of the outline.
      */
-    outlineColor: Property;
+    outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
      */
-    outlineWidth: Property;
+    outlineWidth: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -22796,6 +23378,9 @@ export class PolylineVolumeGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -22868,7 +23453,7 @@ export class PositionProperty {
 }
 
 /**
- * A {@link PositionProperty} whose value is an array whose items are the computed value
+ * A {@link Property} whose value is an array whose items are the computed value
  * of other PositionProperty instances.
  * @param [value] - An array of Property instances.
  * @param [referenceFrame = ReferenceFrame.FIXED] - The reference frame in which the position is defined.
@@ -23191,6 +23776,9 @@ export class RectangleGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -23227,33 +23815,33 @@ export class RectangleGraphics {
 /**
  * A {@link Property} which transparently links to another property on a provided object.
  * @example
- * var collection = new Cesium.EntityCollection();
+ * const collection = new Cesium.EntityCollection();
  *
  * //Create a new entity and assign a billboard scale.
- * var object1 = new Cesium.Entity({id:'object1'});
+ * const object1 = new Cesium.Entity({id:'object1'});
  * object1.billboard = new Cesium.BillboardGraphics();
  * object1.billboard.scale = new Cesium.ConstantProperty(2.0);
  * collection.add(object1);
  *
  * //Create a second entity and reference the scale from the first one.
- * var object2 = new Cesium.Entity({id:'object2'});
+ * const object2 = new Cesium.Entity({id:'object2'});
  * object2.model = new Cesium.ModelGraphics();
  * object2.model.scale = new Cesium.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
  * collection.add(object2);
  *
  * //Create a third object, but use the fromString helper function.
- * var object3 = new Cesium.Entity({id:'object3'});
+ * const object3 = new Cesium.Entity({id:'object3'});
  * object3.billboard = new Cesium.BillboardGraphics();
  * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale');
  * collection.add(object3);
  *
  * //You can refer to an entity with a # or . in id and property names by escaping them.
- * var object4 = new Cesium.Entity({id:'#object.4'});
+ * const object4 = new Cesium.Entity({id:'#object.4'});
  * object4.billboard = new Cesium.BillboardGraphics();
  * object4.billboard.scale = new Cesium.ConstantProperty(2.0);
  * collection.add(object4);
  *
- * var object5 = new Cesium.Entity({id:'object5'});
+ * const object5 = new Cesium.Entity({id:'object5'});
  * object5.billboard = new Cesium.BillboardGraphics();
  * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
  * collection.add(object5);
@@ -23292,7 +23880,7 @@ export class ReferenceProperty {
     /**
      * Gets the resolved instance of the underlying referenced property.
      */
-    readonly resolvedProperty: Property;
+    readonly resolvedProperty: Property | undefined;
     /**
      * Creates a new instance given the entity collection that will
      * be used to resolve it and a string indicating the target entity id and property.
@@ -23381,11 +23969,11 @@ export namespace Rotation {
  * but is instead passed to the constructor of {@link SampledProperty}
  * in order to represent a two-dimensional angle of rotation.
  * @example
- * var time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
- * var time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
- * var time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
+ * const time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
+ * const time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
+ * const time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
  *
- * var property = new Cesium.SampledProperty(Cesium.Rotation);
+ * const property = new Cesium.SampledProperty(Cesium.Rotation);
  * property.addSample(time1, 0);
  * property.addSample(time3, Cesium.Math.toRadians(350));
  *
@@ -23523,17 +24111,17 @@ export class SampledPositionProperty {
  * provided set of samples and specified interpolation algorithm and degree.
  * @example
  * //Create a linearly interpolated Cartesian2
- * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
+ * const property = new Cesium.SampledProperty(Cesium.Cartesian2);
  *
  * //Populate it with data
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:00.00Z'), new Cesium.Cartesian2(0, 0));
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-02T00:00:00.00Z'), new Cesium.Cartesian2(4, 7));
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
  * @example
  * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
- * var property = new Cesium.SampledProperty(Number);
+ * const property = new Cesium.SampledProperty(Number);
  * property.setInterpolationOptions({
  *     interpolationDegree : 3,
  *     interpolationAlgorithm : Cesium.HermitePolynomialApproximation
@@ -23550,7 +24138,7 @@ export class SampledPositionProperty {
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:30.00Z'), 6.2);
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
  * @param type - The type of property.
  * @param [derivativeTypes] - When supplied, indicates that samples will contain derivative information of the specified types.
  */
@@ -23672,11 +24260,11 @@ export class SampledProperty {
  */
 export class StripeMaterialProperty {
     constructor(options?: {
-        orientation?: Property;
-        evenColor?: Property;
-        oddColor?: Property;
-        offset?: Property;
-        repeat?: Property;
+        orientation?: Property | StripeOrientation;
+        evenColor?: Property | Color;
+        oddColor?: Property | Color;
+        offset?: Property | number;
+        repeat?: Property | number;
     });
     /**
      * Gets a value indicating if this property is constant.  A property is considered
@@ -23692,26 +24280,26 @@ export class StripeMaterialProperty {
     /**
      * Gets or sets the Property specifying the {@link StripeOrientation}/
      */
-    orientation: Property;
+    orientation: Property | undefined;
     /**
      * Gets or sets the Property specifying the first {@link Color}.
      */
-    evenColor: Property;
+    evenColor: Property | undefined;
     /**
      * Gets or sets the Property specifying the second {@link Color}.
      */
-    oddColor: Property;
+    oddColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the point into the pattern
      * to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning
      * of the odd color, 2.0 being the even color again, and any multiple or fractional values
      * being in between.
      */
-    offset: Property;
+    offset: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying how many times the stripes repeat.
      */
-    repeat: Property;
+    repeat: Property | undefined;
     /**
      * Gets the {@link Material} type at the provided time.
      * @param time - The time for which to retrieve the type.
@@ -23803,7 +24391,7 @@ export class TimeIntervalCollectionPositionProperty {
  * @example
  * //Create a Cartesian2 interval property which contains data on August 1st, 2012
  * //and uses a different value every 6 hours.
- * var composite = new Cesium.TimeIntervalCollectionProperty();
+ * const composite = new Cesium.TimeIntervalCollectionProperty();
  * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z',
  *     isStartIncluded : true,
@@ -23867,9 +24455,9 @@ export class TimeIntervalCollectionProperty {
  * based on the velocity of the provided {@link PositionProperty}.
  * @example
  * //Create an entity with position and orientation.
- * var position = new Cesium.SampledProperty();
+ * const position = new Cesium.SampledProperty();
  * position.addSamples(...);
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *   position : position,
  *   orientation : new Cesium.VelocityOrientationProperty(position)
  * }));
@@ -23877,7 +24465,7 @@ export class TimeIntervalCollectionProperty {
  * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid used to determine which way is up.
  */
 export class VelocityOrientationProperty {
-    constructor(position?: Property, ellipsoid?: Ellipsoid);
+    constructor(position?: PositionProperty, ellipsoid?: Ellipsoid);
     /**
      * Gets a value indicating if this property is constant.
      */
@@ -23889,11 +24477,11 @@ export class VelocityOrientationProperty {
     /**
      * Gets or sets the position property used to compute orientation.
      */
-    position: Property;
+    position: Property | undefined;
     /**
      * Gets or sets the ellipsoid used to determine which way is up.
      */
-    ellipsoid: Property;
+    ellipsoid: Property | undefined;
     /**
      * Gets the value of the property at the provided time.
      * @param [time] - The time for which to retrieve the value.
@@ -23915,9 +24503,9 @@ export class VelocityOrientationProperty {
  * based on the velocity of the provided {@link PositionProperty}.
  * @example
  * //Create an entity with a billboard rotated to match its velocity.
- * var position = new Cesium.SampledProperty();
+ * const position = new Cesium.SampledProperty();
  * position.addSamples(...);
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *   position : position,
  *   billboard : {
  *     image : 'image.png',
@@ -23928,7 +24516,7 @@ export class VelocityOrientationProperty {
  * @param [normalize = true] - Whether to normalize the computed velocity vector.
  */
 export class VelocityVectorProperty {
-    constructor(position?: Property, normalize?: boolean);
+    constructor(position?: PositionProperty, normalize?: boolean);
     /**
      * Gets a value indicating if this property is constant.
      */
@@ -23940,7 +24528,7 @@ export class VelocityVectorProperty {
     /**
      * Gets or sets the position property used to compute the velocity vector.
      */
-    position: Property;
+    position: Property | undefined;
     /**
      * Gets or sets whether the vector produced by this property
      * will be normalized or not.
@@ -24095,6 +24683,9 @@ export class WallGraphics {
     outlineColor: Property | undefined;
     /**
      * Gets or sets the numeric Property specifying the width of the outline.
+     * <p>
+     * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+     * </p>
      */
     outlineWidth: Property | undefined;
     /**
@@ -24154,8 +24745,8 @@ export type exportKmlResultKmz = {
  *   .then(function(result) {
  *     // The XML string is in result.kml
  *
- *     var externalFiles = result.externalFiles
- *     for(var file in externalFiles) {
+ *     const externalFiles = result.externalFiles
+ *     for(const file in externalFiles) {
  *       // file is the name of the file used in the KML document as the href
  *       // externalFiles[file] is a blob with the contents of the file
  *     }
@@ -24394,7 +24985,7 @@ export namespace ArcGisMapServerImageryProvider {
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  * @example
- * var esri = new Cesium.ArcGisMapServerImageryProvider({
+ * const esri = new Cesium.ArcGisMapServerImageryProvider({
  *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
  * });
  * @param options - Object describing initialization options
@@ -24405,30 +24996,40 @@ export class ArcGisMapServerImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -24470,7 +25071,7 @@ export class ArcGisMapServerImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
@@ -24856,8 +25457,8 @@ export class Billboard {
      * // create a billboard image dynamically
      * function drawImage(id) {
      *   // create and draw an image using a canvas
-     *   var canvas = document.createElement('canvas');
-     *   var context2D = canvas.getContext('2d');
+     *   const canvas = document.createElement('canvas');
+     *   const context2D = canvas.getContext('2d');
      *   // ... draw image
      *   return canvas;
      * }
@@ -24922,7 +25523,7 @@ export namespace Billboard {
  * for images with the same identifier.
  * @example
  * // Create a billboard collection with two billboards
- * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+ * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
  * billboards.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   image : 'url/to/image'
@@ -24938,6 +25539,7 @@ export namespace Billboard {
  * @param [options.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT] - The billboard blending option. The default
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param [options.show = true] - Determines if the billboards in the collection will be shown.
  */
 export class BillboardCollection {
     constructor(options?: {
@@ -24945,14 +25547,19 @@ export class BillboardCollection {
         debugShowBoundingVolume?: boolean;
         scene?: Scene;
         blendOption?: BlendOption;
+        show?: boolean;
     });
+    /**
+     * Determines if billboards in this collection will be shown.
+     */
+    show: boolean;
     /**
      * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
      * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
      * Local reference frames can be used by providing a different transformation matrix, like that returned
      * by {@link Transforms.eastNorthUpToFixedFrame}.
      * @example
-     * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+     * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
      * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      * billboards.add({
      *   image : 'url/to/image',
@@ -25004,7 +25611,7 @@ export class BillboardCollection {
      * The added billboard is returned so it can be modified or removed from the collection later.
      * @example
      * // Example 1:  Add a billboard, specifying all the default values.
-     * var b = billboards.add({
+     * const b = billboards.add({
      *   show : true,
      *   position : Cesium.Cartesian3.ZERO,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
@@ -25029,7 +25636,7 @@ export class BillboardCollection {
      * });
      * @example
      * // Example 2:  Specify only the billboard's cartographic position.
-     * var b = billboards.add({
+     * const b = billboards.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
      * @param [options] - A template describing the billboard's properties as shown in Example 1.
@@ -25039,7 +25646,7 @@ export class BillboardCollection {
     /**
      * Removes a billboard from the collection.
      * @example
-     * var b = billboards.add(...);
+     * const b = billboards.add(...);
      * billboards.remove(b);  // Returns true
      * @param billboard - The billboard to remove.
      * @returns <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
@@ -25067,9 +25674,9 @@ export class BillboardCollection {
      * in the collection.
      * @example
      * // Toggle the show property of every billboard in the collection
-     * var len = billboards.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var b = billboards.get(i);
+     * const len = billboards.length;
+     * for (let i = 0; i < len; ++i) {
+     *   const b = billboards.get(i);
      *   b.show = !b.show;
      * }
      * @param index - The zero-based index of the billboard.
@@ -25110,9 +25717,8 @@ export namespace BingMapsImageryProvider {
     /**
      * Initialization options for the BingMapsImageryProvider constructor
      * @property url - The url of the Bing Maps server hosting the imagery.
-     * @property [key] - The Bing Maps key for your application, which can be
+     * @property key - The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
      * @property [tileProtocol] - The protocol to use when loading tiles, e.g. 'http' or 'https'.
      *        By default, tiles are loaded using the same protocol as the page.
      * @property [mapStyle = BingMapsStyle.AERIAL] - The type of Bing Maps imagery to load.
@@ -25127,7 +25733,7 @@ export namespace BingMapsImageryProvider {
      */
     type ConstructorOptions = {
         url: Resource | string;
-        key?: string;
+        key: string;
         tileProtocol?: string;
         mapStyle?: BingMapsStyle;
         culture?: string;
@@ -25139,7 +25745,7 @@ export namespace BingMapsImageryProvider {
 /**
  * Provides tiled imagery using the Bing Maps Imagery REST API.
  * @example
- * var bing = new Cesium.BingMapsImageryProvider({
+ * const bing = new Cesium.BingMapsImageryProvider({
  *     url : 'https://dev.virtualearth.net',
  *     key : 'get-yours-at-https://www.bingmapsportal.com/',
  *     mapStyle : Cesium.BingMapsStyle.AERIAL
@@ -25152,30 +25758,40 @@ export class BingMapsImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -25220,7 +25836,7 @@ export class BingMapsImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link BingMapsImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link BingMapsImageryProvider#ready} returns true.
@@ -25537,7 +26153,7 @@ export class BoxEmitter {
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,
  * // with a field of view of 60 degrees, and 1:1 aspect ratio.
- * var camera = new Cesium.Camera(scene);
+ * const camera = new Cesium.Camera(scene);
  * camera.position = new Cesium.Cartesian3();
  * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
  * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
@@ -25920,14 +26536,14 @@ export class Camera {
      * determined from the offset, the heading will be north.
      * @example
      * // 1. Using a cartesian offset
-     * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
+     * const center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
      * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
-     * var heading = Cesium.Math.toRadians(50.0);
-     * var pitch = Cesium.Math.toRadians(-20.0);
-     * var range = 5000.0;
+     * const center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
+     * const heading = Cesium.Math.toRadians(50.0);
+     * const pitch = Cesium.Math.toRadians(-20.0);
+     * const range = 5000.0;
      * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
      * @param target - The target position in world coordinates.
      * @param offset - The offset from the target in the local east-north-up reference frame centered at the target.
@@ -25945,14 +26561,14 @@ export class Camera {
      * determined from the offset, the heading will be north.
      * @example
      * // 1. Using a cartesian offset
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
+     * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
      * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      *
      * // 2. Using a HeadingPitchRange offset
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
-     * var heading = Cesium.Math.toRadians(50.0);
-     * var pitch = Cesium.Math.toRadians(-20.0);
-     * var range = 5000.0;
+     * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
+     * const heading = Cesium.Math.toRadians(50.0);
+     * const pitch = Cesium.Math.toRadians(-20.0);
+     * const range = 5000.0;
      * viewer.camera.lookAtTransform(transform, new Cesium.HeadingPitchRange(heading, pitch, range));
      * @param transform - The transformation matrix defining the reference frame.
      * @param [offset] - The offset from the target in a reference frame centered at the target.
@@ -25968,10 +26584,10 @@ export class Camera {
     /**
      * Pick an ellipsoid or map.
      * @example
-     * var canvas = viewer.scene.canvas;
-     * var center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
-     * var ellipsoid = viewer.scene.globe.ellipsoid;
-     * var result = viewer.camera.pickEllipsoid(center, ellipsoid);
+     * const canvas = viewer.scene.canvas;
+     * const center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
+     * const ellipsoid = viewer.scene.globe.ellipsoid;
+     * const result = viewer.camera.pickEllipsoid(center, ellipsoid);
      * @param windowPosition - The x and y coordinates of a pixel.
      * @param [ellipsoid = Ellipsoid.WGS84] - The ellipsoid to pick.
      * @param [result] - The object onto which to store the result.
@@ -25985,9 +26601,9 @@ export class Camera {
      * in world coordinates.
      * @param windowPosition - The x and y coordinates of a pixel.
      * @param [result] - The object onto which to store the result.
-     * @returns Returns the {@link Cartesian3} position and direction of the ray.
+     * @returns Returns the {@link Cartesian3} position and direction of the ray, or undefined if the pick ray cannot be determined.
      */
-    getPickRay(windowPosition: Cartesian2, result?: Ray): Ray;
+    getPickRay(windowPosition: Cartesian2, result?: Ray): Ray | undefined;
     /**
      * Return the distance from the camera to the front of the bounding sphere.
      * @param boundingSphere - The bounding sphere in world coordinates.
@@ -26415,8 +27031,7 @@ export class Cesium3DTileContent {
      */
     readonly batchTableByteLength: number;
     /**
-     * Gets the array of {@link Cesium3DTileContent} objects that represent the
-     * content a composite's inner tiles, which can also be composites.
+     * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
      */
     readonly innerContents: any[];
     /**
@@ -26436,11 +27051,10 @@ export class Cesium3DTileContent {
      */
     readonly url: string;
     /**
-     * Determines if the tile's batch table has a property.  If it does, each feature in
-     * the tile will have the property.
+     * Returns whether the feature has this property.
      * @param batchId - The batchId for the feature.
      * @param name - The case-sensitive name of the property.
-     * @returns <code>true</code> if the property exists; otherwise, <code>false</code>.
+     * @returns <code>true</code> if the feature has this property; otherwise, <code>false</code>.
      */
     hasProperty(batchId: number, name: string): boolean;
     /**
@@ -26471,17 +27085,17 @@ export class Cesium3DTileContent {
  * </p>
  * <p>
  * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
- * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
+ * or picking using {@link Scene#pick}.
  * </p>
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
- *     var feature = scene.pick(movement.endPosition);
- *     if (feature instanceof Cesium3DTileFeature) {
- *         var propertyNames = feature.getPropertyNames();
- *         var length = propertyNames.length;
- *         for (var i = 0; i < length; ++i) {
- *             var propertyName = propertyNames[i];
+ *     const feature = scene.pick(movement.endPosition);
+ *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+ *         const propertyNames = feature.getPropertyNames();
+ *         const length = propertyNames.length;
+ *         for (let i = 0; i < length; ++i) {
+ *             const propertyName = propertyNames[i];
  *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
  *         }
  *     }
@@ -26501,6 +27115,12 @@ export class Cesium3DTileFeature {
      */
     color: Color;
     /**
+     * Gets a typed array containing the ECEF positions of the polyline.
+     * Returns undefined if {@link Cesium3DTileset#vectorKeepDecodedPositions} is false
+     * or the feature is not a polyline in a vector tile.
+     */
+    polylinePositions: Float64Array;
+    /**
      * Gets the tileset containing the feature.
      */
     readonly tileset: Cesium3DTileset;
@@ -26509,6 +27129,12 @@ export class Cesium3DTileFeature {
      * the tileset containing the feature.
      */
     readonly primitive: Cesium3DTileset;
+    /**
+     * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
+     * batch ID is returned. For EXT_mesh_features, this is the feature ID from
+     * the selected feature ID set.
+     */
+    readonly featureId: number;
     /**
      * Returns whether the feature contains this property. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
@@ -26528,25 +27154,54 @@ export class Cesium3DTileFeature {
      * class and inherited classes when using a batch table hierarchy.
      * @example
      * // Display all the properties for a feature in the console log.
-     * var propertyNames = feature.getPropertyNames();
-     * var length = propertyNames.length;
-     * for (var i = 0; i < length; ++i) {
-     *     var propertyName = propertyNames[i];
+     * const propertyNames = feature.getPropertyNames();
+     * const length = propertyNames.length;
+     * for (let i = 0; i < length; ++i) {
+     *     const propertyName = propertyNames[i];
      *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
      * }
      * @param name - The case-sensitive name of the property.
-     * @returns The value of the property or <code>undefined</code> if the property does not exist.
+     * @returns The value of the property or <code>undefined</code> if the feature does not have this property.
      */
     getProperty(name: string): any;
+    /**
+     * Returns a copy of the feature's property with the given name, examining all
+     * the metadata from 3D Tiles 1.0 formats, the EXT_mesh_features and legacy
+     * EXT_feature_metadata glTF extensions, and the 3DTILES_metadata 3D Tiles
+     * extension. Metadata is checked against name from most specific to most
+     * general and the first match is returned. Metadata is checked in this order:
+     *
+     * <ol>
+     *   <li>Batch table (feature metadata) property by semantic</li>
+     *   <li>Batch table (feature metadata) property by property ID</li>
+     *   <li>Tile metadata property by semantic</li>
+     *   <li>Tile metadata property by property ID</li>
+     *   <li>Group metadata property by semantic</li>
+     *   <li>Group metadata property by property ID</li>
+     *   <li>Tileset metadata property by semantic</li>
+     *   <li>Tileset metadata property by property ID</li>
+     *   <li>Otherwise, return undefined</li>
+     * </ol>
+     * <p>
+     * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
+     * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension}
+     * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
+     * </p>
+     * @param content - The content for accessing the metadata
+     * @param batchId - The batch ID (or feature ID) of the feature to get a property for
+     * @param name - The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+     * @returns The value of the property or <code>undefined</code> if the feature does not have this property.
+     */
+    static getPropertyInherited(content: Cesium3DTileContent, batchId: number, name: string): any;
     /**
      * Sets the value of the feature's property with the given name.
      * <p>
      * If a property with the given name doesn't exist, it is created.
      * </p>
      * @example
-     * var height = feature.getProperty('Height'); // e.g., the height of a building
+     * const height = feature.getProperty('Height'); // e.g., the height of a building
      * @example
-     * var name = 'clicked';
+     * const name = 'clicked';
      * if (feature.getProperty(name)) {
      *     console.log('already clicked');
      * } else {
@@ -26578,12 +27233,12 @@ export class Cesium3DTileFeature {
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
- *     var feature = scene.pick(movement.endPosition);
- *     if (feature instanceof Cesium3DTilePointFeature) {
- *         var propertyNames = feature.getPropertyNames();
- *         var length = propertyNames.length;
- *         for (var i = 0; i < length; ++i) {
- *             var propertyName = propertyNames[i];
+ *     const feature = scene.pick(movement.endPosition);
+ *     if (feature instanceof Cesium.Cesium3DTilePointFeature) {
+ *         const propertyNames = feature.getPropertyNames();
+ *         const length = propertyNames.length;
+ *         for (let i = 0; i < length; ++i) {
+ *             const propertyName = propertyNames[i];
  *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
  *         }
  *     }
@@ -26770,14 +27425,14 @@ export class Cesium3DTilePointFeature {
      * class and inherited classes when using a batch table hierarchy.
      * @example
      * // Display all the properties for a feature in the console log.
-     * var propertyNames = feature.getPropertyNames();
-     * var length = propertyNames.length;
-     * for (var i = 0; i < length; ++i) {
-     *     var propertyName = propertyNames[i];
+     * const propertyNames = feature.getPropertyNames();
+     * const length = propertyNames.length;
+     * for (let i = 0; i < length; ++i) {
+     *     const propertyName = propertyNames[i];
      *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
      * }
      * @param name - The case-sensitive name of the property.
-     * @returns The value of the property or <code>undefined</code> if the property does not exist.
+     * @returns The value of the property or <code>undefined</code> if the feature does not have this property.
      */
     getProperty(name: string): any;
     /**
@@ -26786,9 +27441,9 @@ export class Cesium3DTilePointFeature {
      * If a property with the given name doesn't exist, it is created.
      * </p>
      * @example
-     * var height = feature.getProperty('Height'); // e.g., the height of a building
+     * const height = feature.getProperty('Height'); // e.g., the height of a building
      * @example
-     * var name = 'clicked';
+     * const name = 'clicked';
      * if (feature.getProperty(name)) {
      *     console.log('already clicked');
      * } else {
@@ -26805,10 +27460,10 @@ export class Cesium3DTilePointFeature {
  * A style that is applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates an expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * @example
- * tileset.style = new Cesium3DTileStyle({
+ * tileset.style = new Cesium.Cesium3DTileStyle({
  *     color : {
  *         conditions : [
  *             ['${Height} >= 100', 'color("purple", 0.5)'],
@@ -26822,7 +27477,7 @@ export class Cesium3DTilePointFeature {
  *     }
  * });
  * @example
- * tileset.style = new Cesium3DTileStyle({
+ * tileset.style = new Cesium.Cesium3DTileStyle({
  *     color : 'vec4(${Temperature})',
  *     pointSize : '${Temperature} * 2.0'
  * });
@@ -26832,7 +27487,7 @@ export class Cesium3DTileStyle {
     constructor(style?: Resource | string | any);
     /**
      * Gets the object defining the style using the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
      */
     readonly style: any;
     /**
@@ -26854,12 +27509,12 @@ export class Cesium3DTileStyle {
      * This expression is applicable to all tile formats.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
      * });
      * style.show.evaluate(feature); // returns true or false depending on the feature's properties
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override show expression with a custom function
      * style.show = {
      *     evaluate : function(feature) {
@@ -26867,17 +27522,17 @@ export class Cesium3DTileStyle {
      *     }
      * };
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override show expression with a boolean
      * style.show = true;
      * };
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override show expression with a string
      * style.show = '${Height} > 0';
      * };
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override show expression with a condition
      * style.show = {
      *     conditions: [
@@ -26897,12 +27552,12 @@ export class Cesium3DTileStyle {
      * This expression is applicable to all tile formats.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     color : '(${Temperature} > 90) ? color("red") : color("white")'
      * });
      * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override color expression with a custom function
      * style.color = {
      *     evaluateColor : function(feature, result) {
@@ -26910,11 +27565,11 @@ export class Cesium3DTileStyle {
      *     }
      * };
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override color expression with a string
      * style.color = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override color expression with a condition
      * style.color = {
      *     conditions : [
@@ -26934,12 +27589,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile or a Point Cloud tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
      * });
      * style.pointSize.evaluate(feature); // returns a Number
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointSize expression with a custom function
      * style.pointSize = {
      *     evaluate : function(feature) {
@@ -26947,15 +27602,15 @@ export class Cesium3DTileStyle {
      *     }
      * };
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointSize expression with a number
      * style.pointSize = 1.0;
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointSize expression with a string
      * style.pointSize = '${height} / 10';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointSize expression with a condition
      * style.pointSize =  {
      *     conditions : [
@@ -26975,11 +27630,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointOutlineColor expression with a string
      * style.pointOutlineColor = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointOutlineColor expression with a condition
      * style.pointOutlineColor = {
      *     conditions : [
@@ -26999,11 +27654,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointOutlineWidth expression with a string
      * style.pointOutlineWidth = '5';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override pointOutlineWidth expression with a condition
      * style.pointOutlineWidth = {
      *     conditions : [
@@ -27023,11 +27678,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelColor expression with a string
      * style.labelColor = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelColor expression with a condition
      * style.labelColor = {
      *     conditions : [
@@ -27047,11 +27702,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelOutlineColor expression with a string
      * style.labelOutlineColor = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelOutlineColor expression with a condition
      * style.labelOutlineColor = {
      *     conditions : [
@@ -27071,11 +27726,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelOutlineWidth expression with a string
      * style.labelOutlineWidth = '5';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelOutlineWidth expression with a condition
      * style.labelOutlineWidth = {
      *     conditions : [
@@ -27095,12 +27750,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     font : '(${Temperature} > 90) ? "30px Helvetica" : "24px Helvetica"'
      * });
      * style.font.evaluate(feature); // returns a String
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override font expression with a custom function
      * style.font = {
      *     evaluate : function(feature) {
@@ -27119,12 +27774,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
      * });
      * style.labelStyle.evaluate(feature); // returns a LabelStyle
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelStyle expression with a custom function
      * style.labelStyle = {
      *     evaluate : function(feature) {
@@ -27143,12 +27798,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     labelText : '(${Temperature} > 90) ? ">90" : "<=90"'
      * });
      * style.labelText.evaluate(feature); // returns a String
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelText expression with a custom function
      * style.labelText = {
      *     evaluate : function(feature) {
@@ -27167,11 +27822,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override backgroundColor expression with a string
      * style.backgroundColor = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override backgroundColor expression with a condition
      * style.backgroundColor = {
      *     conditions : [
@@ -27191,7 +27846,7 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override backgroundPadding expression with a string
      * style.backgroundPadding = 'vec2(5.0, 7.0)';
      * style.backgroundPadding.evaluate(feature); // returns a Cartesian2
@@ -27207,11 +27862,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override backgroundEnabled expression with a string
      * style.backgroundEnabled = 'true';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override backgroundEnabled expression with a condition
      * style.backgroundEnabled = {
      *     conditions : [
@@ -27231,7 +27886,7 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override scaleByDistance expression with a string
      * style.scaleByDistance = 'vec4(1.5e2, 2.0, 1.5e7, 0.5)';
      * style.scaleByDistance.evaluate(feature); // returns a Cartesian4
@@ -27247,7 +27902,7 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override translucencyByDistance expression with a string
      * style.translucencyByDistance = 'vec4(1.5e2, 1.0, 1.5e7, 0.2)';
      * style.translucencyByDistance.evaluate(feature); // returns a Cartesian4
@@ -27263,7 +27918,7 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override distanceDisplayCondition expression with a string
      * style.distanceDisplayCondition = 'vec2(0.0, 5.5e6)';
      * style.distanceDisplayCondition.evaluate(feature); // returns a Cartesian2
@@ -27279,11 +27934,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override heightOffset expression with a string
      * style.heightOffset = '2.0';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override heightOffset expression with a condition
      * style.heightOffset = {
      *     conditions : [
@@ -27303,11 +27958,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override anchorLineEnabled expression with a string
      * style.anchorLineEnabled = 'true';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override anchorLineEnabled expression with a condition
      * style.anchorLineEnabled = {
      *     conditions : [
@@ -27327,11 +27982,11 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override anchorLineColor expression with a string
      * style.anchorLineColor = 'color("blue")';
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override anchorLineColor expression with a condition
      * style.anchorLineColor = {
      *     conditions : [
@@ -27351,12 +28006,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
      * });
      * style.image.evaluate(feature); // returns a String
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override image expression with a custom function
      * style.image = {
      *     evaluate : function(feature) {
@@ -27375,7 +28030,7 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override disableDepthTestDistance expression with a string
      * style.disableDepthTestDistance = '1000.0';
      * style.disableDepthTestDistance.evaluate(feature); // returns a Number
@@ -27391,12 +28046,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     horizontalOrigin : HorizontalOrigin.LEFT
      * });
      * style.horizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override horizontalOrigin expression with a custom function
      * style.horizontalOrigin = {
      *     evaluate : function(feature) {
@@ -27415,12 +28070,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     verticalOrigin : VerticalOrigin.TOP
      * });
      * style.verticalOrigin.evaluate(feature); // returns a VerticalOrigin
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override verticalOrigin expression with a custom function
      * style.verticalOrigin = {
      *     evaluate : function(feature) {
@@ -27439,12 +28094,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     labelHorizontalOrigin : HorizontalOrigin.LEFT
      * });
      * style.labelHorizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelHorizontalOrigin expression with a custom function
      * style.labelHorizontalOrigin = {
      *     evaluate : function(feature) {
@@ -27463,12 +28118,12 @@ export class Cesium3DTileStyle {
      * This expression is only applicable to point features in a Vector tile.
      * </p>
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     labelVerticalOrigin : VerticalOrigin.TOP
      * });
      * style.labelVerticalOrigin.evaluate(feature); // returns a VerticalOrigin
      * @example
-     * var style = new Cesium3DTileStyle();
+     * const style = new Cesium.Cesium3DTileStyle();
      * // Override labelVerticalOrigin expression with a custom function
      * style.labelVerticalOrigin = {
      *     evaluate : function(feature) {
@@ -27481,7 +28136,7 @@ export class Cesium3DTileStyle {
      * Gets or sets the object containing application-specific expression that can be explicitly
      * evaluated, e.g., for display in a UI.
      * @example
-     * var style = new Cesium3DTileStyle({
+     * const style = new Cesium3DTileStyle({
      *     meta : {
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
@@ -27492,15 +28147,15 @@ export class Cesium3DTileStyle {
 }
 
 /**
- * A {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles tileset},
+ * A {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
  * used for streaming massive heterogeneous 3D geospatial datasets.
  * @example
- * var tileset = scene.primitives.add(new Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
  * }));
  * @example
  * // Common setting for the skipLevelOfDetail optimization
- * var tileset = scene.primitives.add(new Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
  *      skipLevelOfDetail : true,
  *      baseScreenSpaceError : 1024,
@@ -27512,7 +28167,7 @@ export class Cesium3DTileStyle {
  * }));
  * @example
  * // Common settings for the dynamicScreenSpaceError optimization
- * var tileset = scene.primitives.add(new Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
  *      dynamicScreenSpaceError : true,
  *      dynamicScreenSpaceErrorDensity : 0.00278,
@@ -27556,7 +28211,14 @@ export class Cesium3DTileStyle {
  * @param [options.lightColor] - The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @param [options.luminanceAtZenith = 0.2] - The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param [options.sphericalHarmonicCoefficients] - The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param [options.specularEnvironmentMaps] - A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param [options.specularEnvironmentMaps] - A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param [options.backFaceCulling = true] - Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param [options.showOutline = true] - Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param [options.vectorClassificationOnly = false] - Indicates that only the tileset's vector tiles should be used for classification.
+ * @param [options.vectorKeepDecodedPositions = false] - Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+ * @param [options.featureIdIndex = 0] - The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param [options.instanceFeatureIdIndex = 0] - The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param [options.showCreditsOnScreen = false] - Whether to display the credits of this tileset on screen.
  * @param [options.debugHeatmapTilePropertyName] - The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param [options.debugFreezeFrame = false] - For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param [options.debugColorizeTiles = false] - For debugging only. When true, assigns a random color to each tile.
@@ -27608,6 +28270,13 @@ export class Cesium3DTileset {
         luminanceAtZenith?: number;
         sphericalHarmonicCoefficients?: Cartesian3[];
         specularEnvironmentMaps?: string;
+        backFaceCulling?: boolean;
+        showOutline?: boolean;
+        vectorClassificationOnly?: boolean;
+        vectorKeepDecodedPositions?: boolean;
+        featureIdIndex?: number;
+        instanceFeatureIdIndex?: number;
+        showCreditsOnScreen?: boolean;
         debugHeatmapTilePropertyName?: string;
         debugFreezeFrame?: boolean;
         debugColorizeTiles?: boolean;
@@ -27726,10 +28395,6 @@ export class Cesium3DTileset {
      */
     colorBlendAmount: number;
     /**
-     * Options for controlling point size based on geometric error and eye dome lighting.
-     */
-    pointCloudShading: PointCloudShading;
-    /**
      * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
      * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
      * processed and is ready to render.
@@ -27818,6 +28483,9 @@ export class Cesium3DTileset {
      * <li><code>url</code>: the url of the failed tile.</li>
      * <li><code>message</code>: the error message.</li>
      * </ul>
+     * <p>
+     * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+     * </p>
      * @example
      * tileset.tileFailed.addEventListener(function(error) {
      *     console.log('An error occurred loading tile: ' + error.url);
@@ -27844,13 +28512,13 @@ export class Cesium3DTileset {
      * });
      * @example
      * // Apply a red style and then manually set random colors for every other feature when the tile becomes visible.
-     * tileset.style = new Cesium3DTileStyle({
+     * tileset.style = new Cesium.Cesium3DTileStyle({
      *     color : 'color("red")'
      * });
      * tileset.tileVisible.addEventListener(function(tile) {
-     *     var content = tile.content;
-     *     var featuresLength = content.featuresLength;
-     *     for (var i = 0; i < featuresLength; i+=2) {
+     *     const content = tile.content;
+     *     const featuresLength = content.featuresLength;
+     *     for (let i = 0; i < featuresLength; i+=2) {
      *         content.getFeature(i).color = Cesium.Color.fromRandom();
      *     }
      * });
@@ -27937,6 +28605,17 @@ export class Cesium3DTileset {
      */
     specularEnvironmentMaps: string;
     /**
+     * Whether to cull back-facing geometry. When true, back face culling is determined
+     * by the glTF material's doubleSided property; when false, back face culling is disabled.
+     */
+    backFaceCulling: boolean;
+    /**
+     * Whether to display the outline for models using the
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+     * When true, outlines are displayed. When false, outlines are not displayed.
+     */
+    readonly showOutline: boolean;
+    /**
      * This property is for debugging only; it is not optimized for production use.
      * <p>
      * Determines if only the tiles from last frame should be used for rendering.  This
@@ -28014,9 +28693,34 @@ export class Cesium3DTileset {
      */
     debugShowUrl: boolean;
     /**
+     * Function for examining vector lines as they are being streamed.
+     */
+    examineVectorLinesFunction: (...params: any[]) => any;
+    /**
+     * If true, {@link ModelExperimental} will be used instead of {@link Model}
+     * for each tile with a glTF or 3D Tiles 1.0 content (where applicable).
+     * <p>
+     * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
+     * </p>
+     */
+    enableModelExperimental: boolean;
+    /**
+     * The index into the list of primitive feature IDs used for picking and
+     * styling. For EXT_feature_metadata, feature ID attributes are listed before
+     * feature ID textures. If both per-primitive and per-instance feature IDs are
+     * present, the instance feature IDs take priority.
+     */
+    featureIdIndex: number;
+    /**
+     * The index into the list of instance feature IDs used for picking and
+     * styling. If both per-primitive and per-instance feature IDs are present,
+     * the instance feature IDs take priority.
+     */
+    instanceFeatureIdIndex: number;
+    /**
      * Gets the tileset's asset object property, which contains metadata about the tileset.
      * <p>
-     * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
+     * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#reference-asset|asset schema reference}
      * in the 3D Tiles spec for the full set of properties.
      * </p>
      */
@@ -28032,7 +28736,7 @@ export class Cesium3DTileset {
     /**
      * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
      * <p>
-     * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-properties|properties schema reference}
+     * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#reference-properties|properties schema reference}
      * in the 3D Tiles spec for the full set of properties.
      * </p>
      * @example
@@ -28053,9 +28757,9 @@ export class Cesium3DTileset {
      * @example
      * tileset.readyPromise.then(function(tileset) {
      *     // tile.properties is not defined until readyPromise resolves.
-     *     var properties = tileset.properties;
+     *     const properties = tileset.properties;
      *     if (Cesium.defined(properties)) {
-     *         for (var name in properties) {
+     *         for (const name in properties) {
      *             console.log(properties[name]);
      *         }
      *     }
@@ -28068,16 +28772,16 @@ export class Cesium3DTileset {
      */
     readonly tilesLoaded: boolean;
     /**
-     * The url to a tileset JSON file.
+     * The resource used to fetch the tileset JSON file
      */
-    readonly url: string;
+    readonly resource: Resource;
     /**
      * The base path that non-absolute paths in tileset JSON file are relative to.
      */
     readonly basePath: string;
     /**
      * The style, defined using the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language},
      * applied to each feature in the tileset.
      * <p>
      * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -28089,8 +28793,15 @@ export class Cesium3DTileset {
      * properties (e.g. color and show) after the style is applied. When
      * a new style is assigned any manually set properties are overwritten.
      * </p>
+     * <p>
+     * Use an always "true" condition to specify the Color for all objects that are not
+     * overridden by pre-existing conditions. Otherwise, the default color Cesium.Color.White
+     * will be used. Similarly, use an always "true" condition to specify the show property
+     * for all objects that are not overridden by pre-existing conditions. Otherwise, the
+     * default show value true will be used.
+     * </p>
      * @example
-     * tileset.style = new Cesium3DTileStyle({
+     * tileset.style = new Cesium.Cesium3DTileStyle({
      *    color : {
      *        conditions : [
      *            ['${Height} >= 100', 'color("purple", 0.5)'],
@@ -28105,6 +28816,15 @@ export class Cesium3DTileset {
      * });
      */
     style: Cesium3DTileStyle | undefined;
+    /**
+     * A custom shader to apply to all tiles in the tileset. Only used for
+     * contents that use {@link ModelExperimental}. Using custom shaders with a
+     * {@link Cesium3DTileStyle} may lead to undefined behavior.
+     * <p>
+     * To enable {@link ModelExperimental}, set {@link ExperimentalFeatures.enableModelExperimental} or tileset.enableModelExperimental to <code>true</code>.
+     * </p>
+     */
+    customShader: CustomShader | undefined;
     /**
      * The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tile
      * refines to its descendants, and therefore plays a major role in balancing performance with visual quality.
@@ -28140,13 +28860,17 @@ export class Cesium3DTileset {
      */
     maximumMemoryUsage: number;
     /**
+     * Options for controlling point size based on geometric error and eye dome lighting.
+     */
+    pointCloudShading: PointCloudShading;
+    /**
      * The root tile.
      */
     readonly root: Cesium3DTile;
     /**
      * The tileset's bounding sphere.
      * @example
-     * var tileset = viewer.scene.primitives.add(new Cesium3DTileset({
+     * const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
      *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
      * }));
      *
@@ -28160,12 +28884,12 @@ export class Cesium3DTileset {
      * A 4x4 transformation matrix that transforms the entire tileset.
      * @example
      * // Adjust a tileset's height from the globe's surface.
-     * var heightOffset = 20.0;
-     * var boundingSphere = tileset.boundingSphere;
-     * var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-     * var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-     * var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
-     * var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+     * const heightOffset = 20.0;
+     * const boundingSphere = tileset.boundingSphere;
+     * const cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+     * const surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+     * const offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+     * const translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
      * tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
      */
     modelMatrix: Matrix4;
@@ -28224,6 +28948,19 @@ export class Cesium3DTileset {
      * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
      */
     imageBasedLightingFactor: Cartesian2;
+    /**
+     * Indicates that only the tileset's vector tiles should be used for classification.
+     */
+    vectorClassificationOnly: boolean;
+    /**
+     * Whether vector tiles should keep decoded positions in memory.
+     * This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+     */
+    vectorKeepDecodedPositions: boolean;
+    /**
+     * Determines whether the credits of the tileset will be displayed on the screen
+     */
+    showCreditsOnScreen: boolean;
     /**
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
@@ -28442,7 +29179,7 @@ export class ClassificationPrimitive {
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      * @param id - The id of the {@link GeometryInstance}.
@@ -28544,13 +29281,13 @@ export class ClippingPlane {
  * // This clipping plane's distance is positive, which means its normal
  * // is facing the origin. This will clip everything that is behind
  * // the plane, which is anything with y coordinate < -5.
- * var clippingPlanes = new Cesium.ClippingPlaneCollection({
+ * const clippingPlanes = new Cesium.ClippingPlaneCollection({
  *     planes : [
  *         new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 5.0)
  *     ],
  * });
  * // Create an entity and attach the ClippingPlaneCollection to the model.
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *     position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 10000),
  *     model : {
  *         uri : 'model.gltf',
@@ -28672,9 +29409,203 @@ export class ClippingPlaneCollection {
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * @example
-     * clippingPlanes = clippingPlanes && clippingPlanes .destroy();
+     * clippingPlanes = clippingPlanes && clippingPlanes.destroy();
      */
     destroy(): void;
+}
+
+/**
+ * A renderable collection of clouds in the 3D scene.
+ * <br /><br />
+ * <div align='center'>
+ * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />
+ * Example cumulus clouds
+ * </div>
+ * <br /><br />
+ * Clouds are added and removed from the collection using {@link CloudCollection#add}
+ * and {@link CloudCollection#remove}.
+ * @example
+ * // Create a cloud collection with two cumulus clouds
+ * const clouds = scene.primitives.add(new Cesium.CloudCollection());
+ * clouds.add({
+ *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
+ *   maximumSize: new Cesium.Cartesian3(20.0, 12.0, 8.0)
+ * });
+ * clouds.add({
+ *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
+ *   maximumSize: new Cesium.Cartesian3(15.0, 9.0, 9.0),
+ *   slice: 0.5
+ * });
+ * @param [options] - Object with the following properties:
+ * @param [options.show = true] - Whether to display the clouds.
+ * @param [options.noiseDetail = 16.0] - Desired amount of detail in the noise texture.
+ * @param [options.noiseOffset = Cartesian3.ZERO] - Desired translation of data in noise texture.
+ * @param [options.debugBillboards = false] - For debugging only. Determines if the billboards are rendered with an opaque color.
+ * @param [options.debugEllipsoids = false] - For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
+ */
+export class CloudCollection {
+    constructor(options?: {
+        show?: boolean;
+        noiseDetail?: number;
+        noiseOffset?: number;
+        debugBillboards?: boolean;
+        debugEllipsoids?: boolean;
+    });
+    /**
+     * <p>
+     * Controls the amount of detail captured in the precomputed noise texture
+     * used to render the cumulus clouds. In order for the texture to be tileable,
+     * this must be a power of two. For best results, set this to be a power of two
+     * between <code>8.0</code> and <code>32.0</code> (inclusive).
+     * </p>
+     *
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'>
+     *   <code>clouds.noiseDetail = 8.0;</code><br/>
+     *   <img src='Images/CloudCollection.noiseDetail8.png' width='250' height='158' />
+     * </td>
+     * <td align='center'>
+     *   <code>clouds.noiseDetail = 32.0;</code><br/>
+     *   <img src='Images/CloudCollection.noiseDetail32.png' width='250' height='158' />
+     * </td>
+     * </tr></table>
+     * </div>
+     */
+    noiseDetail: number;
+    /**
+     * <p>
+     * Applies a translation to noise texture coordinates to generate different data.
+     * This can be modified if the default noise does not generate good-looking clouds.
+     * </p>
+     *
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'>
+     *   <code>default</code><br/>
+     *   <img src='Images/CloudCollection.noiseOffsetdefault.png' width='250' height='158' />
+     * </td>
+     * <td align='center'>
+     *   <code>clouds.noiseOffset = new Cesium.Cartesian3(10, 20, 10);</code><br/>
+     *   <img src='Images/CloudCollection.noiseOffsetx10y20z10.png' width='250' height='158' />
+     * </td>
+     * </tr></table>
+     * </div>
+     */
+    noiseOffset: Cartesian3;
+    /**
+     * Determines if billboards in this collection will be shown.
+     */
+    show: boolean;
+    /**
+     * This property is for debugging only; it is not for production use nor is it optimized.
+     * <p>
+     * Renders the billboards with one opaque color for the sake of debugging.
+     * </p>
+     */
+    debugBillboards: boolean;
+    /**
+     * This property is for debugging only; it is not for production use nor is it optimized.
+     * <p>
+     * Draws the clouds as opaque, monochrome ellipsoids for the sake of debugging.
+     * If <code>debugBillboards</code> is also true, then the ellipsoids will draw on top of the billboards.
+     * </p>
+     */
+    debugEllipsoids: boolean;
+    /**
+     * Returns the number of clouds in this collection.
+     */
+    length: number;
+    /**
+     * Creates and adds a cloud with the specified initial properties to the collection.
+     * The added cloud is returned so it can be modified or removed from the collection later.
+     * @example
+     * // Example 1:  Add a cumulus cloud, specifying all the default values.
+     * const c = clouds.add({
+     *   show : true,
+     *   position : Cesium.Cartesian3.ZERO,
+     *   scale : new Cesium.Cartesian2(20.0, 12.0),
+     *   maximumSize: new Cesium.Cartesian3(20.0, 12.0, 12.0),
+     *   slice: -1.0,
+     *   cloudType : CloudType.CUMULUS
+     * });
+     * @example
+     * // Example 2:  Specify only the cloud's cartographic position.
+     * const c = clouds.add({
+     *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
+     * });
+     * @param [options] - A template describing the cloud's properties as shown in Example 1.
+     * @returns The cloud that was added to the collection.
+     */
+    add(options?: any): CumulusCloud;
+    /**
+     * Removes a cloud from the collection.
+     * @example
+     * const c = clouds.add(...);
+     * clouds.remove(c);  // Returns true
+     * @param cloud - The cloud to remove.
+     * @returns <code>true</code> if the cloud was removed; <code>false</code> if the cloud was not found in the collection.
+     */
+    remove(cloud: CumulusCloud): boolean;
+    /**
+     * Removes all clouds from the collection.
+     * @example
+     * clouds.add(...);
+     * clouds.add(...);
+     * clouds.removeAll();
+     */
+    removeAll(): void;
+    /**
+     * Check whether this collection contains a given cloud.
+     * @param [cloud] - The cloud to check for.
+     * @returns true if this collection contains the cloud, false otherwise.
+     */
+    contains(cloud?: CumulusCloud): boolean;
+    /**
+     * Returns the cloud in the collection at the specified index. Indices are zero-based
+     * and increase as clouds are added. Removing a cloud shifts all clouds after
+     * it to the left, changing their indices. This function is commonly used with
+     * {@link CloudCollection#length} to iterate over all the clouds in the collection.
+     * @example
+     * // Toggle the show property of every cloud in the collection
+     * const len = clouds.length;
+     * for (let i = 0; i < len; ++i) {
+     *   const c = clouds.get(i);
+     *   c.show = !c.show;
+     * }
+     * @param index - The zero-based index of the cloud.
+     * @returns The cloud at the specified index.
+     */
+    get(index: number): CumulusCloud;
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * @returns <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
+    isDestroyed(): boolean;
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * @example
+     * clouds = clouds && clouds.destroy();
+     */
+    destroy(): void;
+}
+
+/**
+ * Specifies the type of the cloud that is added to a {@link CloudCollection} in {@link CloudCollection#add}.
+ */
+export enum CloudType {
+    /**
+     * Cumulus cloud.
+     */
+    CUMULUS = 0
 }
 
 /**
@@ -28694,13 +29625,13 @@ export enum ColorBlendMode {
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates a conditions expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * Implements the {@link StyleExpression} interface.
  * </p>
  * @example
- * var expression = new Cesium.ConditionsExpression({
+ * const expression = new Cesium.ConditionsExpression({
  *     conditions : [
  *         ['${Area} > 10, 'color("#FF0000")'],
  *         ['${id} !== "1"', 'color("#00FF00")'],
@@ -28720,7 +29651,7 @@ export class ConditionsExpression {
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -28755,7 +29686,7 @@ export class ConeEmitter {
 /**
  * The credit display is responsible for displaying credits on screen.
  * @example
- * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
+ * const creditDisplay = new Cesium.CreditDisplay(creditContainer);
  * @param container - The HTML element where credits will be displayed
  * @param [delimiter = ' • '] - The string to separate text credits
  * @param [viewport = document.body] - The HTML element that will contain the credits popup
@@ -28833,6 +29764,148 @@ export enum CullFace {
 }
 
 /**
+ * A cumulus cloud billboard positioned in the 3D scene, that is created and rendered using a {@link CloudCollection}.
+ * A cloud is created and its initial properties are set by calling {@link CloudCollection#add}.
+ * and {@link CloudCollection#remove}.
+ * <br /><br />
+ * <div align='center'>
+ * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />
+ * Example cumulus clouds
+ * </div>
+ */
+export class CumulusCloud {
+    constructor();
+    /**
+     * Determines if this cumulus cloud will be shown.  Use this to hide or show a cloud, instead
+     * of removing it and re-adding it to the collection.
+     */
+    show: boolean;
+    /**
+     * Gets or sets the Cartesian position of this cumulus cloud.
+     */
+    position: Cartesian3;
+    /**
+     * <p>Gets or sets the scale of the cumulus cloud billboard in meters.
+     * The <code>scale</code> property will affect the size of the billboard,
+     * but not the cloud's actual appearance.</p>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'>
+     *   <code>cloud.scale = new Cesium.Cartesian2(12, 8);</code><br/>
+     *   <img src='Images/CumulusCloud.scalex12y8.png' width='250' height='158' />
+     * </td>
+     * <td align='center'>
+     *   <code>cloud.scale = new Cesium.Cartesian2(24, 10);</code><br/>
+     *   <img src='Images/CumulusCloud.scalex24y10.png' width='250' height='158' />
+     * </td>
+     * </tr></table>
+     * </div>
+     *
+     * <p>To modify the cloud's appearance, modify its <code>maximumSize</code>
+     * and <code>slice</code> properties.</p>
+     */
+    scale: Cartesian2;
+    /**
+     * <p>Gets or sets the maximum size of the cumulus cloud rendered on the billboard.
+     * This defines a maximum ellipsoid volume that the cloud can appear in.
+     * Rather than guaranteeing a specific size, this specifies a boundary for the
+     * cloud to appear in, and changing it can affect the shape of the cloud.</p>
+     * <p>Changing the z-value of <code>maximumSize</code> has the most dramatic effect
+     * on the cloud's appearance because it changes the depth of the cloud, and thus the
+     * positions at which the cloud-shaping texture is sampled.</p>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'>
+     * <tr>
+     *   <td align='center'>
+     *     <code>cloud.maximumSize = new Cesium.Cartesian3(14, 9, 10);</code><br/>
+     *     <img src='Images/CumulusCloud.maximumSizex14y9z10.png' width='250' height='158' />
+     *   </td>
+     *   <td align='center'>
+     *     <code>cloud.maximumSize.x = 25;</code><br/>
+     *     <img src='Images/CumulusCloud.maximumSizex25.png' width='250' height='158' />
+     *   </td>
+     * </tr>
+     * <tr>
+     *   <td align='center'>
+     *     <code>cloud.maximumSize.y = 5;</code><br/>
+     *     <img src='Images/CumulusCloud.maximumSizey5.png' width='250' height='158' />
+     *   </td>
+     *   <td align='center'>
+     *     <code>cloud.maximumSize.z = 17;</code><br/>
+     *     <img src='Images/CumulusCloud.maximumSizez17.png' width='250' height='158' />
+     *   </td>
+     * </tr>
+     * </table>
+     * </div>
+     *
+     * <p>To modify the billboard's actual size, modify the cloud's <code>scale</code> property.</p>
+     */
+    maximumSize: Cartesian3;
+    /**
+     * Sets the color of the cloud
+     */
+    color: Color;
+    /**
+     * <p>Gets or sets the "slice" of the cloud that is rendered on the billboard, i.e.
+     * the specific cross-section of the cloud chosen for the billboard's appearance.
+     * Given a value between 0 and 1, the slice specifies how deeply into the cloud
+     * to intersect based on its maximum size in the z-direction.</p>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>cloud.slice = 0.32;</code><br/><img src='Images/CumulusCloud.slice0.32.png' width='250' height='158' /></td>
+     * <td align='center'><code>cloud.slice = 0.5;</code><br/><img src='Images/CumulusCloud.slice0.5.png' width='250' height='158' /></td>
+     * <td align='center'><code>cloud.slice = 0.6;</code><br/><img src='Images/CumulusCloud.slice0.6.png' width='250' height='158' /></td>
+     * </tr></table>
+     * </div>
+     *
+     * <br />
+     * <p>Due to the nature in which this slice is calculated,
+     * values below <code>0.2</code> may result in cross-sections that are too small,
+     * and the edge of the ellipsoid will be visible. Similarly, values above <code>0.7</code>
+     * will cause the cloud to appear smaller. Values outside the range <code>[0.1, 0.9]</code>
+     * should be avoided entirely because they do not produce desirable results.</p>
+     *
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>cloud.slice = 0.08;</code><br/><img src='Images/CumulusCloud.slice0.08.png' width='250' height='158' /></td>
+     * <td align='center'><code>cloud.slice = 0.8;</code><br/><img src='Images/CumulusCloud.slice0.8.png' width='250' height='158' /></td>
+     * </tr></table>
+     * </div>
+     *
+     * <p>If <code>slice</code> is set to a negative number, the cloud will not render a cross-section.
+     * Instead, it will render the outside of the ellipsoid that is visible. For clouds with
+     * small values of `maximumSize.z`, this can produce good-looking results, but for larger
+     * clouds, this can result in a cloud that is undesirably warped to the ellipsoid volume.</p>
+     *
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'>
+     *  <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 18;</code><br/>
+     *  <img src='Images/CumulusCloud.slice-1z18.png' width='250' height='158' />
+     * </td>
+     * <td align='center'>
+     *   <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 30;</code><br/>
+     *   <img src='Images/CumulusCloud.slice-1z30.png' width='250' height='158' /></td>
+     * </tr></table>
+     * </div>
+     */
+    slice: number;
+    /**
+     * Gets or sets the brightness of the cloud. This can be used to give clouds
+     * a darker, grayer appearance.
+     * <br /><br />
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>cloud.brightness = 1.0;</code><br/><img src='Images/CumulusCloud.brightness1.png' width='250' height='158' /></td>
+     * <td align='center'><code>cloud.brightness = 0.6;</code><br/><img src='Images/CumulusCloud.brightness0.6.png' width='250' height='158' /></td>
+     * <td align='center'><code>cloud.brightness = 0.0;</code><br/><img src='Images/CumulusCloud.brightness0.png' width='250' height='158' /></td>
+     * </tr></table>
+     * </div>
+     */
+    brightness: number;
+}
+
+/**
  * Visualizes a vertex attribute by displaying it as a color for debugging.
  * <p>
  * Components for well-known unit-length vectors, i.e., <code>normal</code>,
@@ -28840,7 +29913,7 @@ export enum CullFace {
  * from [-1.0, 1.0] to (-1.0, 1.0).
  * </p>
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : // ...
  *   appearance : new Cesium.DebugAppearance({
  *     attributeName : 'normal'
@@ -29173,7 +30246,7 @@ export class DiscardMissingTileImagePolicy {
  * fewer vertex attributes since the fragment shader can procedurally compute <code>normal</code>,
  * <code>tangent</code>, and <code>bitangent</code>.
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolygonGeometry({
  *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
@@ -29295,16 +30368,16 @@ export class EllipsoidSurfaceAppearance {
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Evaluates an expression defined using the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * Implements the {@link StyleExpression} interface.
  * </p>
  * @example
- * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+ * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
  * expression.evaluate(feature); // returns true or false depending on the feature's properties
  * @example
- * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+ * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  * @param [expression] - The expression defined using the 3D Tiles Styling language.
  * @param [defines] - Defines in the style.
@@ -29318,7 +30391,7 @@ export class Expression {
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -29563,6 +30636,12 @@ export class Globe {
      */
     enableLighting: boolean;
     /**
+     * A multiplier to adjust terrain lambert lighting.
+     * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
+     * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+     */
+    lambertDiffuseMultiplier: number;
+    /**
      * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
      * when <code>enableLighting</code> is <code>true</code>.
      */
@@ -29634,6 +30713,20 @@ export class Globe {
      * A brightness shift of -1.0 is complete darkness, which will let space show through.
      */
     atmosphereBrightnessShift: number;
+    /**
+     * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
+     * A value of <code>2.0</code> scales the terrain by 2x.
+     * A value of <code>0.0</code> makes the terrain completely flat.
+     * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     */
+    terrainExaggeration: number;
+    /**
+     * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
+     * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
+     * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
+     */
+    terrainExaggerationRelativeHeight: number;
     /**
      * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
      * Skirts are always hidden when the camera is underground or translucency is enabled.
@@ -29723,8 +30816,8 @@ export class Globe {
      * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
      * @example
      * // find intersection of ray through a pixel and the globe
-     * var ray = viewer.camera.getPickRay(windowCoordinates);
-     * var intersection = globe.pick(ray, scene);
+     * const ray = viewer.camera.getPickRay(windowCoordinates);
+     * const intersection = globe.pick(ray, scene);
      * @param ray - The ray to test for intersection.
      * @param scene - The scene.
      * @param [result] - The object onto which to store the result.
@@ -29873,8 +30966,8 @@ export namespace GoogleEarthEnterpriseImageryProvider {
  * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
  *        {@link GoogleEarthEnterpriseMapsProvider} should be used with 2D Maps API.
  * @example
- * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
- * var gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
+ * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+ * const gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
  *     metadata : geeMetadata
  * });
  * @param options - Object describing initialization options
@@ -29885,30 +30978,40 @@ export class GoogleEarthEnterpriseImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -29939,7 +31042,7 @@ export class GoogleEarthEnterpriseImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
@@ -30081,7 +31184,7 @@ export namespace GoogleEarthEnterpriseMapsProvider {
  *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
  *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
  * @example
- * var google = new Cesium.GoogleEarthEnterpriseMapsProvider({
+ * const google = new Cesium.GoogleEarthEnterpriseMapsProvider({
  *     url : 'https://earth.localdomain',
  *     channel : 1008
  * });
@@ -30093,30 +31196,40 @@ export class GoogleEarthEnterpriseMapsProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -30155,7 +31268,7 @@ export class GoogleEarthEnterpriseMapsProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
@@ -30259,20 +31372,31 @@ export class GoogleEarthEnterpriseMapsProvider {
 export namespace GridImageryProvider {
     /**
      * Initialization options for the GridImageryProvider constructor
-     * @param [tilingScheme = new GeographicTilingScheme()] - The tiling scheme for which to draw tiles.
-     * @param [ellipsoid] - The ellipsoid.  If the tilingScheme is specified,
+     * @property [tilingScheme = new GeographicTilingScheme()] - The tiling scheme for which to draw tiles.
+     * @property [ellipsoid] - The ellipsoid.  If the tilingScheme is specified,
      *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
      *                    parameter is specified, the WGS84 ellipsoid is used.
-     * @param [cells = 8] - The number of grids cells.
-     * @param [color = Color(1.0, 1.0, 1.0, 0.4)] - The color to draw grid lines.
-     * @param [glowColor = Color(0.0, 1.0, 0.0, 0.05)] - The color to draw glow for grid lines.
-     * @param [glowWidth = 6] - The width of lines used for rendering the line glow effect.
-     * @param [backgroundColor = Color(0.0, 0.5, 0.0, 0.2)] - Background fill color.
-     * @param [tileWidth = 256] - The width of the tile for level-of-detail selection purposes.
-     * @param [tileHeight = 256] - The height of the tile for level-of-detail selection purposes.
-     * @param [canvasSize = 256] - The size of the canvas used for rendering.
+     * @property [cells = 8] - The number of grids cells.
+     * @property [color = Color(1.0, 1.0, 1.0, 0.4)] - The color to draw grid lines.
+     * @property [glowColor = Color(0.0, 1.0, 0.0, 0.05)] - The color to draw glow for grid lines.
+     * @property [glowWidth = 6] - The width of lines used for rendering the line glow effect.
+     * @property [backgroundColor = Color(0.0, 0.5, 0.0, 0.2)] - Background fill color.
+     * @property [tileWidth = 256] - The width of the tile for level-of-detail selection purposes.
+     * @property [tileHeight = 256] - The height of the tile for level-of-detail selection purposes.
+     * @property [canvasSize = 256] - The size of the canvas used for rendering.
      */
-    type ConstructorOptions = any;
+    type ConstructorOptions = {
+        tilingScheme?: TilingScheme;
+        ellipsoid?: Ellipsoid;
+        cells?: number;
+        color?: Color;
+        glowColor?: Color;
+        glowWidth?: number;
+        backgroundColor?: Color;
+        tileWidth?: number;
+        tileHeight?: number;
+        canvasSize?: number;
+    };
 }
 
 /**
@@ -30286,30 +31410,40 @@ export class GridImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -30336,7 +31470,7 @@ export class GridImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link GridImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link GridImageryProvider#ready} returns true.
@@ -30439,7 +31573,7 @@ export class GridImageryProvider {
  * @example
  * // 1. Draw a polyline on terrain with a basic color material
  *
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.GroundPolylineGeometry({
  *      positions : Cesium.Cartesian3.fromDegreesArray([
  *          -112.1340164450331, 36.05494287836128,
@@ -30459,7 +31593,7 @@ export class GridImageryProvider {
  * // Distance display conditions for polylines on terrain are based on an approximate terrain height
  * // instead of true terrain height.
  *
- * var instance = new Cesium.GeometryInstance({
+ * const instance2 = new Cesium.GeometryInstance({
  *   geometry : new Cesium.GroundPolylineGeometry({
  *      positions : Cesium.Cartesian3.fromDegreesArray([
  *          -112.1340164450331, 36.05494287836128,
@@ -30477,7 +31611,7 @@ export class GridImageryProvider {
  * });
  *
  * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
- *   geometryInstances : instance,
+ *   geometryInstances : instance2,
  *   appearance : new Cesium.PolylineColorAppearance()
  * }));
  * @param [options] - Object with the following properties:
@@ -30588,7 +31722,7 @@ export class GroundPolylinePrimitive {
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      * @param id - The id of the {@link GeometryInstance}.
@@ -30650,7 +31784,7 @@ export class GroundPolylinePrimitive {
  * </p>
  * @example
  * // Example 1: Create primitive with a single instance
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
  *   }),
@@ -30664,8 +31798,8 @@ export class GroundPolylinePrimitive {
  * }));
  *
  * // Example 2: Batch instances
- * var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
  *   }),
@@ -30674,7 +31808,7 @@ export class GroundPolylinePrimitive {
  *     color : color
  *   }
  * });
- * var ellipseInstance = new Cesium.GeometryInstance({
+ * const ellipseInstance = new Cesium.GeometryInstance({
  *     geometry : new Cesium.EllipseGeometry({
  *         center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
  *         semiMinorAxis : 300000.0,
@@ -30815,7 +31949,7 @@ export class GroundPrimitive {
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      * @param id - The id of the {@link GeometryInstance}.
@@ -31273,12 +32407,22 @@ export class ImageryLayerCollection {
      */
     lowerToBottom(layer: ImageryLayer): void;
     /**
+     * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
+     * location on the screen, use {@link Camera.getPickRay}.
+     * @param ray - The ray to test for intersection.
+     * @param scene - The scene.
+     * @returns An array that includes all of
+     *                                 the layers that are intersected by a given pick ray. Undefined if
+     *                                 no layers are selected.
+     */
+    pickImageryLayers(ray: Ray, scene: Scene): ImageryLayer[] | undefined;
+    /**
      * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
      * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
      * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
      * @example
-     * var pickRay = viewer.camera.getPickRay(windowPosition);
-     * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+     * const pickRay = viewer.camera.getPickRay(windowPosition);
+     * const featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
      * if (!Cesium.defined(featuresPromise)) {
      *     console.log('No features picked.');
      * } else {
@@ -31373,40 +32517,40 @@ export class ImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
     /**
      * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultNightAlpha: number;
+    defaultNightAlpha: number | undefined;
     /**
      * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultDayAlpha: number;
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -31442,7 +32586,7 @@ export class ImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link ImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link ImageryProvider#ready} returns true. Generally,
@@ -31582,30 +32726,40 @@ export class IonImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -31641,7 +32795,7 @@ export class IonImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link IonImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link IonImageryProvider#ready} returns true. Generally,
@@ -31985,7 +33139,7 @@ export class Label {
      * // Example 1.
      * // Set a label's rightToLeft before init
      * Cesium.Label.enableRightToLeftDetection = true;
-     * var myLabelEntity = viewer.entities.add({
+     * const myLabelEntity = viewer.entities.add({
      *   label: {
      *     id: 'my label',
      *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
@@ -31993,7 +33147,7 @@ export class Label {
      * });
      * @example
      * // Example 2.
-     * var myLabelEntity = viewer.entities.add({
+     * const myLabelEntity = viewer.entities.add({
      *   label: {
      *     id: 'my label',
      *     text: 'English text'
@@ -32019,7 +33173,7 @@ export class Label {
  * and {@link LabelCollection#remove}.
  * @example
  * // Create a label collection with two labels
- * var labels = scene.primitives.add(new Cesium.LabelCollection());
+ * const labels = scene.primitives.add(new Cesium.LabelCollection());
  * labels.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   text : 'A label'
@@ -32035,6 +33189,7 @@ export class Label {
  * @param [options.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT] - The label blending option. The default
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param [options.show = true] - Determines if the labels in the collection will be shown.
  */
 export class LabelCollection {
     constructor(options?: {
@@ -32042,14 +33197,19 @@ export class LabelCollection {
         debugShowBoundingVolume?: boolean;
         scene?: Scene;
         blendOption?: BlendOption;
+        show?: boolean;
     });
+    /**
+     * Determines if labels in this collection will be shown.
+     */
+    show: boolean;
     /**
      * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
      * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
      * Local reference frames can be used by providing a different transformation matrix, like that returned
      * by {@link Transforms.eastNorthUpToFixedFrame}.
      * @example
-     * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+     * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
      * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      * labels.add({
      *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
@@ -32094,7 +33254,7 @@ export class LabelCollection {
      * The added label is returned so it can be modified or removed from the collection later.
      * @example
      * // Example 1:  Add a label, specifying all the default values.
-     * var l = labels.add({
+     * const l = labels.add({
      *   show : true,
      *   position : Cesium.Cartesian3.ZERO,
      *   text : '',
@@ -32119,7 +33279,7 @@ export class LabelCollection {
      * @example
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
-     * var l = labels.add({
+     * const l = labels.add({
      *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
@@ -32131,7 +33291,7 @@ export class LabelCollection {
     /**
      * Removes a label from the collection.  Once removed, a label is no longer usable.
      * @example
-     * var l = labels.add(...);
+     * const l = labels.add(...);
      * labels.remove(l);  // Returns true
      * @param label - The label to remove.
      * @returns <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
@@ -32159,9 +33319,9 @@ export class LabelCollection {
      * in the collection.
      * @example
      * // Toggle the show property of every label in the collection
-     * var len = labels.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var l = billboards.get(i);
+     * const len = labels.length;
+     * for (let i = 0; i < len; ++i) {
+     *   const l = billboards.get(i);
      *   l.show = !l.show;
      * }
      * @param index - The zero-based index of the billboard.
@@ -32208,7 +33368,7 @@ export enum LabelStyle {
 }
 
 /**
- * A light source. This type describes an interface and is not intended to be instantiated directly.
+ * A light source. This type describes an interface and is not intended to be instantiated directly. Together, <code>color</code> and <code>intensity</code> produce a high-dynamic-range light color. <code>intensity</code> can also be used individually to dim or brighten the light without changing the hue.
  */
 export class Light {
     constructor();
@@ -32217,7 +33377,7 @@ export class Light {
      */
     color: Color;
     /**
-     * The intensity of the light.
+     * The intensity controls the strength of the light. <code>intensity</code> has a minimum value of 0.0 and no maximum value.
      */
     intensity: number;
 }
@@ -32241,7 +33401,7 @@ export namespace MapboxImageryProvider {
      * Initialization options for the MapboxImageryProvider constructor
      * @property [url = 'https://api.mapbox.com/v4/'] - The Mapbox server url.
      * @property mapId - The Mapbox Map ID.
-     * @property [accessToken] - The public access token for the imagery.
+     * @property accessToken - The public access token for the imagery.
      * @property [format = 'png'] - The format of the image request.
      * @property [ellipsoid] - The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @property [minimumLevel = 0] - The minimum level-of-detail supported by the imagery provider.  Take care when specifying
@@ -32254,7 +33414,7 @@ export namespace MapboxImageryProvider {
     type ConstructorOptions = {
         url?: string;
         mapId: string;
-        accessToken?: string;
+        accessToken: string;
         format?: string;
         ellipsoid?: Ellipsoid;
         minimumLevel?: number;
@@ -32268,7 +33428,7 @@ export namespace MapboxImageryProvider {
  * Provides tiled imagery hosted by Mapbox.
  * @example
  * // Mapbox tile provider
- * var mapbox = new Cesium.MapboxImageryProvider({
+ * const mapbox = new Cesium.MapboxImageryProvider({
  *     mapId: 'mapbox.streets',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -32280,30 +33440,40 @@ export class MapboxImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -32343,7 +33513,7 @@ export class MapboxImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link MapboxImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link MapboxImageryProvider#ready} returns true. Generally,
@@ -32433,7 +33603,7 @@ export namespace MapboxStyleImageryProvider {
      * @property [url = 'https://api.mapbox.com/styles/v1/'] - The Mapbox server url.
      * @property [username = 'mapbox'] - The username of the map account.
      * @property styleId - The Mapbox Style ID.
-     * @property [accessToken] - The public access token for the imagery.
+     * @property accessToken - The public access token for the imagery.
      * @property [tilesize = 512] - The size of the image tiles.
      * @property [scaleFactor] - Determines if tiles are rendered at a @2x scale factor.
      * @property [ellipsoid] - The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -32448,7 +33618,7 @@ export namespace MapboxStyleImageryProvider {
         url?: Resource | string;
         username?: string;
         styleId: string;
-        accessToken?: string;
+        accessToken: string;
         tilesize?: number;
         scaleFactor?: boolean;
         ellipsoid?: Ellipsoid;
@@ -32463,7 +33633,7 @@ export namespace MapboxStyleImageryProvider {
  * Provides tiled imagery hosted by Mapbox.
  * @example
  * // Mapbox style provider
- * var mapbox = new Cesium.MapboxStyleImageryProvider({
+ * const mapbox = new Cesium.MapboxStyleImageryProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -32475,30 +33645,40 @@ export class MapboxStyleImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -32538,7 +33718,7 @@ export class MapboxStyleImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link MapboxStyleImageryProvider#ready} returns true. Generally,
@@ -32738,7 +33918,6 @@ export class MapboxStyleImageryProvider {
  *      <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
  *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
  *      <li><code>frequency</code>:  Number that controls the number of waves.</li>
- *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
  *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
  *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
  *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
@@ -32801,6 +33980,11 @@ export class MapboxStyleImageryProvider {
  *  <ul>
  *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
  *  </ul>
+ *  <li>ElevationBand</li>
+ *  <ul>
+ *      <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
+ *      <li><code>colors</code>: image of colors at the corresponding heights.</li>
+ * </ul>
  * </ul>
  * </ul>
  * </div>
@@ -32863,7 +34047,7 @@ export class Material {
      * <br /><br />
      * Shorthand for: new Material({fabric : {type : type}});
      * @example
-     * var material = Cesium.Material.fromType('Color', {
+     * const material = Cesium.Material.fromType('Color', {
      *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
      * });
      * @param type - The base material type.
@@ -32995,13 +34179,17 @@ export class Material {
      * Gets the name of the aspect ramp material.
      */
     static readonly AspectRampMaterialType: string;
+    /**
+     * Gets the name of the elevation band material.
+     */
+    static readonly ElevationBandType: string;
 }
 
 /**
  * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
  * that supports shading with materials.
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.WallGeometry({
  *             materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
@@ -33186,8 +34374,15 @@ export namespace MaterialAppearance {
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  * </li>
  * </ul>
+ * </p>
+ * <p>
+ * Note: for models with compressed textures using the KHR_texture_basisu extension, we recommend power of 2 textures in both dimensions
+ * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
+ * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
  * </p>
  * <p>
  * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
@@ -33224,8 +34419,11 @@ export namespace MaterialAppearance {
  * @param [options.lightColor] - The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param [options.luminanceAtZenith = 0.2] - The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param [options.sphericalHarmonicCoefficients] - The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param [options.specularEnvironmentMaps] - A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param [options.specularEnvironmentMaps] - A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param [options.credit] - A credit for the data source, which is displayed on the canvas.
+ * @param [options.showCreditsOnScreen = false] - Whether to display the credits of this model on screen.
+ * @param [options.backFaceCulling = true] - Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
+ * @param [options.showOutline = true] - Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  */
 export class Model {
     constructor(options?: {
@@ -33260,6 +34458,9 @@ export class Model {
         sphericalHarmonicCoefficients?: Cartesian3[];
         specularEnvironmentMaps?: string;
         credit?: Credit | string;
+        showCreditsOnScreen?: boolean;
+        backFaceCulling?: boolean;
+        showOutline?: boolean;
     });
     /**
      * Determines if the model primitive will be shown.
@@ -33279,7 +34480,7 @@ export class Model {
      * Local reference frames can be used by providing a different transformation matrix, like that returned
      * by {@link Transforms.eastNorthUpToFixedFrame}.
      * @example
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+     * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      */
     modelMatrix: Matrix4;
@@ -33336,6 +34537,19 @@ export class Model {
      */
     colorBlendAmount: number;
     /**
+     * Whether to cull back-facing geometry. When true, back face culling is
+     * determined by the material's doubleSided property; when false, back face
+     * culling is disabled. Back faces are not culled if {@link Model#color} is
+     * translucent or {@link Model#silhouetteSize} is greater than 0.0.
+     */
+    backFaceCulling: boolean;
+    /**
+     * Whether to display the outline for models using the
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
+     * When true, outlines are displayed. When false, outlines are not displayed.
+     */
+    readonly showOutline: boolean;
+    /**
      * This property is for debugging only; it is not for production use nor is it optimized.
      * <p>
      * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
@@ -33368,7 +34582,7 @@ export class Model {
      * account glTF animations and skins nor does it take into account {@link Model#minimumPixelSize}.
      * @example
      * // Center in WGS84 coordinates
-     * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+     * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
      */
     readonly boundingSphere: BoundingSphere;
     /**
@@ -33451,13 +34665,17 @@ export class Model {
      */
     sphericalHarmonicCoefficients: Cartesian3[];
     /**
-     * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+     * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      */
     specularEnvironmentMaps: string;
     /**
      * Gets the credit that will be displayed for the model
      */
     credit: Credit;
+    /**
+     * Gets or sets whether the credits of the model will be displayed on the screen
+     */
+    showCreditsOnScreen: boolean;
     /**
      * Determines if silhouettes are supported.
      * @param scene - The scene.
@@ -33495,6 +34713,8 @@ export class Model {
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md|KHR_texture_basisu}
      * </li>
      * </ul>
      * </p>
@@ -33505,15 +34725,15 @@ export class Model {
      * </p>
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
+     * const model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.gltf'
      * }));
      * @example
      * // Example 2. Create model and provide all properties and events
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+     * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+     * const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
+     * const model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.gltf',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
@@ -33556,6 +34776,9 @@ export class Model {
      * @param [options.clippingPlanes] - The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param [options.dequantizeInShader = true] - Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param [options.credit] - A credit for the model, which is displayed on the canvas.
+     * @param [options.showCreditsOnScreen = false] - Whether to display the credits of this model on screen.
+     * @param [options.backFaceCulling = true] - Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
+     * @param [options.showOutline = true] - Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
      * @returns The newly created model.
      */
     static fromGltf(options: {
@@ -33585,13 +34808,16 @@ export class Model {
         clippingPlanes?: ClippingPlaneCollection;
         dequantizeInShader?: boolean;
         credit?: Credit | string;
+        showCreditsOnScreen?: boolean;
+        backFaceCulling?: boolean;
+        showOutline?: boolean;
     }): Model;
     /**
      * Returns the glTF node with the given <code>name</code> property.  This is used to
      * modify a node's transform for animation outside of glTF animations.
      * @example
      * // Apply non-uniform scale to node LOD3sp
-     * var node = model.getNode('LOD3sp');
+     * const node = model.getNode('LOD3sp');
      * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      * @param name - The glTF name of the node.
      * @returns The node or <code>undefined</code> if no node with <code>name</code> exists.
@@ -33788,9 +35014,9 @@ export class ModelAnimationCollection {
      * });
      * @example
      * // Example 3. Add an animation and provide all properties and events
-     * var startTime = Cesium.JulianDate.now();
+     * const startTime = Cesium.JulianDate.now();
      *
-     * var animation = model.activeAnimations.add({
+     * const animation = model.activeAnimations.add({
      *   name : 'another animation name',
      *   startTime : startTime,
      *   delay : 0.0,                          // Play at startTime (default)
@@ -33873,7 +35099,7 @@ export class ModelAnimationCollection {
      * <code>true</code>.  The {@link ModelAnimationCollection#animationRemoved} event is still fired when the animation is removed.
      * </p>
      * @example
-     * var a = model.activeAnimations.add({
+     * const a = model.activeAnimations.add({
      *   name : 'animation name'
      * });
      * model.activeAnimations.remove(a); // Returns true
@@ -33902,9 +35128,9 @@ export class ModelAnimationCollection {
      * all the animations in the collection.
      * @example
      * // Output the names of all the animations in the collection.
-     * var animations = model.activeAnimations;
-     * var length = animations.length;
-     * for (var i = 0; i < length; ++i) {
+     * const animations = model.activeAnimations;
+     * const length = animations.length;
+     * for (let i = 0; i < length; ++i) {
      *   console.log(animations.get(i).name);
      * }
      * @param index - The zero-based index of the animation.
@@ -33929,6 +35155,669 @@ export enum ModelAnimationLoop {
      * Loop the animation.  First, playing it forward, then in reverse, then forward, and so on.
      */
     MIRRORED_REPEAT = 2
+}
+
+/**
+ * An object describing a uniform, its type, and an initial value
+ * @property type - The Glsl type of the uniform.
+ * @property value - The initial value of the uniform
+ */
+export type UniformSpecifier = {
+    type: UniformType;
+    value: boolean | number | Cartesian2 | Cartesian3 | Cartesian4 | Matrix2 | Matrix3 | Matrix4 | TextureUniform;
+};
+
+/**
+ * A user defined GLSL shader used with {@link ModelExperimental} as well
+ * as {@link Cesium3DTileset}.
+ * <p>
+ * If texture uniforms are used, additional resource management must be done:
+ * </p>
+ * <ul>
+ *   <li>
+ *      The <code>update</code> function must be called each frame. When a
+ *      custom shader is passed to a {@link ModelExperimental} or a
+ *      {@link Cesium3DTileset}, this step is handled automaticaly
+ *   </li>
+ *   <li>
+ *      {@link CustomShader#destroy} must be called when the custom shader is
+ *      no longer needed to clean up GPU resources properly. The application
+ *      is responsible for calling this method.
+ *   </li>
+ * </ul>
+ * <p>
+ * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
+ * </p>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
+ * </p>
+ * @example
+ * const customShader = new CustomShader({
+ *   uniforms: {
+ *     u_colorIndex: {
+ *       type: Cesium.UniformType.FLOAT,
+ *       value: 1.0
+ *     },
+ *     u_normalMap: {
+ *       type: Cesium.UniformType.SAMPLER_2D,
+ *       value: new Cesium.TextureUniform({
+ *         url: "http://example.com/normal.png"
+ *       })
+ *     }
+ *   },
+ *   varyings: {
+ *     v_selectedColor: Cesium.VaryingType.VEC3
+ *   },
+ *   vertexShaderText: `
+ *   void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+ *     v_selectedColor = mix(vsInput.attributes.color_0, vsInput.attributes.color_1, u_colorIndex);
+ *     vsOutput.positionMC += 0.1 * vsInput.attributes.normal;
+ *   }
+ *   `,
+ *   fragmentShaderText: `
+ *   void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+ *     material.normal = texture2D(u_normalMap, fsInput.attributes.texCoord_0);
+ *     material.diffuse = v_selectedColor;
+ *   }
+ *   `
+ * });
+ * @param options - An object with the following options
+ * @param [options.mode = CustomShaderMode.MODIFY_MATERIAL] - The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
+ * @param [options.lightingModel] - The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
+ * @param [options.isTranslucent = false] - If set, the model will be rendered as translucent. This overrides the default settings for the model.
+ * @param [options.uniforms] - A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
+ * @param [options.varyings] - A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
+ * @param [options.vertexShaderText] - The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
+ * @param [options.fragmentShaderText] - The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
+ */
+export class CustomShader {
+    constructor(options: {
+        mode?: CustomShaderMode;
+        lightingModel?: LightingModel;
+        isTranslucent?: boolean;
+        uniforms?: {
+            [key: string]: UniformSpecifier;
+        };
+        varyings?: {
+            [key: string]: VaryingType;
+        };
+        vertexShaderText?: string;
+        fragmentShaderText?: string;
+    });
+    /**
+     * Update the value of a uniform declared in the shader
+     * @param uniformName - The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
+     * @param value - The new value of the uniform.
+     */
+    setUniform(uniformName: string, value: boolean | number | Cartesian2 | Cartesian3 | Cartesian4 | Matrix2 | Matrix3 | Matrix4 | string | Resource): void;
+}
+
+/**
+ * A value determining how the custom shader interacts with the overall
+ * fragment shader. This is used by {@link CustomShaderPipelineStage}
+ */
+export const mode: CustomShaderMode;
+
+/**
+ * The lighting model to use when using the custom shader.
+ * This is used by {@link CustomShaderPipelineStage}
+ */
+export const lightingModel: LightingModel;
+
+/**
+ * Additional uniforms as declared by the user.
+ */
+export const uniforms: {
+    [key: string]: UniformSpecifier;
+};
+
+/**
+ * Additional varyings as declared by the user.
+ * This is used by {@link CustomShaderPipelineStage}
+ */
+export const varyings: {
+    [key: string]: VaryingType;
+};
+
+/**
+ * The user-defined GLSL code for the vertex shader
+ */
+export const vertexShaderText: string;
+
+/**
+ * The user-defined GLSL code for the fragment shader
+ */
+export const fragmentShaderText: string;
+
+/**
+ * Whether the shader should be rendered as translucent
+ */
+export const isTranslucent: boolean;
+
+/**
+ * An enum describing how the {@link CustomShader} will be added to the
+ * fragment shader. This determines how the shader interacts with the material.
+ */
+export enum CustomShaderMode {
+    /**
+     * The custom shader will be used to modify the results of the material stage
+     * before lighting is applied.
+     */
+    MODIFY_MATERIAL = "MODIFY_MATERIAL",
+    /**
+     * The custom shader will be used instead of the material stage. This is a hint
+     * to optimize out the material processing code.
+     */
+    REPLACE_MATERIAL = "REPLACE_MATERIAL"
+}
+
+/**
+ * The lighting model to use for lighting a {@link ModelExperimental}.
+ */
+export enum LightingModel {
+    /**
+     * Use unlit shading, i.e. skip lighting calculations. The model's
+     * diffuse color (assumed to be linear RGB, not sRGB) is used directly
+     * when computing <code>gl_FragColor</code>. The alpha mode is still
+     * applied.
+     */
+    UNLIT = 0,
+    /**
+     * Use physically-based rendering lighting calculations. This includes
+     * both PBR metallic roughness and PBR specular glossiness. Image-based
+     * lighting is also applied when possible.
+     */
+    PBR = 1
+}
+
+/**
+ * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
+ * <p>
+ * Do not call this function directly, instead use the `from` functions to create
+ * the Model from your source data type.
+ * </p>
+ * @param options - Object with the following properties:
+ * @param options.resource - The Resource to the 3D model.
+ * @param [options.modelMatrix = Matrix4.IDENTITY] - The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param [options.debugShowBoundingVolume = false] - For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param [options.cull = true] - Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param [options.opaquePass = Pass.OPAQUE] - The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param [options.allowPicking = true] - When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param [options.customShader] - A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+ * @param [options.content] - The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @param [options.show = true] - Whether or not to render the model.
+ * @param [options.color] - A color that blends with the model's rendered color.
+ * @param [options.colorBlendMode = ColorBlendMode.HIGHLIGHT] - Defines how the color blends with the model.
+ * @param [options.colorBlendAmount = 0.5] - Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param [options.featureIdIndex = 0] - The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param [options.instanceFeatureIdIndex = 0] - The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param [options.pointCloudShading] - Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param [options.backFaceCulling = true] - Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param [options.shadows = ShadowMode.ENABLED] - Determines whether the model casts or receives shadows from light sources.
+ * @param [options.showCreditsOnScreen = false] - Whether to display the credits of this model on screen.
+ */
+export class ModelExperimental {
+    constructor(options: {
+        resource: Resource;
+        modelMatrix?: Matrix4;
+        debugShowBoundingVolume?: boolean;
+        cull?: boolean;
+        opaquePass?: boolean;
+        allowPicking?: boolean;
+        customShader?: CustomShader;
+        content?: Cesium3DTileContent;
+        show?: boolean;
+        color?: Color;
+        colorBlendMode?: ColorBlendMode;
+        colorBlendAmount?: number;
+        featureIdIndex?: number;
+        instanceFeatureIdIndex?: number;
+        pointCloudShading?: any;
+        backFaceCulling?: boolean;
+        shadows?: ShadowMode;
+        showCreditsOnScreen?: boolean;
+    });
+    /**
+     * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
+     * and shader files were downloaded and the WebGL resources were created.  This is set to
+     * <code>true</code> right before {@link ModelExperimental#readyPromise} is resolved.
+     */
+    readonly ready: boolean;
+    /**
+     * Gets the promise that will be resolved when this model is ready to render, i.e. when the external resources
+     * have been downloaded and the WebGL resources are created.
+     * <p>
+     * This promise is resolved at the end of the frame before the first frame the model is rendered in.
+     * </p>
+     */
+    readonly readyPromise: Promise<ModelExperimental>;
+    /**
+     * Point cloud shading settings for controlling point cloud attenuation
+     * and lighting. For 3D Tiles, this is inherited from the
+     * {@link Cesium3DTileset}.
+     */
+    pointCloudShading: PointCloudShading;
+    /**
+     * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
+     * may lead to undefined behavior.
+     */
+    customShader: CustomShader;
+    /**
+     * The color to blend with the model's rendered color.
+     */
+    color: Color;
+    /**
+     * Defines how the color blends with the model.
+     */
+    colorBlendMode: Cesium3DTileColorBlendMode | ColorBlendMode;
+    /**
+     * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     */
+    colorBlendAmount: number;
+    /**
+     * Gets the model's bounding sphere.
+     */
+    readonly boundingSphere: BoundingSphere;
+    /**
+     * This property is for debugging only; it is not for production use nor is it optimized.
+     * <p>
+     * Draws the bounding sphere for each draw command in the model.
+     * </p>
+     */
+    debugShowBoundingVolume: boolean;
+    /**
+     * Whether or not to render the model.
+     */
+    show: boolean;
+    /**
+     * The index into the list of primitive feature IDs used for picking and
+     * styling. For EXT_feature_metadata, feature ID attributes are listed before
+     * feature ID textures. If both per-primitive and per-instance feature IDs are
+     * present, the instance feature IDs take priority.
+     */
+    readonly featureIdIndex: number;
+    /**
+     * The index into the list of instance feature IDs used for picking and
+     * styling. If both per-primitive and per-instance feature IDs are present,
+     * the instance feature IDs take priority.
+     */
+    instanceFeatureIdIndex: number;
+    /**
+     * Gets or sets whether the credits of the model will be displayed on the screen
+     */
+    showCreditsOnScreen: boolean;
+    /**
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     */
+    update(): void;
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * @returns <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
+    isDestroyed(): boolean;
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * @example
+     * model = model && model.destroy();
+     */
+    destroy(): void;
+    /**
+     * <p>
+     * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
+     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+     * </p>
+     * <p>
+     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+     * @param options - Object with the following properties:
+     * @param options.gltf - A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
+     * @param [options.basePath = ''] - The base path that paths in the glTF JSON are relative to.
+     * @param [options.modelMatrix = Matrix4.IDENTITY] - The 4x4 transformation matrix that transforms the model from model to world coordinates.
+     * @param [options.incrementallyLoadTextures = true] - Determine if textures may continue to stream in after the model is loaded.
+     * @param [options.releaseGltfJson = false] - When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+     * @param [options.debugShowBoundingVolume = false] - For debugging only. Draws the bounding sphere for each draw command in the model.
+     * @param [options.cull = true] - Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+     * @param [options.opaquePass = Pass.OPAQUE] - The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+     * @param [options.upAxis = Axis.Y] - The up-axis of the glTF model.
+     * @param [options.forwardAxis = Axis.Z] - The forward-axis of the glTF model.
+     * @param [options.allowPicking = true] - When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+     * @param [options.customShader] - A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+     * @param [options.content] - The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+     * @param [options.show = true] - Whether or not to render the model.
+     * @param [options.color] - A color that blends with the model's rendered color.
+     * @param [options.colorBlendMode = ColorBlendMode.HIGHLIGHT] - Defines how the color blends with the model.
+     * @param [options.colorBlendAmount = 0.5] - Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param [options.featureIdIndex = 0] - The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+     * @param [options.instanceFeatureIdIndex = 0] - The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+     * @param [options.pointCloudShading] - Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+     * @param [options.backFaceCulling = true] - Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+     * @param [options.shadows = ShadowMode.ENABLED] - Determines whether the model casts or receives shadows from light sources.
+     * @param [options.showCreditsOnScreen = false] - Whether to display the credits of this model on screen.
+     * @returns The newly created model.
+     */
+    static fromGltf(options: {
+        gltf: string | Resource | Uint8Array | any;
+        basePath?: string | Resource;
+        modelMatrix?: Matrix4;
+        incrementallyLoadTextures?: boolean;
+        releaseGltfJson?: boolean;
+        debugShowBoundingVolume?: boolean;
+        cull?: boolean;
+        opaquePass?: boolean;
+        upAxis?: Axis;
+        forwardAxis?: Axis;
+        allowPicking?: boolean;
+        customShader?: CustomShader;
+        content?: Cesium3DTileContent;
+        show?: boolean;
+        color?: Color;
+        colorBlendMode?: ColorBlendMode;
+        colorBlendAmount?: number;
+        featureIdIndex?: number;
+        instanceFeatureIdIndex?: number;
+        pointCloudShading?: any;
+        backFaceCulling?: boolean;
+        shadows?: ShadowMode;
+        showCreditsOnScreen?: boolean;
+    }): ModelExperimental;
+}
+
+/**
+ * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
+ * Local reference frames can be used by providing a different transformation matrix, like that returned
+ * by {@link Transforms.eastNorthUpToFixedFrame}.
+ * @example
+ * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+ * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+ */
+export var modelMatrix: Matrix4;
+
+/**
+ * The style to apply the to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+ */
+export var style: Cesium3DTileStyle;
+
+/**
+ * Whether to cull back-facing geometry. When true, back face culling is
+ * determined by the material's doubleSided property; when false, back face
+ * culling is disabled. Back faces are not culled if the model's color is
+ * translucent.
+ */
+export var backFaceCulling: boolean;
+
+/**
+ * Determines whether the model casts or receives shadows from light sources.
+ */
+export var shadows: ShadowMode;
+
+/**
+ * The indices of the children of this node in the scene graph.
+ */
+export const children: number[];
+
+/**
+ * Update stages to apply to this primitive.
+ */
+export var updateStages: any;
+
+/**
+ * A feature of a {@link ModelExperimental}.
+ * <p>
+ * Provides access to a feature's properties stored in the model's feature table.
+ * </p>
+ * <p>
+ * Modifications to a <code>ModelFeature</code> object have the lifetime of the model.
+ * </p>
+ * <p>
+ * Do not construct this directly. Access it through picking using {@link Scene#pick}.
+ * </p>
+ * @example
+ * // On mouse over, display all the properties for a feature in the console log.
+ * handler.setInputAction(function(movement) {
+ *     const feature = scene.pick(movement.endPosition);
+ *     if (feature instanceof Cesium.ModelFeature) {
+ *         console.log(feature);
+ *     }
+ * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+ * @param options - Object with the following properties:
+ * @param options.model - The model the feature belongs to.
+ * @param options.featureId - The unique integral identifier for this feature.
+ */
+export class ModelFeature {
+    constructor(options: {
+        model: ModelExperimental;
+        featureId: number;
+    });
+    /**
+     * Gets or sets if the feature will be shown. This is set for all features
+     * when a style's show is evaluated.
+     */
+    show: boolean;
+    /**
+     * Gets or sets the highlight color multiplied with the feature's color.  When
+     * this is white, the feature's color is not changed. This is set for all features
+     * when a style's color is evaluated.
+     */
+    color: Color;
+    /**
+     * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
+     * batch ID is returned. For EXT_mesh_features, this is the feature ID from
+     * the selected feature ID set.
+     */
+    readonly featureId: number;
+    /**
+     * Returns whether the feature contains this property.
+     * @param name - The case-sensitive name of the property.
+     * @returns Whether the feature contains this property.
+     */
+    hasProperty(name: string): boolean;
+    /**
+     * Returns a copy of the value of the feature's property with the given name.
+     * @example
+     * // Display all the properties for a feature in the console log.
+     * const propertyNames = feature.getPropertyNames();
+     * const length = propertyNames.length;
+     * for (let i = 0; i < length; ++i) {
+     *     const propertyName = propertyNames[i];
+     *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+     * }
+     * @param name - The case-sensitive name of the property.
+     * @returns The value of the property or <code>undefined</code> if the feature does not have this property.
+     */
+    getProperty(name: string): any;
+    /**
+     * Returns a copy of the feature's property with the given name, examining all
+     * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
+     * extensions. Metadata is checked against name from most specific to most
+     * general and the first match is returned. Metadata is checked in this order:
+     * <ol>
+     *   <li>Feature metadata property by semantic</li>
+     *   <li>Feature metadata property by property ID</li>
+     * </ol>
+     * <p>
+     * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+     * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+     * </p>
+     * @param name - The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+     * @returns The value of the property or <code>undefined</code> if the feature does not have this property.
+     */
+    getPropertyInherited(name: string): any;
+    /**
+     * Returns an array of property names for the feature.
+     * @param [results] - An array into which to store the results.
+     * @returns The names of the feature's properties.
+     */
+    getPropertyNames(results?: string[]): string[];
+    /**
+     * Sets the value of the feature's property with the given name.
+     * @example
+     * const height = feature.getProperty('Height'); // e.g., the height of a building
+     * @example
+     * const name = 'clicked';
+     * if (feature.getProperty(name)) {
+     *     console.log('already clicked');
+     * } else {
+     *     feature.setProperty(name, true);
+     *     console.log('first click');
+     * }
+     * @param name - The case-sensitive name of the property.
+     * @param value - The value of the property that will be copied.
+     * @returns <code>true</code> if the property was set, <code>false</code> otherwise.
+     */
+    setProperty(name: string, value: any): boolean;
+}
+
+/**
+ * The bounding sphere that contains all the vertices in this primitive.
+ */
+export var boundingSphere: BoundingSphere;
+
+/**
+ * A simple struct that serves as a value of a <code>sampler2D</code>-valued
+ * uniform. This is used with {@link CustomShader} and {@link TextureManager}
+ * @param options - An object with the following properties:
+ * @param [options.typedArray] - A typed array storing the contents of a texture. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
+ * @param [options.width] - The width of the image. Required when options.typedArray is present
+ * @param [options.height] - The height of the image. Required when options.typedArray is present.
+ * @param [options.url] - A URL string or resource pointing to a texture image.
+ * @param [options.repeat = true] - When defined, the texture sampler will be set to wrap in both directions
+ * @param [options.pixelFormat = PixelFormat.RGBA] - When options.typedArray is defined, this is used to determine the pixel format of the texture
+ * @param [options.pixelDatatype = PixelDatatype.UNSIGNED_BYTE] - When options.typedArray is defined, this is the data type of pixel values in the typed array.
+ * @param [textureMinificationFilter = TextureMinificationFilter.LINEAR] - The minification filter of the texture sampler.
+ * @param [textureMagnificationFilter = TextureMagnificationFilter.LINEAR] - The magnification filter of the texture sampler.
+ * @param [options.maximumAnisotropy = 1.0] - The maximum anisotropy of the texture sampler
+ */
+export class TextureUniform {
+    constructor(options: {
+        typedArray?: Uint8Array;
+        width?: number;
+        height?: number;
+        url?: string | Resource;
+        repeat?: boolean;
+        pixelFormat?: PixelFormat;
+        pixelDatatype?: PixelDatatype;
+        maximumAnisotropy?: number;
+    }, textureMinificationFilter?: TextureMinificationFilter, textureMagnificationFilter?: TextureMagnificationFilter);
+}
+
+/**
+ * An enum of the basic GLSL uniform types. These can be used with
+ * {@link CustomShader} to declare user-defined uniforms.
+ */
+export enum UniformType {
+    /**
+     * A single floating point value.
+     */
+    FLOAT = "float",
+    /**
+     * A vector of 2 floating point values.
+     */
+    VEC2 = "vec2",
+    /**
+     * A vector of 3 floating point values.
+     */
+    VEC3 = "vec3",
+    /**
+     * A vector of 4 floating point values.
+     */
+    VEC4 = "vec4",
+    /**
+     * A single integer value
+     */
+    INT = "int",
+    /**
+     * A vector of 2 integer values.
+     */
+    INT_VEC2 = "ivec2",
+    /**
+     * A vector of 3 integer values.
+     */
+    INT_VEC3 = "ivec3",
+    /**
+     * A vector of 4 integer values.
+     */
+    INT_VEC4 = "ivec4",
+    /**
+     * A single boolean value.
+     */
+    BOOL = "bool",
+    /**
+     * A vector of 2 boolean values.
+     */
+    BOOL_VEC2 = "bvec2",
+    /**
+     * A vector of 3 boolean values.
+     */
+    BOOL_VEC3 = "bvec3",
+    /**
+     * A vector of 4 boolean values.
+     */
+    BOOL_VEC4 = "bvec4",
+    /**
+     * A 2x2 matrix of floating point values.
+     */
+    MAT2 = "mat2",
+    /**
+     * A 3x3 matrix of floating point values.
+     */
+    MAT3 = "mat2",
+    /**
+     * A 3x3 matrix of floating point values.
+     */
+    MAT4 = "mat4",
+    /**
+     * A 2D sampled texture.
+     */
+    SAMPLER_2D = "sampler2D",
+    SAMPLER_CUBE = "samplerCube"
+}
+
+/**
+ * An enum for the GLSL varying types. These can be used for declaring varyings
+ * in {@link CustomShader}
+ */
+export enum VaryingType {
+    /**
+     * A single floating point value.
+     */
+    FLOAT = "float",
+    /**
+     * A vector of 2 floating point values.
+     */
+    VEC2 = "vec2",
+    /**
+     * A vector of 3 floating point values.
+     */
+    VEC3 = "vec3",
+    /**
+     * A vector of 4 floating point values.
+     */
+    VEC4 = "vec4",
+    /**
+     * A 2x2 matrix of floating point values.
+     */
+    MAT2 = "mat2",
+    /**
+     * A 3x3 matrix of floating point values.
+     */
+    MAT3 = "mat2",
+    /**
+     * A 3x3 matrix of floating point values.
+     */
+    MAT4 = "mat4"
 }
 
 /**
@@ -34003,7 +35892,7 @@ export class ModelMesh {
  * Use {@link Model#getNode} to create an instance.
  * </p>
  * @example
- * var node = model.getNode('LOD3sp');
+ * const node = model.getNode('LOD3sp');
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 export class ModelNode {
@@ -34136,7 +36025,7 @@ export namespace OpenStreetMapImageryProvider {
  * servers, so you must conform to their
  * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
  * @example
- * var osm = new Cesium.OpenStreetMapImageryProvider({
+ * const osm = new Cesium.OpenStreetMapImageryProvider({
  *     url : 'https://a.tile.openstreetmap.org/'
  * });
  * @param options - Object describing initialization options
@@ -34455,8 +36344,8 @@ export namespace ParticleSystem {
      * color, sizing, etc.
      * @example
      * function applyGravity(particle, dt) {
-     *    var position = particle.position;
-     *    var gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
+     *    const position = particle.position;
+     *    const gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
      *    Cesium.Cartesian3.multiplyByScalar(gravityVector, GRAVITATIONAL_CONSTANT * dt, gravityVector);
      *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
      * }
@@ -34472,7 +36361,7 @@ export namespace ParticleSystem {
  * be drawn with the same {@link Primitive} as shown in the second example below.
  * @example
  * // A solid white line segment
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.SimplePolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -34491,7 +36380,7 @@ export namespace ParticleSystem {
  * });
  *
  * // Two rectangles in a primitive, each with a different color
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
  *   }),
@@ -34500,7 +36389,7 @@ export namespace ParticleSystem {
  *   }
  * });
  *
- * var anotherInstance = new Cesium.GeometryInstance({
+ * const anotherInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
  *   }),
@@ -34509,7 +36398,7 @@ export namespace ParticleSystem {
  *   }
  * });
  *
- * var rectanglePrimitive = new Cesium.Primitive({
+ * const rectanglePrimitive = new Cesium.Primitive({
  *   geometryInstances : [instance, anotherInstance],
  *   appearance : new Cesium.PerInstanceColorAppearance()
  * });
@@ -34812,7 +36701,7 @@ export class PointPrimitive {
  * and {@link PointPrimitiveCollection#remove}.
  * @example
  * // Create a pointPrimitive collection with two points
- * var points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
+ * const points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
  * points.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   color : Cesium.Color.YELLOW
@@ -34827,20 +36716,26 @@ export class PointPrimitive {
  * @param [options.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT] - The point blending option. The default
  * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param [options.show = true] - Determines if the primitives in the collection will be shown.
  */
 export class PointPrimitiveCollection {
     constructor(options?: {
         modelMatrix?: Matrix4;
         debugShowBoundingVolume?: boolean;
         blendOption?: BlendOption;
+        show?: boolean;
     });
+    /**
+     * Determines if primitives in this collection will be shown.
+     */
+    show: boolean;
     /**
      * The 4x4 transformation matrix that transforms each point in this collection from model to world coordinates.
      * When this is the identity matrix, the pointPrimitives are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
      * Local reference frames can be used by providing a different transformation matrix, like that returned
      * by {@link Transforms.eastNorthUpToFixedFrame}.
      * @example
-     * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+     * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
      * pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      * pointPrimitives.add({
      *   color : Cesium.Color.ORANGE,
@@ -34885,7 +36780,7 @@ export class PointPrimitiveCollection {
      * The added point is returned so it can be modified or removed from the collection later.
      * @example
      * // Example 1:  Add a point, specifying all the default values.
-     * var p = pointPrimitives.add({
+     * const p = pointPrimitives.add({
      *   show : true,
      *   position : Cesium.Cartesian3.ZERO,
      *   pixelSize : 10.0,
@@ -34896,7 +36791,7 @@ export class PointPrimitiveCollection {
      * });
      * @example
      * // Example 2:  Specify only the point's cartographic position.
-     * var p = pointPrimitives.add({
+     * const p = pointPrimitives.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
      * @param [options] - A template describing the point's properties as shown in Example 1.
@@ -34906,7 +36801,7 @@ export class PointPrimitiveCollection {
     /**
      * Removes a point from the collection.
      * @example
-     * var p = pointPrimitives.add(...);
+     * const p = pointPrimitives.add(...);
      * pointPrimitives.remove(p);  // Returns true
      * @param pointPrimitive - The point to remove.
      * @returns <code>true</code> if the point was removed; <code>false</code> if the point was not found in the collection.
@@ -34934,9 +36829,9 @@ export class PointPrimitiveCollection {
      * in the collection.
      * @example
      * // Toggle the show property of every point in the collection
-     * var len = pointPrimitives.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var p = pointPrimitives.get(i);
+     * const len = pointPrimitives.length;
+     * for (let i = 0; i < len; ++i) {
+     *   const p = pointPrimitives.get(i);
      *   p.show = !p.show;
      * }
      * @param index - The zero-based index of the point.
@@ -35036,7 +36931,7 @@ export class Polyline {
  * and {@link PolylineCollection#remove}.
  * @example
  * // Create a polyline collection with two polylines
- * var polylines = new Cesium.PolylineCollection();
+ * const polylines = new Cesium.PolylineCollection();
  * polylines.add({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     -75.10, 39.57,
@@ -35057,12 +36952,18 @@ export class Polyline {
  * @param [options] - Object with the following properties:
  * @param [options.modelMatrix = Matrix4.IDENTITY] - The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
  * @param [options.debugShowBoundingVolume = false] - For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param [options.show = true] - Determines if the polylines in the collection will be shown.
  */
 export class PolylineCollection {
     constructor(options?: {
         modelMatrix?: Matrix4;
         debugShowBoundingVolume?: boolean;
+        show?: boolean;
     });
+    /**
+     * Determines if polylines in this collection will be shown.
+     */
+    show: boolean;
     /**
      * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
      * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -35088,7 +36989,7 @@ export class PolylineCollection {
      * The added polyline is returned so it can be modified or removed from the collection later.
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
-     * var p = polylines.add({
+     * const p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
      *            Cesium.Cartographic.fromDegrees(-75.10, 39.57),
@@ -35102,7 +37003,7 @@ export class PolylineCollection {
     /**
      * Removes a polyline from the collection.
      * @example
-     * var p = polylines.add(...);
+     * const p = polylines.add(...);
      * polylines.remove(p);  // Returns true
      * @param polyline - The polyline to remove.
      * @returns <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
@@ -35130,9 +37031,9 @@ export class PolylineCollection {
      * in the collection.
      * @example
      * // Toggle the show property of every polyline in the collection
-     * var len = polylines.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var p = polylines.get(i);
+     * const len = polylines.length;
+     * for (let i = 0; i < len; ++i) {
+     *   const p = polylines.get(i);
      *   p.show = !p.show;
      * }
      * @param index - The zero-based index of the polyline.
@@ -35176,7 +37077,7 @@ export class PolylineCollection {
  * be drawn with the same {@link Primitive}.
  * @example
  * // A solid white line segment
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -35272,7 +37173,7 @@ export class PolylineColorAppearance {
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -35370,7 +37271,7 @@ export class PolylineMaterialAppearance {
  * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
  * @example
  * // Simple stage to change the color
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform float scale;\n' +
@@ -35391,7 +37292,7 @@ export class PolylineMaterialAppearance {
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform vec4 highlight;\n' +
@@ -35404,7 +37305,7 @@ export class PolylineMaterialAppearance {
  *     '        gl_FragColor = color;\n' +
  *     '    }\n' +
  *     '}\n';
- * var stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
+ * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
  *     uniforms : {
  *         highlight : function() {
@@ -35723,7 +37624,7 @@ export class PostProcessStageCollection {
  * });
  * @example
  * // Example 3: create a uniform alias
- * var uniforms = {};
+ * const uniforms = {};
  * Cesium.defineProperties(uniforms, {
  *     filterSize : {
  *         get : function() {
@@ -35871,19 +37772,19 @@ export namespace PostProcessStageLibrary {
      * </p>
      * @example
      * // multiple silhouette effects
-     * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+     * const yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
      * yellowEdge.selected = [feature0];
      *
-     * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+     * const greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * greenEdge.uniforms.color = Cesium.Color.LIME;
      * greenEdge.selected = [feature1];
      *
      * // draw edges around feature0 and feature1
-     * postProcessStages.add(Cesium.PostProcessLibrary.createSilhouetteEffect([yellowEdge, greenEdge]);
+     * postProcessStages.add(Cesium.PostProcessLibrary.createSilhouetteStage([yellowEdge, greenEdge]);
      * @returns A post-process stage that applies an edge detection effect.
      */
-    function createEdgeDetectionStage(): PostProcessStageComposite;
+    function createEdgeDetectionStage(): PostProcessStage;
     /**
      * Whether or not an edge detection stage is supported.
      * <p>
@@ -35905,9 +37806,10 @@ export namespace PostProcessStageLibrary {
      * <code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.
      * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
      * </p>
+     * @param [edgeDetectionStages] - An array of edge detection post process stages.
      * @returns A post-process stage that applies a silhouette effect.
      */
-    function createSilhouetteStage(): PostProcessStageComposite;
+    function createSilhouetteStage(edgeDetectionStages?: PostProcessStage[]): PostProcessStageComposite;
     /**
      * Whether or not a silhouette stage is supported.
      * <p>
@@ -36004,7 +37906,7 @@ export enum PostProcessStageSampleMode {
  * </p>
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipseGeometry({
  *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
  *       semiMinorAxis : 500000.0,
@@ -36022,7 +37924,7 @@ export enum PostProcessStageSampleMode {
  * }));
  * @example
  * // 2. Draw different instances each with a unique color
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
  *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
@@ -36032,7 +37934,7 @@ export enum PostProcessStageSampleMode {
  *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
  *   }
  * });
- * var ellipsoidInstance = new Cesium.GeometryInstance({
+ * const ellipsoidInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipsoidGeometry({
  *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
@@ -36052,18 +37954,19 @@ export enum PostProcessStageSampleMode {
  * // 3. Create the geometry on the main thread.
  * scene.primitives.add(new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
- *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
- *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
- *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
- *       })),
- *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
- *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
- *       id : 'ellipsoid',
- *       attributes : {
- *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
- *       }
+ *     geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
+ *       radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+ *       vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
+ *     })),
+ *     modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+ *       Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
+ *     id : 'ellipsoid',
+ *     attributes : {
+ *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+ *     }
  *   }),
- *   appearance : new Cesium.PerInstanceColorAppearance()
+ *   appearance : new Cesium.PerInstanceColorAppearance(),
+ *   asynchronous : false
  * }));
  * @param [options] - Object with the following properties:
  * @param [options.geometryInstances] - The geometry instances - or a single geometry instance - to render.
@@ -36141,7 +38044,7 @@ export class Primitive {
      * This property is only supported in 3D mode.
      * </p>
      * @example
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+     * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      */
     modelMatrix: Matrix4;
@@ -36213,7 +38116,7 @@ export class Primitive {
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * const attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
@@ -36250,10 +38153,10 @@ export class Primitive {
  * but <code>PrimitiveCollection</code> is also a primitive itself so collections can
  * be added to collections forming a hierarchy.
  * @example
- * var billboards = new Cesium.BillboardCollection();
- * var labels = new Cesium.LabelCollection();
+ * const billboards = new Cesium.BillboardCollection();
+ * const labels = new Cesium.LabelCollection();
  *
- * var collection = new Cesium.PrimitiveCollection();
+ * const collection = new Cesium.PrimitiveCollection();
  * collection.add(billboards);
  *
  * scene.primitives.add(collection);  // Add collection
@@ -36277,17 +38180,17 @@ export class PrimitiveCollection {
      * by {@link PrimitiveCollection#removeAll}.
      * @example
      * // Example 1. Primitives are destroyed by default.
-     * var primitives = new Cesium.PrimitiveCollection();
-     * var labels = primitives.add(new Cesium.LabelCollection());
+     * const primitives = new Cesium.PrimitiveCollection();
+     * const labels = primitives.add(new Cesium.LabelCollection());
      * primitives = primitives.destroy();
-     * var b = labels.isDestroyed(); // true
+     * const b = labels.isDestroyed(); // true
      * @example
      * // Example 2. Do not destroy primitives in a collection.
-     * var primitives = new Cesium.PrimitiveCollection();
+     * const primitives = new Cesium.PrimitiveCollection();
      * primitives.destroyPrimitives = false;
-     * var labels = primitives.add(new Cesium.LabelCollection());
+     * const labels = primitives.add(new Cesium.LabelCollection());
      * primitives = primitives.destroy();
-     * var b = labels.isDestroyed(); // false
+     * const b = labels.isDestroyed(); // false
      * labels = labels.destroy();    // explicitly destroy
      */
     destroyPrimitives: boolean;
@@ -36298,17 +38201,16 @@ export class PrimitiveCollection {
     /**
      * Adds a primitive to the collection.
      * @example
-     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+     * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * @param primitive - The primitive to add.
-     * @param [index] - the index to add the layer at.  If omitted, the primitive will
-     *                         added at the bottom  of all existing primitives.
+     * @param [index] - The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
      * @returns The primitive added to the collection.
      */
     add(primitive: any, index?: number): any;
     /**
      * Removes a primitive from the collection.
      * @example
-     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+     * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(billboards);  // Returns true
      * @param [primitive] - The primitive to remove.
      * @returns <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
@@ -36352,10 +38254,10 @@ export class PrimitiveCollection {
      * Returns the primitive in the collection at the specified index.
      * @example
      * // Toggle the show property of every primitive in the collection.
-     * var primitives = scene.primitives;
-     * var length = primitives.length;
-     * for (var i = 0; i < length; ++i) {
-     *   var p = primitives.get(i);
+     * const primitives = scene.primitives;
+     * const length = primitives.length;
+     * for (let i = 0; i < length; ++i) {
+     *   const p = primitives.get(i);
      *   p.show = !p.show;
      * }
      * @param index - The zero-based index of the primitive to return.
@@ -36429,13 +38331,13 @@ export class PrimitiveCollection {
  * </p>
  * @example
  * // Create scene without anisotropic texture filtering
- * var scene = new Cesium.Scene({
+ * const scene = new Cesium.Scene({
  *   canvas : canvas,
  *   contextOptions : {
  *     allowTextureFilterAnisotropic : false
  *   }
  * });
- * @param [options] - Object with the following properties:
+ * @param options - Object with the following properties:
  * @param options.canvas - The HTML canvas element to create the scene for.
  * @param [options.contextOptions] - Context and WebGL creation properties.  See details above.
  * @param [options.creditContainer] - The HTML element in which the credits will be displayed.
@@ -36443,14 +38345,15 @@ export class PrimitiveCollection {
  * @param [options.mapProjection = new GeographicProjection()] - The map projection to use in 2D and Columbus View modes.
  * @param [options.orderIndependentTranslucency = true] - If true and the configuration supports it, use order independent translucency.
  * @param [options.scene3DOnly = false] - If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
- * @param [options.terrainExaggeration = 1.0] - A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
  * @param [options.shadows = false] - Determines if shadows are cast by light sources.
  * @param [options.mapMode2D = MapMode2D.INFINITE_SCROLL] - Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param [options.requestRenderMode = false] - If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param [options.maximumRenderTimeChange = 0.0] - If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param [depthPlaneEllipsoidOffset = 0.0] - Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
+ * @param [options.msaaSamples = 1] - If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  */
 export class Scene {
-    constructor(options?: {
+    constructor(options: {
         canvas: HTMLCanvasElement;
         contextOptions?: any;
         creditContainer?: Element;
@@ -36458,12 +38361,12 @@ export class Scene {
         mapProjection?: MapProjection;
         orderIndependentTranslucency?: boolean;
         scene3DOnly?: boolean;
-        terrainExaggeration?: number;
         shadows?: boolean;
         mapMode2D?: MapMode2D;
         requestRenderMode?: boolean;
         maximumRenderTimeChange?: number;
-    });
+        msaaSamples?: number;
+    }, depthPlaneEllipsoidOffset?: number);
     /**
      * Exceptions occurring in <code>render</code> are always caught in order to raise the
      * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -36554,7 +38457,7 @@ export class Scene {
      * };
      *
      * // Execute only the billboard's commands.  That is, only draw the billboard.
-     * var billboards = new Cesium.BillboardCollection();
+     * const billboards = new Cesium.BillboardCollection();
      * scene.debugCommandFilter = function(command) {
      *     return command.owner === billboards;
      * };
@@ -36591,13 +38494,6 @@ export class Scene {
     /**
      * This property is for debugging only; it is not for production use.
      * <p>
-     * Displays depth information for the indicated frustum.
-     * </p>
-     */
-    debugShowGlobeDepth: boolean;
-    /**
-     * This property is for debugging only; it is not for production use.
-     * <p>
      * Indicates which frustum will have depth information displayed.
      * </p>
      */
@@ -36617,20 +38513,18 @@ export class Scene {
      * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
      *
      * <p>
-     * Render must be called between picks.
-     * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
+     * There is a decrease in performance when enabled. There are extra draw calls to write depth for
      * translucent geometry.
      * </p>
      * @example
      * // picking the position of a translucent primitive
      * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
-     *      var pickedFeature = viewer.scene.pick(movement.position);
+     *      const pickedFeature = viewer.scene.pick(movement.position);
      *      if (!Cesium.defined(pickedFeature)) {
      *          // nothing picked
      *          return;
      *      }
-     *      viewer.scene.render();
-     *      var worldPosition = viewer.scene.pickPosition(movement.position);
+     *      const worldPosition = viewer.scene.pickPosition(movement.position);
      * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
      */
     pickTranslucentDepth: boolean;
@@ -36687,7 +38581,7 @@ export class Scene {
      */
     sphericalHarmonicCoefficients: Cartesian3[];
     /**
-     * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+     * The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
      */
     specularEnvironmentMaps: string;
     /**
@@ -36835,10 +38729,6 @@ export class Scene {
      */
     mode: SceneMode;
     /**
-     * Gets the scalar used to exaggerate the terrain.
-     */
-    readonly terrainExaggeration: number;
-    /**
      * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
      * Used for cardboard and WebVR.
      */
@@ -36880,6 +38770,14 @@ export class Scene {
      */
     readonly cameraUnderground: boolean;
     /**
+     * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
+     */
+    readonly msaaSamples: number;
+    /**
+     * Returns <code>true</code> if the Scene's context supports MSAA.
+     */
+    readonly msaaSupported: boolean;
+    /**
      * Determines if a compressed texture format is supported.
      * @param format - The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.
      * @returns Whether or not the format is supported.
@@ -36906,8 +38804,8 @@ export class Scene {
      * @example
      * // On mouse over, color the feature yellow.
      * handler.setInputAction(function(movement) {
-     *     var feature = scene.pick(movement.endPosition);
-     *     if (feature instanceof Cesium3DTileFeature) {
+     *     const feature = scene.pick(movement.endPosition);
+     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
      *         feature.color = Cesium.Color.YELLOW;
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -36939,7 +38837,7 @@ export class Scene {
      * type of primitive and may be used to further identify the picked object. The primitives in
      * the list are ordered by their visual order in the scene (front to back).
      * @example
-     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     * const pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      * @param windowPosition - Window coordinates to perform picking on.
      * @param [limit] - If supplied, stop drilling after collecting this many picks.
      * @param [width = 3] - Width of the pick rectangle.
@@ -36956,8 +38854,8 @@ export class Scene {
      * from all other primitives regardless of their visibility.
      * </p>
      * @example
-     * var position = new Cesium.Cartographic(-1.31968, 0.698874);
-     * var height = viewer.scene.sampleHeight(position);
+     * const position = new Cesium.Cartographic(-1.31968, 0.698874);
+     * const height = viewer.scene.sampleHeight(position);
      * console.log(height);
      * @param position - The cartographic position to sample height from.
      * @param [objectsToExclude] - A list of primitives, entities, or 3D Tiles features to not sample height from.
@@ -36975,7 +38873,7 @@ export class Scene {
      * </p>
      * @example
      * // Clamp an entity to the underlying scene geometry
-     * var position = entity.position.getValue(Cesium.JulianDate.now());
+     * const position = entity.position.getValue(Cesium.JulianDate.now());
      * entity.position = viewer.scene.clampToHeight(position);
      * @param cartesian - The cartesian position.
      * @param [objectsToExclude] - A list of primitives, entities, or 3D Tiles features to not clamp to.
@@ -36991,11 +38889,11 @@ export class Scene {
      * If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,
      * the height is set to undefined.
      * @example
-     * var positions = [
+     * const positions = [
      *     new Cesium.Cartographic(-1.31968, 0.69887),
      *     new Cesium.Cartographic(-1.10489, 0.83923)
      * ];
-     * var promise = viewer.scene.sampleHeightMostDetailed(positions);
+     * const promise = viewer.scene.sampleHeightMostDetailed(positions);
      * promise.then(function(updatedPosition) {
      *     // positions[0].height and positions[1].height have been updated.
      *     // updatedPositions is just a reference to positions.
@@ -37005,18 +38903,18 @@ export class Scene {
      * @param [width = 0.1] - Width of the intersection volume in meters.
      * @returns A promise that resolves to the provided list of positions when the query has completed.
      */
-    sampleHeightMostDetailed(positions: Cartographic[], objectsToExclude?: object[], width?: number): Promise<number[]>;
+    sampleHeightMostDetailed(positions: Cartographic[], objectsToExclude?: object[], width?: number): Promise<Cartographic[]>;
     /**
      * Initiates an asynchronous {@link Scene#clampToHeight} query for an array of {@link Cartesian3} positions
      * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
      * the query completes. Each position is modified in place. If a position cannot be clamped because no geometry
      * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
      * @example
-     * var cartesians = [
+     * const cartesians = [
      *     entities[0].position.getValue(Cesium.JulianDate.now()),
      *     entities[1].position.getValue(Cesium.JulianDate.now())
      * ];
-     * var promise = viewer.scene.clampToHeightMostDetailed(cartesians);
+     * const promise = viewer.scene.clampToHeightMostDetailed(cartesians);
      * promise.then(function(updatedCartesians) {
      *     entities[0].position = updatedCartesians[0];
      *     entities[1].position = updatedCartesians[1];
@@ -37032,10 +38930,10 @@ export class Scene {
      * HTML element at the same screen position as an object in the scene.
      * @example
      * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * const scene = widget.scene;
+     * const ellipsoid = scene.globe.ellipsoid;
+     * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(scene.cartesianToCanvasCoordinates(position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -37116,10 +39014,10 @@ export namespace SceneTransforms {
      * HTML element at the same screen position as an object in the scene.
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * const scene = widget.scene;
+     * const ellipsoid = scene.globe.ellipsoid;
+     * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -37134,10 +39032,10 @@ export namespace SceneTransforms {
      * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * const scene = widget.scene;
+     * const ellipsoid = scene.globe.ellipsoid;
+     * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -37327,6 +39225,7 @@ export class ScreenSpaceCameraController {
  * @param [options.softShadows = false] - Whether percentage-closer-filtering is enabled for producing softer shadows.
  * @param [options.darkness = 0.3] - The shadow darkness.
  * @param [options.normalOffset = true] - Whether a normal bias is applied to shadows.
+ * @param [options.fadingEnabled = true] - Whether shadows start to fade out once the light gets closer to the horizon.
  */
 export class ShadowMap {
     constructor(options: {
@@ -37341,11 +39240,16 @@ export class ShadowMap {
         softShadows?: boolean;
         darkness?: number;
         normalOffset?: boolean;
+        fadingEnabled?: boolean;
     });
     /**
      * Determines the darkness of the shadows.
      */
     darkness: number;
+    /**
+     * Determines whether shadows start to fade out once the light gets closer to the horizon.
+     */
+    fadingEnabled: boolean;
     /**
      * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
      */
@@ -37418,30 +39322,40 @@ export class SingleTileImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -37472,7 +39386,7 @@ export class SingleTileImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link SingleTileImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link SingleTileImageryProvider#ready} returns true.
@@ -37781,7 +39695,7 @@ export enum StencilOperation {
  * An expression for a style applied to a {@link Cesium3DTileset}.
  * <p>
  * Derived classes of this interface evaluate expressions in the
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}.
  * </p>
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
@@ -37792,7 +39706,7 @@ export class StyleExpression {
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -37901,38 +39815,48 @@ export namespace TileCoordinatesImageryProvider {
  * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
  * a label inside it indicating the X, Y, Level coordinates of the tile.  This is mostly useful for
  * debugging terrain and imagery rendering problems.
- * @param options - Object describing initialization options
+ * @param [options] - Object describing initialization options
  */
 export class TileCoordinatesImageryProvider {
-    constructor(options: TileCoordinatesImageryProvider.ConstructorOptions);
+    constructor(options?: TileCoordinatesImageryProvider.ConstructorOptions);
     /**
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -37959,7 +39883,7 @@ export class TileCoordinatesImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
@@ -38106,7 +40030,7 @@ export namespace TileMapServiceImageryProvider {
  * An imagery provider that provides tiled imagery as generated by
  * {@link http://www.maptiler.org/|MapTiler}, {@link http://www.klokan.cz/projects/gdal2tiles/|GDAL2Tiles}, etc.
  * @example
- * var tms = new Cesium.TileMapServiceImageryProvider({
+ * const tms = new Cesium.TileMapServiceImageryProvider({
  *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
  *    fileExtension: 'png',
  *    maximumLevel: 4,
@@ -38185,7 +40109,7 @@ export class TimeDynamicImagery {
  * @param [options.shadows = ShadowMode.ENABLED] - Determines whether the point cloud casts or receives shadows from light sources.
  * @param [options.maximumMemoryUsage = 256] - The maximum amount of memory in MB that can be used by the point cloud.
  * @param [options.shading] - Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
- * @param [options.style] - The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
+ * @param [options.style] - The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
  * @param [options.clippingPlanes] - The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
 export class TimeDynamicPointCloud {
@@ -38234,14 +40158,14 @@ export class TimeDynamicPointCloud {
     shading: PointCloudShading;
     /**
      * The style, defined using the
-     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language},
      * applied to each point in the point cloud.
      * <p>
      * Assign <code>undefined</code> to remove the style, which will restore the visual
      * appearance of the point cloud to its default when no style was applied.
      * </p>
      * @example
-     * pointCloud.style = new Cesium3DTileStyle({
+     * pointCloud.style = new Cesium.Cesium3DTileStyle({
      *    color : {
      *        conditions : [
      *            ['${Classification} === 0', 'color("purple", 0.5)'],
@@ -38436,19 +40360,19 @@ export namespace UrlTemplateImageryProvider {
  * Provides imagery by requesting tiles using a specified URL template.
  * @example
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
- * var tms = new Cesium.UrlTemplateImageryProvider({
+ * const tms = new Cesium.UrlTemplateImageryProvider({
  *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
  *     credit : '© Analytical Graphics, Inc.',
  *     tilingScheme : new Cesium.GeographicTilingScheme(),
  *     maximumLevel : 5
  * });
  * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
- * var positron = new Cesium.UrlTemplateImageryProvider({
+ * const positron = new Cesium.UrlTemplateImageryProvider({
  *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
  *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
  * });
  * // Access a Web Map Service (WMS) server.
- * var wms = new Cesium.UrlTemplateImageryProvider({
+ * const wms = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
  *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
  *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
@@ -38458,7 +40382,7 @@ export namespace UrlTemplateImageryProvider {
  *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
  * });
  * // Using custom tags in your template url.
- * var custom = new Cesium.UrlTemplateImageryProvider({
+ * const custom = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
  *    customTags : {
  *        Time: function(imageryProvider, x, y, level) {
@@ -38474,30 +40398,40 @@ export class UrlTemplateImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -38589,7 +40523,7 @@ export class UrlTemplateImageryProvider {
      * Gets the maximum level-of-detail that can be requested, or undefined if there is no limit.
      * This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
@@ -38715,7 +40649,7 @@ export enum VerticalOrigin {
 /**
  * A viewport aligned quad.
  * @example
- * var viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
+ * const viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
  * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
  * @param [rectangle] - The {@link BoundingRectangle} defining the quad's position within the viewport.
  * @param [material] - The {@link Material} defining the surface appearance of the viewport quad.
@@ -38776,6 +40710,16 @@ export class ViewportQuad {
     destroy(): void;
 }
 
+/**
+ * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
+ */
+export const includesReverseAxis: number[];
+
+/**
+ * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
+ */
+export const excludesReverseAxis: number[];
+
 export namespace WebMapServiceImageryProvider {
     /**
      * Initialization options for the WebMapServiceImageryProvider constructor
@@ -38811,6 +40755,7 @@ export namespace WebMapServiceImageryProvider {
      *                          an array, each element in the array is a subdomain.
      * @property [clock] - A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
      * @property [times] - TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @property [getFeatureInfoUrl] - The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
      */
     type ConstructorOptions = {
         url: Resource | string;
@@ -38832,13 +40777,14 @@ export namespace WebMapServiceImageryProvider {
         subdomains?: string | string[];
         clock?: Clock;
         times?: TimeIntervalCollection;
+        getFeatureInfoUrl?: Resource | string;
     };
 }
 
 /**
  * Provides tiled imagery hosted by a Web Map Service (WMS) server.
  * @example
- * var provider = new Cesium.WebMapServiceImageryProvider({
+ * const provider = new Cesium.WebMapServiceImageryProvider({
  *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')
@@ -38853,30 +40799,40 @@ export class WebMapServiceImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -38911,7 +40867,7 @@ export class WebMapServiceImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
@@ -38979,6 +40935,10 @@ export class WebMapServiceImageryProvider {
      * tile requests.
      */
     times: TimeIntervalCollection;
+    /**
+     * Gets the getFeatureInfo URL of the WMS server.
+     */
+    readonly getFeatureInfoUrl: Resource | string;
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      * @param x - The tile X coordinate.
@@ -39082,7 +41042,7 @@ export namespace WebMapTileServiceImageryProvider {
  * This provider supports HTTP KVP-encoded and RESTful GetTile requests, but does not yet support the SOAP encoding.
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)
- * var shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -39095,7 +41055,7 @@ export namespace WebMapTileServiceImageryProvider {
  * viewer.imageryLayers.addImageryProvider(shadedRelief1);
  * @example
  * // Example 2. USGS shaded relief tiles (RESTful)
- * var shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -39107,7 +41067,7 @@ export namespace WebMapTileServiceImageryProvider {
  * viewer.imageryLayers.addImageryProvider(shadedRelief2);
  * @example
  * // Example 3. NASA time dynamic weather data (RESTful)
- * var times = Cesium.TimeIntervalCollection.fromIso8601({
+ * const times = Cesium.TimeIntervalCollection.fromIso8601({
  *     iso8601: '2015-07-30/2017-06-16/P1D',
  *     dataCallback: function dataCallback(interval, index) {
  *         return {
@@ -39115,7 +41075,7 @@ export namespace WebMapTileServiceImageryProvider {
  *         };
  *     }
  * });
- * var weather = new Cesium.WebMapTileServiceImageryProvider({
+ * const weather = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
  *     layer : 'AMSR2_Snow_Water_Equivalent',
  *     style : 'default',
@@ -39135,30 +41095,40 @@ export class WebMapTileServiceImageryProvider {
      * The default alpha blending value of this provider, with 0.0 representing fully transparent and
      * 1.0 representing fully opaque.
      */
-    defaultAlpha: number;
+    defaultAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultNightAlpha: number | undefined;
+    /**
+     * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+     * 1.0 representing fully opaque.
+     */
+    defaultDayAlpha: number | undefined;
     /**
      * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
      * makes the imagery darker while greater than 1.0 makes it brighter.
      */
-    defaultBrightness: number;
+    defaultBrightness: number | undefined;
     /**
      * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
      * the contrast while greater than 1.0 increases it.
      */
-    defaultContrast: number;
+    defaultContrast: number | undefined;
     /**
      * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
      */
-    defaultHue: number;
+    defaultHue: number | undefined;
     /**
      * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
      * saturation while greater than 1.0 increases it.
      */
-    defaultSaturation: number;
+    defaultSaturation: number | undefined;
     /**
      * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
      */
-    defaultGamma: number;
+    defaultGamma: number | undefined;
     /**
      * The default texture minification filter to apply to this provider.
      */
@@ -39189,7 +41159,7 @@ export class WebMapTileServiceImageryProvider {
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
      */
-    readonly maximumLevel: number;
+    readonly maximumLevel: number | undefined;
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
@@ -39295,18 +41265,76 @@ export class WebMapTileServiceImageryProvider {
 }
 
 /**
+ * @property height - The height.
+ * @property color - The color at this height.
+ */
+export type createElevationBandMaterialEntry = {
+    height: number;
+    color: Color;
+};
+
+/**
+ * @property entries - A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
+ * @property [extendDownwards = false] - If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
+ * @property [extendUpwards = false] - If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
+ */
+export type createElevationBandMaterialBand = {
+    entries: createElevationBandMaterialEntry[];
+    extendDownwards?: boolean;
+    extendUpwards?: boolean;
+};
+
+/**
+ * Creates a {@link Material} that combines multiple layers of color/gradient bands and maps them to terrain heights.
+ *
+ * The shader does a binary search over all the heights to find out which colors are above and below a given height, and
+ * interpolates between them for the final color. This material supports hundreds of entries relatively cheaply.
+ * @example
+ * scene.globe.material = Cesium.createElevationBandMaterial({
+ *     scene : scene,
+ *     layers : [{
+ *         entries : [{
+ *             height : 4200.0,
+ *             color : new Cesium.Color(0.0, 0.0, 0.0, 1.0)
+ *         }, {
+ *             height : 8848.0,
+ *             color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
+ *         }],
+ *         extendDownwards : true,
+ *         extendUpwards : true,
+ *     }, {
+ *         entries : [{
+ *             height : 7000.0,
+ *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+ *         }, {
+ *             height : 7100.0,
+ *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+ *         }]
+ *     }]
+ * });
+ * @param options - Object with the following properties:
+ * @param options.scene - The scene where the visualization is taking place.
+ * @param options.layers - A list of bands ordered from lowest to highest precedence.
+ * @returns A new {@link Material} instance.
+ */
+export function createElevationBandMaterial(options: {
+    scene: Scene;
+    layers: createElevationBandMaterialBand[];
+}): Material;
+
+/**
  * Creates a {@link Cesium3DTileset} instance for the
  * {@link https://cesium.com/content/cesium-osm-buildings/|Cesium OSM Buildings}
  * tileset.
  * @example
  * // Create Cesium OSM Buildings with default styling
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.scene.primitives.add(Cesium.createOsmBuildings());
  * @example
  * // Create Cesium OSM Buildings with a custom style highlighting
  * // schools and hospitals.
  * viewer.scene.primitives.add(Cesium.createOsmBuildings({
- *   style: new Cesium3DTileStyle({
+ *   style: new Cesium.Cesium3DTileStyle({
  *     color: {
  *       conditions: [
  *         ["${feature['building']} === 'hospital'", "color('#0000FF')"],
@@ -39324,10 +41352,13 @@ export class WebMapTileServiceImageryProvider {
  *        specified, a default style is used which gives each building or building part a
  *        color inferred from its OpenStreetMap <code>tags</code>. If no color can be inferred,
  *        <code>options.defaultColor</code> is used.
+ * @param [options.showOutline = true] - Whether to show outlines around buildings. When true,
+ *        outlines are displayed. When false, outlines are not displayed.
  */
 export function createOsmBuildings(options?: {
     defaultColor?: Color;
     style?: Cesium3DTileStyle;
+    showOutline?: boolean;
 }): Cesium3DTileset;
 
 /**
@@ -39357,12 +41388,12 @@ export function createTangentSpaceDebugPrimitive(options: {
  * Creates an {@link IonImageryProvider} instance for ion's default global base imagery layer, currently Bing Maps.
  * @example
  * // Create Cesium World Terrain with default settings
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery();
  * });
  * @example
  * // Create Cesium World Terrain with water and normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
  *     })
@@ -39399,10 +41430,10 @@ export function createWorldImagery(options?: {
  * // In HTML head, include a link to Animation.css stylesheet,
  * // and in the body, include: <div id="animationContainer"></div>
  *
- * var clock = new Cesium.Clock();
- * var clockViewModel = new Cesium.ClockViewModel(clock);
- * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
- * var widget = new Cesium.Animation('animationContainer', viewModel);
+ * const clock = new Cesium.Clock();
+ * const clockViewModel = new Cesium.ClockViewModel(clock);
+ * const viewModel = new Cesium.AnimationViewModel(clockViewModel);
+ * const widget = new Cesium.Animation('animationContainer', viewModel);
  *
  * function tick() {
  *     clock.tick();
@@ -39576,7 +41607,7 @@ export namespace AnimationViewModel {
  *
  * //Create the list of available providers we would like the user to select from.
  * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
- * var imageryViewModels = [];
+ * const imageryViewModels = [];
  * imageryViewModels.push(new Cesium.ProviderViewModel({
  *      name : 'Open\u00adStreet\u00adMap',
  *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
@@ -39611,11 +41642,11 @@ export namespace AnimationViewModel {
  *  }));
  *
  * //Create a CesiumWidget without imagery, if you haven't already done so.
- * var cesiumWidget = new CesiumWidget('cesiumContainer', { imageryProvider: false });
+ * const cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
  *
  * //Finally, create the baseLayerPicker widget using our view models.
- * var layers = cesiumWidget.imageryLayers;
- * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
+ * const layers = cesiumWidget.imageryLayers;
+ * const baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
  *     globe : cesiumWidget.scene.globe,
  *     imageryProviderViewModels : imageryViewModels
  * });
@@ -40153,14 +42184,6 @@ export class CesiumInspectorViewModel {
      */
     wireframe: boolean;
     /**
-     * Gets or sets the show globe depth state.  This property is observable.
-     */
-    globeDepth: boolean;
-    /**
-     * Gets or sets the show pick depth state.  This property is observable.
-     */
-    pickDepth: boolean;
-    /**
      * Gets or sets the index of the depth frustum to display.  This property is observable.
      */
     depthFrustum: number;
@@ -40326,10 +42349,10 @@ export class CesiumInspectorViewModel {
  * // and in the body, include: <div id="cesiumContainer"></div>
  *
  * //Widget with no terrain and default Bing Maps imagery provider.
- * var widget = new CesiumWidget('cesiumContainer');
+ * const widget = new Cesium.CesiumWidget('cesiumContainer');
  *
  * //Widget with ion imagery and Cesium World Terrain.
- * var widget = new CesiumWidget('cesiumContainer', {
+ * const widget2 = new Cesium.CesiumWidget('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery(),
  *     terrainProvider : Cesium.createWorldTerrain(),
  *     skyBox : new Cesium.SkyBox({
@@ -40366,12 +42389,12 @@ export class CesiumInspectorViewModel {
  * @param [options.creditContainer] - The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
  *        to the bottom of the widget itself.
  * @param [options.creditViewport] - The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
- * @param [options.terrainExaggeration = 1.0] - A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
  * @param [options.shadows = false] - Determines if shadows are cast by light sources.
  * @param [options.terrainShadows = ShadowMode.RECEIVE_ONLY] - Determines if the terrain casts or receives shadows from light sources.
  * @param [options.mapMode2D = MapMode2D.INFINITE_SCROLL] - Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param [options.requestRenderMode = false] - If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param [options.maximumRenderTimeChange = 0.0] - If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param [options.msaaSamples = 1] - If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  */
 export class CesiumWidget {
     constructor(container: Element | string, options?: {
@@ -40392,33 +42415,33 @@ export class CesiumWidget {
         contextOptions?: any;
         creditContainer?: Element | string;
         creditViewport?: Element | string;
-        terrainExaggeration?: number;
         shadows?: boolean;
         terrainShadows?: ShadowMode;
         mapMode2D?: MapMode2D;
         requestRenderMode?: boolean;
         maximumRenderTimeChange?: number;
+        msaaSamples?: number;
     });
     /**
      * Gets the parent container.
      */
-    container: Element;
+    readonly container: Element;
     /**
      * Gets the canvas.
      */
-    canvas: HTMLCanvasElement;
+    readonly canvas: HTMLCanvasElement;
     /**
      * Gets the credit container.
      */
-    creditContainer: Element;
+    readonly creditContainer: Element;
     /**
      * Gets the credit viewport
      */
-    creditViewport: Element;
+    readonly creditViewport: Element;
     /**
      * Gets the scene.
      */
-    scene: Scene;
+    readonly scene: Scene;
     /**
      * Gets the collection of image layers that will be rendered on the globe.
      */
@@ -40434,11 +42457,11 @@ export class CesiumWidget {
     /**
      * Gets the clock.
      */
-    clock: Clock;
+    readonly clock: Clock;
     /**
      * Gets the screen space event handler.
      */
-    screenSpaceEventHandler: ScreenSpaceEventHandler;
+    readonly screenSpaceEventHandler: ScreenSpaceEventHandler;
     /**
      * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
      * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
@@ -40482,10 +42505,10 @@ export class CesiumWidget {
      * when a render loop error occurs, if showRenderLoopErrors was not false when the
      * widget was constructed.
      * @param title - The title to be displayed on the error panel.  This string is interpreted as text.
-     * @param message - A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+     * @param [message] - A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
      * @param [error] - The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
      */
-    showErrorPanel(title: string, message: string, error?: string): void;
+    showErrorPanel(title: string, message?: string, error?: string): void;
     /**
      * @returns true if the object has been destroyed, false otherwise.
      */
@@ -40946,7 +42969,7 @@ export class InfoBoxViewModel {
  * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
  * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
  *
- * var navigationHelpButton = new Cesium.NavigationHelpButton({
+ * const navigationHelpButton = new Cesium.NavigationHelpButton({
  *     container : 'navigationHelpButtonContainer'
  * });
  * @param options - Object with the following properties:
@@ -41082,7 +43105,7 @@ export class PerformanceWatchdogViewModel {
  * // and in the body, include: <div id="projectionPickerContainer"></div>
  * // Note: This code assumes you already have a Scene instance.
  *
- * var projectionPicker = new Cesium.ProjectionPicker('projectionPickerContainer', scene);
+ * const projectionPicker = new Cesium.ProjectionPicker('projectionPickerContainer', scene);
  * @param container - The DOM element or ID that will contain the widget.
  * @param scene - The Scene instance to use.
  */
@@ -41174,7 +43197,7 @@ export class ProjectionPickerViewModel {
  * // and in the body, include: <div id="sceneModePickerContainer"></div>
  * // Note: This code assumes you already have a Scene instance.
  *
- * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
+ * const sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
  * @param container - The DOM element or ID that will contain the widget.
  * @param scene - The Scene instance to use.
  * @param [duration = 2.0] - The time, in seconds, it takes for the scene to transition.
@@ -41533,7 +43556,7 @@ export namespace Viewer {
      * @property [terrainProviderViewModels = createDefaultTerrainProviderViewModels()] - The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
      * @property [imageryProvider = createWorldImagery()] - The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
      * @property [terrainProvider = new EllipsoidTerrainProvider()] - The terrain provider to use
-     * @property [skyBox] - The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
+     * @property [skyBox] - The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
      * @property [skyAtmosphere] - Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
      * @property [fullscreenElement = document.body] - The element or id to be placed into fullscreen mode when the full screen button is pressed.
      * @property [useDefaultRenderLoop = true] - True if this widget should control the render loop, false otherwise.
@@ -41550,13 +43573,14 @@ export namespace Viewer {
      * @property [creditViewport] - The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
      * @property [dataSources = new DataSourceCollection()] - The collection of data sources visualized by the widget.  If this parameter is provided,
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
-     * @property [terrainExaggeration = 1.0] - A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @property [shadows = false] - Determines if shadows are cast by light sources.
      * @property [terrainShadows = ShadowMode.RECEIVE_ONLY] - Determines if the terrain casts or receives shadows from light sources.
      * @property [mapMode2D = MapMode2D.INFINITE_SCROLL] - Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @property [projectionPicker = false] - If set to true, the ProjectionPicker widget will be created.
      * @property [requestRenderMode = false] - If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @property [maximumRenderTimeChange = 0.0] - If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @property [depthPlaneEllipsoidOffset = 0.0] - Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
+     * @property [msaaSamples = 1] - If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
      */
     type ConstructorOptions = {
         animation?: boolean;
@@ -41580,8 +43604,8 @@ export namespace Viewer {
         terrainProviderViewModels?: ProviderViewModel[];
         imageryProvider?: ImageryProvider;
         terrainProvider?: TerrainProvider;
-        skyBox?: SkyBox;
-        skyAtmosphere?: SkyAtmosphere;
+        skyBox?: SkyBox | false;
+        skyAtmosphere?: SkyAtmosphere | false;
         fullscreenElement?: Element | string;
         useDefaultRenderLoop?: boolean;
         targetFrameRate?: number;
@@ -41591,18 +43615,19 @@ export namespace Viewer {
         contextOptions?: any;
         sceneMode?: SceneMode;
         mapProjection?: MapProjection;
-        globe?: Globe;
+        globe?: Globe | false;
         orderIndependentTranslucency?: boolean;
         creditContainer?: Element | string;
         creditViewport?: Element | string;
         dataSources?: DataSourceCollection;
-        terrainExaggeration?: number;
         shadows?: boolean;
         terrainShadows?: ShadowMode;
         mapMode2D?: MapMode2D;
         projectionPicker?: boolean;
         requestRenderMode?: boolean;
         maximumRenderTimeChange?: number;
+        depthPlaneEllipsoidOffset?: number;
+        msaaSamples?: number;
     };
     /**
      * A function that augments a Viewer instance with additional functionality.
@@ -41617,7 +43642,7 @@ export namespace Viewer {
  * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
  * @example
  * //Initialize the viewer widget with several custom options and mixins.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     //Start in Columbus Viewer
  *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
  *     //Use Cesium World Terrain
@@ -41651,10 +43676,10 @@ export namespace Viewer {
  *     window.alert(error);
  * });
  * @param container - The DOM element or ID that will contain the widget.
- * @param options - Object describing initialization options
+ * @param [options] - Object describing initialization options
  */
 export class Viewer {
-    constructor(container: Element | string, options: Viewer.ConstructorOptions);
+    constructor(container: Element | string, options?: Viewer.ConstructorOptions);
     /**
      * Gets the parent container.
      */
@@ -41827,6 +43852,10 @@ export class Viewer {
     trackedEntity: Entity | undefined;
     /**
      * Gets or sets the object instance for which to display a selection indicator.
+     *
+     * If a user interactively picks a Cesium3DTilesFeature instance, then this property
+     * will contain a transient Entity instance with a property named "feature" that is
+     * the instance that was picked.
      */
     selectedEntity: Entity | undefined;
     /**
@@ -41926,7 +43955,7 @@ export class Viewer {
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
  * @param viewer - The viewer instance.
  */
@@ -41937,7 +43966,7 @@ export function viewerCesium3DTilesInspectorMixin(viewer: Viewer): void;
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesiumInspectorMixin);
  * @param viewer - The viewer instance.
  */
@@ -41949,7 +43978,7 @@ export function viewerCesiumInspectorMixin(viewer: Viewer): void;
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @example
  * // Add basic drag and drop support and pop up an alert window on error.
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerDragDropMixin);
  * viewer.dropError.addEventListener(function(viewerArg, source, error) {
  *     window.alert('Error processing ' + source + ':' + error);
@@ -41975,7 +44004,7 @@ export function viewerDragDropMixin(viewer: Viewer, options?: {
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerPerformanceWatchdogMixin, {
  *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
  * });
@@ -42007,10 +44036,8 @@ export function createCommand(func: (...params: any[]) => any, canExecute?: bool
 }
 
 declare module "cesium/Source/Core/ArcGISTiledElevationTerrainProvider" { import { ArcGISTiledElevationTerrainProvider } from 'cesium'; export default ArcGISTiledElevationTerrainProvider; }
-declare module "cesium/Source/Core/ArcType" { import { ArcType } from 'cesium'; export default ArcType; }
 declare module "cesium/Source/Core/AssociativeArray" { import { AssociativeArray } from 'cesium'; export default AssociativeArray; }
 declare module "cesium/Source/Core/AxisAlignedBoundingBox" { import { AxisAlignedBoundingBox } from 'cesium'; export default AxisAlignedBoundingBox; }
-declare module "cesium/Source/Core/BingMapsApi" { import { BingMapsApi } from 'cesium'; export default BingMapsApi; }
 declare module "cesium/Source/Core/BingMapsGeocoderService" { import { BingMapsGeocoderService } from 'cesium'; export default BingMapsGeocoderService; }
 declare module "cesium/Source/Core/BoundingRectangle" { import { BoundingRectangle } from 'cesium'; export default BoundingRectangle; }
 declare module "cesium/Source/Core/BoundingSphere" { import { BoundingSphere } from 'cesium'; export default BoundingSphere; }
@@ -42026,20 +44053,17 @@ declare module "cesium/Source/Core/CesiumTerrainProvider" { import { CesiumTerra
 declare module "cesium/Source/Core/CircleGeometry" { import { CircleGeometry } from 'cesium'; export default CircleGeometry; }
 declare module "cesium/Source/Core/CircleOutlineGeometry" { import { CircleOutlineGeometry } from 'cesium'; export default CircleOutlineGeometry; }
 declare module "cesium/Source/Core/Clock" { import { Clock } from 'cesium'; export default Clock; }
-declare module "cesium/Source/Core/ClockRange" { import { ClockRange } from 'cesium'; export default ClockRange; }
-declare module "cesium/Source/Core/ClockStep" { import { ClockStep } from 'cesium'; export default ClockStep; }
 declare module "cesium/Source/Core/Color" { import { Color } from 'cesium'; export default Color; }
 declare module "cesium/Source/Core/ColorGeometryInstanceAttribute" { import { ColorGeometryInstanceAttribute } from 'cesium'; export default ColorGeometryInstanceAttribute; }
-declare module "cesium/Source/Core/ComponentDatatype" { import { ComponentDatatype } from 'cesium'; export default ComponentDatatype; }
 declare module "cesium/Source/Core/CompressedTextureBuffer" { import { CompressedTextureBuffer } from 'cesium'; export default CompressedTextureBuffer; }
 declare module "cesium/Source/Core/CoplanarPolygonGeometry" { import { CoplanarPolygonGeometry } from 'cesium'; export default CoplanarPolygonGeometry; }
 declare module "cesium/Source/Core/CoplanarPolygonOutlineGeometry" { import { CoplanarPolygonOutlineGeometry } from 'cesium'; export default CoplanarPolygonOutlineGeometry; }
-declare module "cesium/Source/Core/CornerType" { import { CornerType } from 'cesium'; export default CornerType; }
 declare module "cesium/Source/Core/CorridorGeometry" { import { CorridorGeometry } from 'cesium'; export default CorridorGeometry; }
 declare module "cesium/Source/Core/CorridorOutlineGeometry" { import { CorridorOutlineGeometry } from 'cesium'; export default CorridorOutlineGeometry; }
 declare module "cesium/Source/Core/Credit" { import { Credit } from 'cesium'; export default Credit; }
 declare module "cesium/Source/Core/CubicRealPolynomial" { import { CubicRealPolynomial } from 'cesium'; export default CubicRealPolynomial; }
 declare module "cesium/Source/Core/CullingVolume" { import { CullingVolume } from 'cesium'; export default CullingVolume; }
+declare module "cesium/Source/Core/CustomHeightmapTerrainProvider" { import { CustomHeightmapTerrainProvider } from 'cesium'; export default CustomHeightmapTerrainProvider; }
 declare module "cesium/Source/Core/CylinderGeometry" { import { CylinderGeometry } from 'cesium'; export default CylinderGeometry; }
 declare module "cesium/Source/Core/CylinderOutlineGeometry" { import { CylinderOutlineGeometry } from 'cesium'; export default CylinderOutlineGeometry; }
 declare module "cesium/Source/Core/DefaultProxy" { import { DefaultProxy } from 'cesium'; export default DefaultProxy; }
@@ -42058,18 +44082,17 @@ declare module "cesium/Source/Core/EllipsoidTangentPlane" { import { EllipsoidTa
 declare module "cesium/Source/Core/EllipsoidTerrainProvider" { import { EllipsoidTerrainProvider } from 'cesium'; export default EllipsoidTerrainProvider; }
 declare module "cesium/Source/Core/Event" { import { Event } from 'cesium'; export default Event; }
 declare module "cesium/Source/Core/EventHelper" { import { EventHelper } from 'cesium'; export default EventHelper; }
-declare module "cesium/Source/Core/ExtrapolationType" { import { ExtrapolationType } from 'cesium'; export default ExtrapolationType; }
 declare module "cesium/Source/Core/FeatureDetection" { import { FeatureDetection } from 'cesium'; export default FeatureDetection; }
 declare module "cesium/Source/Core/FrustumGeometry" { import { FrustumGeometry } from 'cesium'; export default FrustumGeometry; }
 declare module "cesium/Source/Core/FrustumOutlineGeometry" { import { FrustumOutlineGeometry } from 'cesium'; export default FrustumOutlineGeometry; }
 declare module "cesium/Source/Core/Fullscreen" { import { Fullscreen } from 'cesium'; export default Fullscreen; }
-declare module "cesium/Source/Core/GeocodeType" { import { GeocodeType } from 'cesium'; export default GeocodeType; }
 declare module "cesium/Source/Core/GeocoderService" { import { GeocoderService } from 'cesium'; export default GeocoderService; }
 declare module "cesium/Source/Core/GeographicProjection" { import { GeographicProjection } from 'cesium'; export default GeographicProjection; }
 declare module "cesium/Source/Core/GeographicTilingScheme" { import { GeographicTilingScheme } from 'cesium'; export default GeographicTilingScheme; }
 declare module "cesium/Source/Core/Geometry" { import { Geometry } from 'cesium'; export default Geometry; }
 declare module "cesium/Source/Core/GeometryAttribute" { import { GeometryAttribute } from 'cesium'; export default GeometryAttribute; }
 declare module "cesium/Source/Core/GeometryAttributes" { import { GeometryAttributes } from 'cesium'; export default GeometryAttributes; }
+declare module "cesium/Source/Core/GeometryFactory" { import { GeometryFactory } from 'cesium'; export default GeometryFactory; }
 declare module "cesium/Source/Core/GeometryInstance" { import { GeometryInstance } from 'cesium'; export default GeometryInstance; }
 declare module "cesium/Source/Core/GeometryInstanceAttribute" { import { GeometryInstanceAttribute } from 'cesium'; export default GeometryInstanceAttribute; }
 declare module "cesium/Source/Core/GeometryPipeline" { import { GeometryPipeline } from 'cesium'; export default GeometryPipeline; }
@@ -42080,13 +44103,11 @@ declare module "cesium/Source/Core/GregorianDate" { import { GregorianDate } fro
 declare module "cesium/Source/Core/GroundPolylineGeometry" { import { GroundPolylineGeometry } from 'cesium'; export default GroundPolylineGeometry; }
 declare module "cesium/Source/Core/HeadingPitchRange" { import { HeadingPitchRange } from 'cesium'; export default HeadingPitchRange; }
 declare module "cesium/Source/Core/HeadingPitchRoll" { import { HeadingPitchRoll } from 'cesium'; export default HeadingPitchRoll; }
-declare module "cesium/Source/Core/HeightmapEncoding" { import { HeightmapEncoding } from 'cesium'; export default HeightmapEncoding; }
 declare module "cesium/Source/Core/HeightmapTerrainData" { import { HeightmapTerrainData } from 'cesium'; export default HeightmapTerrainData; }
 declare module "cesium/Source/Core/HermitePolynomialApproximation" { import { HermitePolynomialApproximation } from 'cesium'; export default HermitePolynomialApproximation; }
 declare module "cesium/Source/Core/HermiteSpline" { import { HermiteSpline } from 'cesium'; export default HermiteSpline; }
-declare module "cesium/Source/Core/IndexDatatype" { import { IndexDatatype } from 'cesium'; export default IndexDatatype; }
+declare module "cesium/Source/Core/HilbertOrder" { import { HilbertOrder } from 'cesium'; export default HilbertOrder; }
 declare module "cesium/Source/Core/InterpolationAlgorithm" { import { InterpolationAlgorithm } from 'cesium'; export default InterpolationAlgorithm; }
-declare module "cesium/Source/Core/Intersect" { import { Intersect } from 'cesium'; export default Intersect; }
 declare module "cesium/Source/Core/IntersectionTests" { import { IntersectionTests } from 'cesium'; export default IntersectionTests; }
 declare module "cesium/Source/Core/Intersections2D" { import { Intersections2D } from 'cesium'; export default Intersections2D; }
 declare module "cesium/Source/Core/Interval" { import { Interval } from 'cesium'; export default Interval; }
@@ -42095,13 +44116,11 @@ declare module "cesium/Source/Core/IonGeocoderService" { import { IonGeocoderSer
 declare module "cesium/Source/Core/IonResource" { import { IonResource } from 'cesium'; export default IonResource; }
 declare module "cesium/Source/Core/Iso8601" { import { Iso8601 } from 'cesium'; export default Iso8601; }
 declare module "cesium/Source/Core/JulianDate" { import { JulianDate } from 'cesium'; export default JulianDate; }
-declare module "cesium/Source/Core/KeyboardEventModifier" { import { KeyboardEventModifier } from 'cesium'; export default KeyboardEventModifier; }
 declare module "cesium/Source/Core/LagrangePolynomialApproximation" { import { LagrangePolynomialApproximation } from 'cesium'; export default LagrangePolynomialApproximation; }
 declare module "cesium/Source/Core/LeapSecond" { import { LeapSecond } from 'cesium'; export default LeapSecond; }
 declare module "cesium/Source/Core/LinearApproximation" { import { LinearApproximation } from 'cesium'; export default LinearApproximation; }
 declare module "cesium/Source/Core/LinearSpline" { import { LinearSpline } from 'cesium'; export default LinearSpline; }
 declare module "cesium/Source/Core/MapProjection" { import { MapProjection } from 'cesium'; export default MapProjection; }
-declare module "cesium/Source/Core/MapboxApi" { import { MapboxApi } from 'cesium'; export default MapboxApi; }
 declare module "cesium/Source/Core/Math" { import { Math } from 'cesium'; export default Math; }
 declare module "cesium/Source/Core/Matrix2" { import { Matrix2 } from 'cesium'; export default Matrix2; }
 declare module "cesium/Source/Core/Matrix3" { import { Matrix3 } from 'cesium'; export default Matrix3; }
@@ -42118,7 +44137,6 @@ declare module "cesium/Source/Core/PeliasGeocoderService" { import { PeliasGeoco
 declare module "cesium/Source/Core/PerspectiveFrustum" { import { PerspectiveFrustum } from 'cesium'; export default PerspectiveFrustum; }
 declare module "cesium/Source/Core/PerspectiveOffCenterFrustum" { import { PerspectiveOffCenterFrustum } from 'cesium'; export default PerspectiveOffCenterFrustum; }
 declare module "cesium/Source/Core/PinBuilder" { import { PinBuilder } from 'cesium'; export default PinBuilder; }
-declare module "cesium/Source/Core/PixelFormat" { import { PixelFormat } from 'cesium'; export default PixelFormat; }
 declare module "cesium/Source/Core/Plane" { import { Plane } from 'cesium'; export default Plane; }
 declare module "cesium/Source/Core/PlaneGeometry" { import { PlaneGeometry } from 'cesium'; export default PlaneGeometry; }
 declare module "cesium/Source/Core/PlaneOutlineGeometry" { import { PlaneOutlineGeometry } from 'cesium'; export default PlaneOutlineGeometry; }
@@ -42128,7 +44146,6 @@ declare module "cesium/Source/Core/PolygonOutlineGeometry" { import { PolygonOut
 declare module "cesium/Source/Core/PolylineGeometry" { import { PolylineGeometry } from 'cesium'; export default PolylineGeometry; }
 declare module "cesium/Source/Core/PolylineVolumeGeometry" { import { PolylineVolumeGeometry } from 'cesium'; export default PolylineVolumeGeometry; }
 declare module "cesium/Source/Core/PolylineVolumeOutlineGeometry" { import { PolylineVolumeOutlineGeometry } from 'cesium'; export default PolylineVolumeOutlineGeometry; }
-declare module "cesium/Source/Core/PrimitiveType" { import { PrimitiveType } from 'cesium'; export default PrimitiveType; }
 declare module "cesium/Source/Core/Proxy" { import { Proxy } from 'cesium'; export default Proxy; }
 declare module "cesium/Source/Core/QuadraticRealPolynomial" { import { QuadraticRealPolynomial } from 'cesium'; export default QuadraticRealPolynomial; }
 declare module "cesium/Source/Core/QuantizedMeshTerrainData" { import { QuantizedMeshTerrainData } from 'cesium'; export default QuantizedMeshTerrainData; }
@@ -42140,16 +44157,12 @@ declare module "cesium/Source/Core/Ray" { import { Ray } from 'cesium'; export d
 declare module "cesium/Source/Core/Rectangle" { import { Rectangle } from 'cesium'; export default Rectangle; }
 declare module "cesium/Source/Core/RectangleGeometry" { import { RectangleGeometry } from 'cesium'; export default RectangleGeometry; }
 declare module "cesium/Source/Core/RectangleOutlineGeometry" { import { RectangleOutlineGeometry } from 'cesium'; export default RectangleOutlineGeometry; }
-declare module "cesium/Source/Core/ReferenceFrame" { import { ReferenceFrame } from 'cesium'; export default ReferenceFrame; }
 declare module "cesium/Source/Core/Request" { import { Request } from 'cesium'; export default Request; }
 declare module "cesium/Source/Core/RequestErrorEvent" { import { RequestErrorEvent } from 'cesium'; export default RequestErrorEvent; }
 declare module "cesium/Source/Core/RequestScheduler" { import { RequestScheduler } from 'cesium'; export default RequestScheduler; }
-declare module "cesium/Source/Core/RequestState" { import { RequestState } from 'cesium'; export default RequestState; }
-declare module "cesium/Source/Core/RequestType" { import { RequestType } from 'cesium'; export default RequestType; }
 declare module "cesium/Source/Core/Resource" { import { Resource } from 'cesium'; export default Resource; }
 declare module "cesium/Source/Core/RuntimeError" { import { RuntimeError } from 'cesium'; export default RuntimeError; }
 declare module "cesium/Source/Core/ScreenSpaceEventHandler" { import { ScreenSpaceEventHandler } from 'cesium'; export default ScreenSpaceEventHandler; }
-declare module "cesium/Source/Core/ScreenSpaceEventType" { import { ScreenSpaceEventType } from 'cesium'; export default ScreenSpaceEventType; }
 declare module "cesium/Source/Core/ShowGeometryInstanceAttribute" { import { ShowGeometryInstanceAttribute } from 'cesium'; export default ShowGeometryInstanceAttribute; }
 declare module "cesium/Source/Core/Simon1994PlanetaryPositions" { import { Simon1994PlanetaryPositions } from 'cesium'; export default Simon1994PlanetaryPositions; }
 declare module "cesium/Source/Core/SimplePolylineGeometry" { import { SimplePolylineGeometry } from 'cesium'; export default SimplePolylineGeometry; }
@@ -42165,7 +44178,6 @@ declare module "cesium/Source/Core/TileProviderError" { import { TileProviderErr
 declare module "cesium/Source/Core/TilingScheme" { import { TilingScheme } from 'cesium'; export default TilingScheme; }
 declare module "cesium/Source/Core/TimeInterval" { import { TimeInterval } from 'cesium'; export default TimeInterval; }
 declare module "cesium/Source/Core/TimeIntervalCollection" { import { TimeIntervalCollection } from 'cesium'; export default TimeIntervalCollection; }
-declare module "cesium/Source/Core/TimeStandard" { import { TimeStandard } from 'cesium'; export default TimeStandard; }
 declare module "cesium/Source/Core/Transforms" { import { Transforms } from 'cesium'; export default Transforms; }
 declare module "cesium/Source/Core/TranslationRotationScale" { import { TranslationRotationScale } from 'cesium'; export default TranslationRotationScale; }
 declare module "cesium/Source/Core/TridiagonalSystemSolver" { import { TridiagonalSystemSolver } from 'cesium'; export default TridiagonalSystemSolver; }
@@ -42173,16 +44185,14 @@ declare module "cesium/Source/Core/TrustedServers" { import { TrustedServers } f
 declare module "cesium/Source/Core/VRTheWorldTerrainProvider" { import { VRTheWorldTerrainProvider } from 'cesium'; export default VRTheWorldTerrainProvider; }
 declare module "cesium/Source/Core/VertexFormat" { import { VertexFormat } from 'cesium'; export default VertexFormat; }
 declare module "cesium/Source/Core/VideoSynchronizer" { import { VideoSynchronizer } from 'cesium'; export default VideoSynchronizer; }
-declare module "cesium/Source/Core/Visibility" { import { Visibility } from 'cesium'; export default Visibility; }
 declare module "cesium/Source/Core/WallGeometry" { import { WallGeometry } from 'cesium'; export default WallGeometry; }
 declare module "cesium/Source/Core/WallOutlineGeometry" { import { WallOutlineGeometry } from 'cesium'; export default WallOutlineGeometry; }
-declare module "cesium/Source/Core/WebGLConstants" { import { WebGLConstants } from 'cesium'; export default WebGLConstants; }
 declare module "cesium/Source/Core/WebMercatorProjection" { import { WebMercatorProjection } from 'cesium'; export default WebMercatorProjection; }
 declare module "cesium/Source/Core/WebMercatorTilingScheme" { import { WebMercatorTilingScheme } from 'cesium'; export default WebMercatorTilingScheme; }
 declare module "cesium/Source/Core/WeightSpline" { import { WeightSpline } from 'cesium'; export default WeightSpline; }
-declare module "cesium/Source/Core/WindingOrder" { import { WindingOrder } from 'cesium'; export default WindingOrder; }
 declare module "cesium/Source/Core/barycentricCoordinates" { import { barycentricCoordinates } from 'cesium'; export default barycentricCoordinates; }
 declare module "cesium/Source/Core/binarySearch" { import { binarySearch } from 'cesium'; export default binarySearch; }
+declare module "cesium/Source/Core/buildModuleUrl" { import { buildModuleUrl } from 'cesium'; export default buildModuleUrl; }
 declare module "cesium/Source/Core/cancelAnimationFrame" { import { cancelAnimationFrame } from 'cesium'; export default cancelAnimationFrame; }
 declare module "cesium/Source/Core/clone" { import { clone } from 'cesium'; export default clone; }
 declare module "cesium/Source/Core/combine" { import { combine } from 'cesium'; export default combine; }
@@ -42199,8 +44209,6 @@ declare module "cesium/Source/Core/getFilenameFromUri" { import { getFilenameFro
 declare module "cesium/Source/Core/getImagePixels" { import { getImagePixels } from 'cesium'; export default getImagePixels; }
 declare module "cesium/Source/Core/getTimestamp" { import { getTimestamp } from 'cesium'; export default getTimestamp; }
 declare module "cesium/Source/Core/isLeapYear" { import { isLeapYear } from 'cesium'; export default isLeapYear; }
-declare module "cesium/Source/Core/loadCRN" { import { loadCRN } from 'cesium'; export default loadCRN; }
-declare module "cesium/Source/Core/loadKTX" { import { loadKTX } from 'cesium'; export default loadKTX; }
 declare module "cesium/Source/Core/mergeSort" { import { mergeSort } from 'cesium'; export default mergeSort; }
 declare module "cesium/Source/Core/objectToQuery" { import { objectToQuery } from 'cesium'; export default objectToQuery; }
 declare module "cesium/Source/Core/pointInsideTriangle" { import { pointInsideTriangle } from 'cesium'; export default pointInsideTriangle; }
@@ -42246,6 +44254,7 @@ declare module "cesium/Source/DataSources/EntityView" { import { EntityView } fr
 declare module "cesium/Source/DataSources/GeoJsonDataSource" { import { GeoJsonDataSource } from 'cesium'; export default GeoJsonDataSource; }
 declare module "cesium/Source/DataSources/GeometryUpdater" { import { GeometryUpdater } from 'cesium'; export default GeometryUpdater; }
 declare module "cesium/Source/DataSources/GeometryVisualizer" { import { GeometryVisualizer } from 'cesium'; export default GeometryVisualizer; }
+declare module "cesium/Source/DataSources/GpxDataSource" { import { GpxDataSource } from 'cesium'; export default GpxDataSource; }
 declare module "cesium/Source/DataSources/GridMaterialProperty" { import { GridMaterialProperty } from 'cesium'; export default GridMaterialProperty; }
 declare module "cesium/Source/DataSources/GroundGeometryUpdater" { import { GroundGeometryUpdater } from 'cesium'; export default GroundGeometryUpdater; }
 declare module "cesium/Source/DataSources/ImageMaterialProperty" { import { ImageMaterialProperty } from 'cesium'; export default ImageMaterialProperty; }
@@ -42290,7 +44299,6 @@ declare module "cesium/Source/DataSources/Rotation" { import { Rotation } from '
 declare module "cesium/Source/DataSources/SampledPositionProperty" { import { SampledPositionProperty } from 'cesium'; export default SampledPositionProperty; }
 declare module "cesium/Source/DataSources/SampledProperty" { import { SampledProperty } from 'cesium'; export default SampledProperty; }
 declare module "cesium/Source/DataSources/StripeMaterialProperty" { import { StripeMaterialProperty } from 'cesium'; export default StripeMaterialProperty; }
-declare module "cesium/Source/DataSources/StripeOrientation" { import { StripeOrientation } from 'cesium'; export default StripeOrientation; }
 declare module "cesium/Source/DataSources/TimeIntervalCollectionPositionProperty" { import { TimeIntervalCollectionPositionProperty } from 'cesium'; export default TimeIntervalCollectionPositionProperty; }
 declare module "cesium/Source/DataSources/TimeIntervalCollectionProperty" { import { TimeIntervalCollectionProperty } from 'cesium'; export default TimeIntervalCollectionProperty; }
 declare module "cesium/Source/DataSources/VelocityOrientationProperty" { import { VelocityOrientationProperty } from 'cesium'; export default VelocityOrientationProperty; }
@@ -42299,26 +44307,16 @@ declare module "cesium/Source/DataSources/Visualizer" { import { Visualizer } fr
 declare module "cesium/Source/DataSources/WallGeometryUpdater" { import { WallGeometryUpdater } from 'cesium'; export default WallGeometryUpdater; }
 declare module "cesium/Source/DataSources/WallGraphics" { import { WallGraphics } from 'cesium'; export default WallGraphics; }
 declare module "cesium/Source/DataSources/exportKml" { import { exportKml } from 'cesium'; export default exportKml; }
-declare module "cesium/Source/Renderer/PixelDatatype" { import { PixelDatatype } from 'cesium'; export default PixelDatatype; }
-declare module "cesium/Source/Renderer/TextureMagnificationFilter" { import { TextureMagnificationFilter } from 'cesium'; export default TextureMagnificationFilter; }
-declare module "cesium/Source/Renderer/TextureMinificationFilter" { import { TextureMinificationFilter } from 'cesium'; export default TextureMinificationFilter; }
 declare module "cesium/Source/Scene/Appearance" { import { Appearance } from 'cesium'; export default Appearance; }
 declare module "cesium/Source/Scene/ArcGisMapServerImageryProvider" { import { ArcGisMapServerImageryProvider } from 'cesium'; export default ArcGisMapServerImageryProvider; }
-declare module "cesium/Source/Scene/Axis" { import { Axis } from 'cesium'; export default Axis; }
 declare module "cesium/Source/Scene/Billboard" { import { Billboard } from 'cesium'; export default Billboard; }
 declare module "cesium/Source/Scene/BillboardCollection" { import { BillboardCollection } from 'cesium'; export default BillboardCollection; }
 declare module "cesium/Source/Scene/BingMapsImageryProvider" { import { BingMapsImageryProvider } from 'cesium'; export default BingMapsImageryProvider; }
-declare module "cesium/Source/Scene/BingMapsStyle" { import { BingMapsStyle } from 'cesium'; export default BingMapsStyle; }
-declare module "cesium/Source/Scene/BlendEquation" { import { BlendEquation } from 'cesium'; export default BlendEquation; }
-declare module "cesium/Source/Scene/BlendFunction" { import { BlendFunction } from 'cesium'; export default BlendFunction; }
-declare module "cesium/Source/Scene/BlendOption" { import { BlendOption } from 'cesium'; export default BlendOption; }
 declare module "cesium/Source/Scene/BlendingState" { import { BlendingState } from 'cesium'; export default BlendingState; }
 declare module "cesium/Source/Scene/BoxEmitter" { import { BoxEmitter } from 'cesium'; export default BoxEmitter; }
 declare module "cesium/Source/Scene/Camera" { import { Camera } from 'cesium'; export default Camera; }
 declare module "cesium/Source/Scene/CameraEventAggregator" { import { CameraEventAggregator } from 'cesium'; export default CameraEventAggregator; }
-declare module "cesium/Source/Scene/CameraEventType" { import { CameraEventType } from 'cesium'; export default CameraEventType; }
 declare module "cesium/Source/Scene/Cesium3DTile" { import { Cesium3DTile } from 'cesium'; export default Cesium3DTile; }
-declare module "cesium/Source/Scene/Cesium3DTileColorBlendMode" { import { Cesium3DTileColorBlendMode } from 'cesium'; export default Cesium3DTileColorBlendMode; }
 declare module "cesium/Source/Scene/Cesium3DTileContent" { import { Cesium3DTileContent } from 'cesium'; export default Cesium3DTileContent; }
 declare module "cesium/Source/Scene/Cesium3DTileFeature" { import { Cesium3DTileFeature } from 'cesium'; export default Cesium3DTileFeature; }
 declare module "cesium/Source/Scene/Cesium3DTilePointFeature" { import { Cesium3DTilePointFeature } from 'cesium'; export default Cesium3DTilePointFeature; }
@@ -42326,18 +44324,16 @@ declare module "cesium/Source/Scene/Cesium3DTileStyle" { import { Cesium3DTileSt
 declare module "cesium/Source/Scene/Cesium3DTileset" { import { Cesium3DTileset } from 'cesium'; export default Cesium3DTileset; }
 declare module "cesium/Source/Scene/CircleEmitter" { import { CircleEmitter } from 'cesium'; export default CircleEmitter; }
 declare module "cesium/Source/Scene/ClassificationPrimitive" { import { ClassificationPrimitive } from 'cesium'; export default ClassificationPrimitive; }
-declare module "cesium/Source/Scene/ClassificationType" { import { ClassificationType } from 'cesium'; export default ClassificationType; }
 declare module "cesium/Source/Scene/ClippingPlane" { import { ClippingPlane } from 'cesium'; export default ClippingPlane; }
 declare module "cesium/Source/Scene/ClippingPlaneCollection" { import { ClippingPlaneCollection } from 'cesium'; export default ClippingPlaneCollection; }
-declare module "cesium/Source/Scene/ColorBlendMode" { import { ColorBlendMode } from 'cesium'; export default ColorBlendMode; }
+declare module "cesium/Source/Scene/CloudCollection" { import { CloudCollection } from 'cesium'; export default CloudCollection; }
 declare module "cesium/Source/Scene/ConditionsExpression" { import { ConditionsExpression } from 'cesium'; export default ConditionsExpression; }
 declare module "cesium/Source/Scene/ConeEmitter" { import { ConeEmitter } from 'cesium'; export default ConeEmitter; }
 declare module "cesium/Source/Scene/CreditDisplay" { import { CreditDisplay } from 'cesium'; export default CreditDisplay; }
-declare module "cesium/Source/Scene/CullFace" { import { CullFace } from 'cesium'; export default CullFace; }
+declare module "cesium/Source/Scene/CumulusCloud" { import { CumulusCloud } from 'cesium'; export default CumulusCloud; }
 declare module "cesium/Source/Scene/DebugAppearance" { import { DebugAppearance } from 'cesium'; export default DebugAppearance; }
 declare module "cesium/Source/Scene/DebugCameraPrimitive" { import { DebugCameraPrimitive } from 'cesium'; export default DebugCameraPrimitive; }
 declare module "cesium/Source/Scene/DebugModelMatrixPrimitive" { import { DebugModelMatrixPrimitive } from 'cesium'; export default DebugModelMatrixPrimitive; }
-declare module "cesium/Source/Scene/DepthFunction" { import { DepthFunction } from 'cesium'; export default DepthFunction; }
 declare module "cesium/Source/Scene/DirectionalLight" { import { DirectionalLight } from 'cesium'; export default DirectionalLight; }
 declare module "cesium/Source/Scene/DiscardEmptyTileImagePolicy" { import { DiscardEmptyTileImagePolicy } from 'cesium'; export default DiscardEmptyTileImagePolicy; }
 declare module "cesium/Source/Scene/DiscardMissingTileImagePolicy" { import { DiscardMissingTileImagePolicy } from 'cesium'; export default DiscardMissingTileImagePolicy; }
@@ -42353,20 +44349,14 @@ declare module "cesium/Source/Scene/GoogleEarthEnterpriseMapsProvider" { import 
 declare module "cesium/Source/Scene/GridImageryProvider" { import { GridImageryProvider } from 'cesium'; export default GridImageryProvider; }
 declare module "cesium/Source/Scene/GroundPolylinePrimitive" { import { GroundPolylinePrimitive } from 'cesium'; export default GroundPolylinePrimitive; }
 declare module "cesium/Source/Scene/GroundPrimitive" { import { GroundPrimitive } from 'cesium'; export default GroundPrimitive; }
-declare module "cesium/Source/Scene/HeightReference" { import { HeightReference } from 'cesium'; export default HeightReference; }
-declare module "cesium/Source/Scene/HorizontalOrigin" { import { HorizontalOrigin } from 'cesium'; export default HorizontalOrigin; }
 declare module "cesium/Source/Scene/ImageryLayer" { import { ImageryLayer } from 'cesium'; export default ImageryLayer; }
 declare module "cesium/Source/Scene/ImageryLayerCollection" { import { ImageryLayerCollection } from 'cesium'; export default ImageryLayerCollection; }
 declare module "cesium/Source/Scene/ImageryLayerFeatureInfo" { import { ImageryLayerFeatureInfo } from 'cesium'; export default ImageryLayerFeatureInfo; }
 declare module "cesium/Source/Scene/ImageryProvider" { import { ImageryProvider } from 'cesium'; export default ImageryProvider; }
-declare module "cesium/Source/Scene/ImagerySplitDirection" { import { ImagerySplitDirection } from 'cesium'; export default ImagerySplitDirection; }
 declare module "cesium/Source/Scene/IonImageryProvider" { import { IonImageryProvider } from 'cesium'; export default IonImageryProvider; }
-declare module "cesium/Source/Scene/IonWorldImageryStyle" { import { IonWorldImageryStyle } from 'cesium'; export default IonWorldImageryStyle; }
 declare module "cesium/Source/Scene/Label" { import { Label } from 'cesium'; export default Label; }
 declare module "cesium/Source/Scene/LabelCollection" { import { LabelCollection } from 'cesium'; export default LabelCollection; }
-declare module "cesium/Source/Scene/LabelStyle" { import { LabelStyle } from 'cesium'; export default LabelStyle; }
 declare module "cesium/Source/Scene/Light" { import { Light } from 'cesium'; export default Light; }
-declare module "cesium/Source/Scene/MapMode2D" { import { MapMode2D } from 'cesium'; export default MapMode2D; }
 declare module "cesium/Source/Scene/MapboxImageryProvider" { import { MapboxImageryProvider } from 'cesium'; export default MapboxImageryProvider; }
 declare module "cesium/Source/Scene/MapboxStyleImageryProvider" { import { MapboxStyleImageryProvider } from 'cesium'; export default MapboxStyleImageryProvider; }
 declare module "cesium/Source/Scene/Material" { import { Material } from 'cesium'; export default Material; }
@@ -42374,7 +44364,6 @@ declare module "cesium/Source/Scene/MaterialAppearance" { import { MaterialAppea
 declare module "cesium/Source/Scene/Model" { import { Model } from 'cesium'; export default Model; }
 declare module "cesium/Source/Scene/ModelAnimation" { import { ModelAnimation } from 'cesium'; export default ModelAnimation; }
 declare module "cesium/Source/Scene/ModelAnimationCollection" { import { ModelAnimationCollection } from 'cesium'; export default ModelAnimationCollection; }
-declare module "cesium/Source/Scene/ModelAnimationLoop" { import { ModelAnimationLoop } from 'cesium'; export default ModelAnimationLoop; }
 declare module "cesium/Source/Scene/ModelMaterial" { import { ModelMaterial } from 'cesium'; export default ModelMaterial; }
 declare module "cesium/Source/Scene/ModelMesh" { import { ModelMesh } from 'cesium'; export default ModelMesh; }
 declare module "cesium/Source/Scene/ModelNode" { import { ModelNode } from 'cesium'; export default ModelNode; }
@@ -42397,21 +44386,16 @@ declare module "cesium/Source/Scene/PostProcessStage" { import { PostProcessStag
 declare module "cesium/Source/Scene/PostProcessStageCollection" { import { PostProcessStageCollection } from 'cesium'; export default PostProcessStageCollection; }
 declare module "cesium/Source/Scene/PostProcessStageComposite" { import { PostProcessStageComposite } from 'cesium'; export default PostProcessStageComposite; }
 declare module "cesium/Source/Scene/PostProcessStageLibrary" { import { PostProcessStageLibrary } from 'cesium'; export default PostProcessStageLibrary; }
-declare module "cesium/Source/Scene/PostProcessStageSampleMode" { import { PostProcessStageSampleMode } from 'cesium'; export default PostProcessStageSampleMode; }
 declare module "cesium/Source/Scene/Primitive" { import { Primitive } from 'cesium'; export default Primitive; }
 declare module "cesium/Source/Scene/PrimitiveCollection" { import { PrimitiveCollection } from 'cesium'; export default PrimitiveCollection; }
 declare module "cesium/Source/Scene/Scene" { import { Scene } from 'cesium'; export default Scene; }
-declare module "cesium/Source/Scene/SceneMode" { import { SceneMode } from 'cesium'; export default SceneMode; }
 declare module "cesium/Source/Scene/SceneTransforms" { import { SceneTransforms } from 'cesium'; export default SceneTransforms; }
 declare module "cesium/Source/Scene/ScreenSpaceCameraController" { import { ScreenSpaceCameraController } from 'cesium'; export default ScreenSpaceCameraController; }
 declare module "cesium/Source/Scene/ShadowMap" { import { ShadowMap } from 'cesium'; export default ShadowMap; }
-declare module "cesium/Source/Scene/ShadowMode" { import { ShadowMode } from 'cesium'; export default ShadowMode; }
 declare module "cesium/Source/Scene/SingleTileImageryProvider" { import { SingleTileImageryProvider } from 'cesium'; export default SingleTileImageryProvider; }
 declare module "cesium/Source/Scene/SkyAtmosphere" { import { SkyAtmosphere } from 'cesium'; export default SkyAtmosphere; }
 declare module "cesium/Source/Scene/SkyBox" { import { SkyBox } from 'cesium'; export default SkyBox; }
 declare module "cesium/Source/Scene/SphereEmitter" { import { SphereEmitter } from 'cesium'; export default SphereEmitter; }
-declare module "cesium/Source/Scene/StencilFunction" { import { StencilFunction } from 'cesium'; export default StencilFunction; }
-declare module "cesium/Source/Scene/StencilOperation" { import { StencilOperation } from 'cesium'; export default StencilOperation; }
 declare module "cesium/Source/Scene/StyleExpression" { import { StyleExpression } from 'cesium'; export default StyleExpression; }
 declare module "cesium/Source/Scene/Sun" { import { Sun } from 'cesium'; export default Sun; }
 declare module "cesium/Source/Scene/SunLight" { import { SunLight } from 'cesium'; export default SunLight; }
@@ -42421,10 +44405,10 @@ declare module "cesium/Source/Scene/TileMapServiceImageryProvider" { import { Ti
 declare module "cesium/Source/Scene/TimeDynamicImagery" { import { TimeDynamicImagery } from 'cesium'; export default TimeDynamicImagery; }
 declare module "cesium/Source/Scene/TimeDynamicPointCloud" { import { TimeDynamicPointCloud } from 'cesium'; export default TimeDynamicPointCloud; }
 declare module "cesium/Source/Scene/UrlTemplateImageryProvider" { import { UrlTemplateImageryProvider } from 'cesium'; export default UrlTemplateImageryProvider; }
-declare module "cesium/Source/Scene/VerticalOrigin" { import { VerticalOrigin } from 'cesium'; export default VerticalOrigin; }
 declare module "cesium/Source/Scene/ViewportQuad" { import { ViewportQuad } from 'cesium'; export default ViewportQuad; }
 declare module "cesium/Source/Scene/WebMapServiceImageryProvider" { import { WebMapServiceImageryProvider } from 'cesium'; export default WebMapServiceImageryProvider; }
 declare module "cesium/Source/Scene/WebMapTileServiceImageryProvider" { import { WebMapTileServiceImageryProvider } from 'cesium'; export default WebMapTileServiceImageryProvider; }
+declare module "cesium/Source/Scene/createElevationBandMaterial" { import { createElevationBandMaterial } from 'cesium'; export default createElevationBandMaterial; }
 declare module "cesium/Source/Scene/createOsmBuildings" { import { createOsmBuildings } from 'cesium'; export default createOsmBuildings; }
 declare module "cesium/Source/Scene/createTangentSpaceDebugPrimitive" { import { createTangentSpaceDebugPrimitive } from 'cesium'; export default createTangentSpaceDebugPrimitive; }
 declare module "cesium/Source/Scene/createWorldImagery" { import { createWorldImagery } from 'cesium'; export default createWorldImagery; }
@@ -42433,6 +44417,10 @@ declare module "cesium/Source/Widgets/Command" { import { Command } from 'cesium
 declare module "cesium/Source/Widgets/SvgPathBindingHandler" { import { SvgPathBindingHandler } from 'cesium'; export default SvgPathBindingHandler; }
 declare module "cesium/Source/Widgets/ToggleButtonViewModel" { import { ToggleButtonViewModel } from 'cesium'; export default ToggleButtonViewModel; }
 declare module "cesium/Source/Widgets/createCommand" { import { createCommand } from 'cesium'; export default createCommand; }
+declare module "cesium/Source/Scene/ModelExperimental/CustomShader" { import { CustomShader } from 'cesium'; export default CustomShader; }
+declare module "cesium/Source/Scene/ModelExperimental/ModelExperimental" { import { ModelExperimental } from 'cesium'; export default ModelExperimental; }
+declare module "cesium/Source/Scene/ModelExperimental/ModelFeature" { import { ModelFeature } from 'cesium'; export default ModelFeature; }
+declare module "cesium/Source/Scene/ModelExperimental/TextureUniform" { import { TextureUniform } from 'cesium'; export default TextureUniform; }
 declare module "cesium/Source/Widgets/Animation/Animation" { import { Animation } from 'cesium'; export default Animation; }
 declare module "cesium/Source/Widgets/Animation/AnimationViewModel" { import { AnimationViewModel } from 'cesium'; export default AnimationViewModel; }
 declare module "cesium/Source/Widgets/BaseLayerPicker/BaseLayerPicker" { import { BaseLayerPicker } from 'cesium'; export default BaseLayerPicker; }
