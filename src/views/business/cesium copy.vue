@@ -2,15 +2,10 @@
   <div style="width:100%;height: 100%" class="fullSize">
     <div id="cesiumContainer" class="full-container" />
     <div v-if="showPopup" class="popup" :style="{ top: popupTop + 'px', left: popupLeft + 'px' }">
-      <div class="content">
-        <span class="close-btn" @click="closePopup">
-          <i class="el-icon-close" />
-        </span>
-        <h3>经纬度</h3>
-        <p>{{ popupTop }} ：{{ popupLeft }}</p>
-        <p>{{ selectedEntity.description }}</p>
-      </div>
+      <h3>{{ selectedEntity.name }}</h3>
+      <p>{{ selectedEntity.description }}</p>
       <div class="arrow" />
+      <button @click="closePopup">关闭</button>
     </div>
     <div id="loadingOverlay">
       <h1>Loading...</h1>
@@ -31,8 +26,6 @@ export default {
       viewer: null,
       showPopup: false,
       selectedEntity: null,
-      position: null,
-      pick: null,
       popupTop: 0,
       popupLeft: 0
     }
@@ -184,10 +177,9 @@ export default {
           ', 高度' + height
         )
         var earthPosition = viewer.scene.pickPosition(event.position)
-        that.position = event.position
+
         // 获取 pick 拾取对象
         var pick = viewer.scene.pick(event.position)
-        that.pick = pick
         // 判断是否获取到了 pick
         if (!Cesium.defined(pick)) {
           viewer.entities.add({
@@ -216,14 +208,7 @@ export default {
           that.setPopupPosition(event.position)
           // 显示弹窗
           that.showPopup = true
-          var str = '经度：' +
-            Cesium.Math.toDegrees(radiansPos.longitude) +
-            ', 纬度：' +
-            Cesium.Math.toDegrees(radiansPos.latitude) +
-            ', 高度' + height
-          that.selectedEntity = {
-            name: '123123', description: str
-          }
+          that.selectedEntity = { name: '123123', description: 'qwsdasdasdas' }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
@@ -232,13 +217,8 @@ export default {
         console.log('点击了中键')
       },
         Cesium.ScreenSpaceEventType.MIDDLE_CLICK)
-      handler.setInputAction(function (event) {
-        if (that.showPopup) {
-          // 更新弹窗位置
-          // var model = viewer.entities.getById(that.pick.id._id) // 模型获取
-          // console.log(model.position)
-          // that.setPopupPosition(model.position)
-        }
+      handler.setInputAction(function () {
+        console.log('滚动！')
       },
         Cesium.ScreenSpaceEventType.MOUSE_MOVE)
       handler.setInputAction(function () {
@@ -277,18 +257,16 @@ export default {
       const windowPosition = new Cesium.Cartesian2(position.x, position.y)
 
       // 获取弹窗的宽度和高度
-      const popupWidth = 550
-      const popupHeight = 100
+      const popupWidth = 80
+      const popupHeight = 20
 
       // 计算弹窗的左上角坐标
-      const left = windowPosition.x - popupWidth / 2
-      const top = windowPosition.y - popupHeight - 20
+      const left = windowPosition.x - popupWidth
+      const top = windowPosition.y + popupHeight
 
       // 更新弹窗的位置
       this.popupLeft = left
       this.popupTop = top
-      console.log(this.popupLeft)
-      console.log(this.popupTop)
     },
     closePopup() {
       // 关闭弹窗
@@ -363,34 +341,21 @@ html {
 }
 .popup {
   position: absolute;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-.content {
-  padding: 10px;
-  color: #101010;
-}
-
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  cursor: pointer;
-  color: #101010;
-  font-size: 16px;
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .arrow {
   position: absolute;
-  bottom: -20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+  top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 20px solid rgba(255, 255, 255, 0.8);
 }
 </style>
