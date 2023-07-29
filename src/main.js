@@ -8,6 +8,7 @@ import 'font-awesome/css/font-awesome.min.css'
 // import locale from 'element-ui/lib/locale/lang/en' // lang i18n
 
 import '@/styles/index.scss' // global css
+import BaiduMap from 'vue-baidu-map'
 
 import App from './App'
 import store from './store'
@@ -35,6 +36,9 @@ import 'wl-vue-select/lib/wl-vue-select.css'
 // 如果想要中文版 element-ui，按如下方式声明
 Vue.use(ElementUI)
 Vue.use(wl)
+Vue.use(BaiduMap, {
+  ak: 'ka30ZTnAYDciRdDxgncznTqGP0KGG93I'
+})
 
 Vue.config.productionTip = false
 
