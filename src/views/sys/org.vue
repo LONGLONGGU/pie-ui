@@ -489,6 +489,7 @@ export default {
           addressComp.streetNumber
         that.dataForm.address = this.businessDetail.address
         this.$forceUpdate()
+        console.log(rs)
       })
 
       console.log(this.dataForm)
