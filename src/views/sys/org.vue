@@ -112,13 +112,11 @@ import { format } from '@/utils/datetime'
 import Pagination from '@/components/Pagination'
 import { save, findPage, removeById, resetAdminPwd, saveOrgMenus, findOrgMenus } from '@/api/admin-server/org'
 import { findMenuTree } from '@/api/admin-server/menu'
-import Area from '@/components/ZST/Area'
 export default {
   name: 'Org',
   components: {
     KtButton,
-    Pagination,
-    Area
+    Pagination
   },
   data() {
     return {
