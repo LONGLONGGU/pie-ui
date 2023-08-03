@@ -1,27 +1,52 @@
 <template>
   <div class="page-container">
     <!--工具栏-->
-    <div class="toolbar" style="float:left;padding-top:10px;padding-left:15px;">
+    <div class="toolbar" style="padding-top:10px;padding-left:15px;">
       <el-form :inline="true" :model="filters" :size="size">
         <el-form-item>
           <el-input v-model="filters.name" placeholder="用户名" />
         </el-form-item>
         <el-form-item>
-          <kt-button
-            icon="fa fa-search"
-            label="查询"
-            perms="sys:log:view"
-            type="primary"
-            @click="findPage(null)"
-          />
-          <kt-button
-            icon="fa fa-search"
-            label="导出统计信息"
-            perms="sys:count:export"
-            type="primary"
-            @click="exportCountInfo()"
-          />
+          <kt-button icon="fa fa-search" label="查询" perms="sys:log:view" type="primary" @click="findPage(null)" />
+          <kt-button icon="fa fa-search" label="导出统计信息" perms="sys:count:export" type="primary" @click="exportCountInfo()" />
         </el-form-item>
+        <el-row>
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索编号2" prop="xsbh" style="padding-left: 10px;">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索类型2" prop="xslx">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索来源2" prop="xsxz">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <ShrinkageButton v-show="!showAll" :show-all="showAll" @closepop="closepop" />
+        </el-row>
+        <el-row :class="showAll ? 'btnRow' : 'unBtnRow'">
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索编号2" prop="xsbh" style="padding-left: 10px;">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索类型2" prop="xslx">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6" class="elrow">
+            <el-form-item label="线索来源2" prop="xsxz">
+              <el-input />
+            </el-form-item>
+          </el-col>
+          <ShrinkageButton v-show="showAll" :show-all="showAll" @closepop="closepop" />
+        </el-row>
+
       </el-form>
     </div>
     <!--表格内容栏-->
@@ -32,16 +57,19 @@
 <script>
 import KtTable from '@/components/KtTable'
 import KtButton from '@/components/KtButton'
+import ShrinkageButton from '@/components/ShrinkageButton'
 import { format } from '@/utils/datetime'
 import { findPage, exportCount } from '@/api/admin-server/log'
 export default {
   components: {
     KtTable,
-    KtButton
+    KtButton,
+    ShrinkageButton
   },
   data() {
     return {
       size: 'small',
+      showAll: false,
       filters: {
         name: ''
       },
@@ -65,8 +93,12 @@ export default {
   mounted() {
   },
   methods: {
+    closepop() {
+      this.showAll = !this.showAll
+      console.log('父组件的状态：' + this.showAll)
+    },
     // 获取分页数据
-    findPage: function(data) {
+    findPage: function (data) {
       if (data !== null) {
         this.pageRequest = data.pageRequest
       }
@@ -106,12 +138,19 @@ export default {
       })
     },
     // 时间格式化
-    dateFormat: function(row, column, cellValue, index) {
+    dateFormat: function (row, column, cellValue, index) {
       return format(row[column.property])
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
+.btnRow {
+  display: block;
+}
+
+.unBtnRow {
+  display: none;
+}
 </style>
